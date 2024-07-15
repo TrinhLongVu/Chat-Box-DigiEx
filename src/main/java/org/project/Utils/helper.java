@@ -1,6 +1,6 @@
 package org.project.Utils;
 
-import org.project.format.TypeRecieve;
+import org.project.payload.TypeRecieve;
 
 public class helper {
     public static TypeRecieve FormatData(String receiveMsg) {

@@ -1,4 +1,4 @@
-package org.project.format;
+package org.project.payload;
 
 // "type: login, name: Hoang"
 public class TypeRecieve {
@@ -16,7 +16,7 @@ public class TypeRecieve {
     }
 
     public String getType() {return _type;}
-    public String getSend() {return _send;}
-    public String getRecieve() {return _recieve;}
+    public String getIdSend() {return _send;}
+    public String getIdRecieve() {return _recieve;}
     public String getData() {return _data;}
 }

@@ -1,5 +1,7 @@
 package org.project;
 
+import org.project.Chat.Recieve;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,7 +14,7 @@ public class Main {
             do
             {
                 Socket ss = s.accept(); //synchronous
-                new ClientThread(ss).start();
+                new Recieve(ss).start();
             }
             while (true);
         }
