@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         try
         {
-            ServerSocket s = new ServerSocket(3001);
+            ServerSocket s = new ServerSocket(3005);
             do
             {
                 Socket ss = s.accept(); //synchronous
