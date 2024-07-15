@@ -1,5 +1,8 @@
 package org.project;
 
+import org.project.Chat.Recieve;
+import org.project.Chat.Send;
+
 import java.net.Socket;
 
 public class ClientThread extends Thread {

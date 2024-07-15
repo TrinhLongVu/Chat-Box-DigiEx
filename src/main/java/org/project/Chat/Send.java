@@ -1,4 +1,4 @@
-package org.project;
+package org.project.Chat;
 
 import java.io.*;
 import java.net.Socket;
@@ -6,7 +6,7 @@ import java.net.Socket;
 public class Send extends Thread {
     BufferedWriter bw;
 
-    Send(Socket ss) {
+    public Send(Socket ss) {
         OutputStream os = null;
         try {
             os = ss.getOutputStream();
