@@ -1,15 +1,22 @@
+package View;
+
+import socket.Send;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.Socket;
 
 public class LoginForm extends JDialog {
     private JTextField tfEmail;
     private JButton btnOK;
     private JButton btnCancel;
     private JPanel loginPanel;
-    public LoginForm(JFrame parent) {
+    private Socket _socket = null;
+    public LoginForm(JFrame parent, Socket socket) {
         super(parent);
+        _socket = socket;
         setTitle("Login");
         setContentPane(loginPanel);
         setMinimumSize(new Dimension(450,474));
@@ -20,9 +27,12 @@ public class LoginForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = tfEmail.getText();
-                System.out.println("Username: " + username);
+                new Send(_socket).sendData("type:login,send:" + username);
+                dispose();
+                new HomePage(null, _socket, username);
             }
         });
+
         btnCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -30,12 +40,8 @@ public class LoginForm extends JDialog {
                 dispose();
             }
         });
+
         setVisible(true);
-
-    }
-
-    public static void main(String[] args) {
-        LoginForm loginForm = new LoginForm(null);
 
     }
 }

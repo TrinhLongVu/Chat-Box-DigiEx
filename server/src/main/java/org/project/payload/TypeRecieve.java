@@ -16,7 +16,7 @@ public class TypeRecieve {
     }
 
     public String getType() {return _type;}
-    public String getIdSend() {return _send;}
-    public String getIdRecieve() {return _recieve;}
+    public String getNameSend() {return _send;}
+    public String getNameRecieve() {return _recieve;}
     public String getData() {return _data;}
 }
