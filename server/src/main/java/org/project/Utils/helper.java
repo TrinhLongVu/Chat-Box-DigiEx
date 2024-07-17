@@ -1,6 +1,13 @@
 package org.project.Utils;
 
+import org.project.Chat.Send;
+import org.project.Data.Client;
+import org.project.Data.DataSave;
 import org.project.payload.TypeReceive;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class helper {
     public static TypeReceive FormatData(String receiveMsg) {
@@ -35,5 +42,27 @@ public class helper {
 
         TypeReceive result = new TypeReceive(type, send, receive, data);
         return result;
+    }
+
+    public static void sendUserOnline() {
+        String resultSend = "";
+        for(Client client: DataSave.clients) {
+            List<String> names = DataSave.clients.stream()
+                    .filter((c) -> !c.getName().equals(client.getName()))
+                    .map((clientName) -> clientName.getName())
+                    .collect(Collectors.toList());
+            resultSend = "type:online&&content:" + names.toString();
+
+            for (Map.Entry<String, String> dataName : DataSave.groups.entrySet())  {
+                String usersInGroup[] = dataName.getValue().split(", ");
+                for(String userInGroup: usersInGroup) {
+                    if(userInGroup.equals(client.getName())) {
+                        resultSend = resultSend.substring(0, resultSend.length() - 1) + ", " + dataName.getKey() + "]";
+                    }
+                }
+            }
+
+            new Send(client.getSocket()).sendData(resultSend);
+        }
     }
 }

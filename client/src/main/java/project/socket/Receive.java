@@ -66,6 +66,24 @@ public class Receive extends Thread {
                             }
                             break;
                         }
+                        case "chat-group": {
+                            String content = data.getContent();
+                            String userSend[] = data.getNameSend().split(",");
+
+                            LinkedList history = dataChat.contentChat.get(userSend[1]);
+                            if(history == null){
+                                history = new LinkedList<>();
+                                dataChat.contentChat.put(userSend[1], history);
+                            }
+                            history.add(userSend[0] + ": " + content);
+                            if(dataChat.selectedUser.equals(userSend[1])) {
+                                HomePage.listModel.clear();
+                                for(Object hist: history) {
+                                    HomePage.listModel.addElement((String)hist);
+                                }
+                            }
+                            break;
+                        }
                     }
                 }
             }

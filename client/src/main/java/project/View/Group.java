@@ -34,16 +34,18 @@ public class Group extends JDialog {
                 if (comp instanceof JCheckBox) {
                     JCheckBox checkBox = (JCheckBox) comp;
                     if (checkBox.isSelected()) {
-                        selectedUsers.append(checkBox.getText()).append(",");
+                        selectedUsers.append(checkBox.getText()).append(", ");
                     }
                 }
             }
             if (selectedUsers.length() > 0) {
-                selectedUsers.setLength(selectedUsers.length() - 2);
-                new Send(_socket).sendData("type:group&&receive:" + _myName + "," + selectedUsers.toString() + "&&" + "send:" + fieldName.getText());
+                System.out.println( selectedUsers.toString() + _myName);
+                new Send(_socket).sendData("type:group&&receive:" + selectedUsers.toString() + _myName + "&&" + "send:" + fieldName.getText());
             } else {
                 JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error", JOptionPane.ERROR_MESSAGE);
             }
+
+            setVisible(false);
         });
 
 
