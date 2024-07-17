@@ -1,13 +1,13 @@
 package project.Utils;
 
 // "type: login, name: Hoang"
-public class TypeRecieve {
+public class TypeReceive {
     private String _type;
     private String _send;
     private String _content;
 
 
-    public TypeRecieve(String type, String send, String content) {
+    public TypeReceive(String type, String send, String content) {
         _type = type;
         _content = content;
         _send = send;

@@ -22,7 +22,6 @@ public class HomePage extends JFrame {
     private JLabel userLabel;
     public static JList<String> JlistUsers;
     public static DefaultListModel<String> listModelUsers = new DefaultListModel<>();
-    public static String selectedUser = "";
     private Socket _socket = null;
     private String _myName = "";
     private JButton btnCreateGroup; // Changed from Button to JButton for consistency
@@ -55,13 +54,13 @@ public class HomePage extends JFrame {
 
         JlistUsers.addListSelectionListener((ListSelectionEvent e) -> {
             if (!e.getValueIsAdjusting()) {
-                selectedUser = JlistUsers.getSelectedValue();
-                userLabel.setText(_myName + " is chatting with user: " + selectedUser);
+                dataChat.selectedUser = JlistUsers.getSelectedValue();
+                userLabel.setText(_myName + " is chatting with user: " + dataChat.selectedUser);
 
-                LinkedList<String> history = dataChat.contentChat.get(selectedUser);
+                LinkedList<String> history = dataChat.contentChat.get(dataChat.selectedUser);
                 if(history == null){
                     history = new LinkedList<>();
-                    dataChat.contentChat.put(selectedUser, history);
+                    dataChat.contentChat.put(dataChat.selectedUser, history);
                 }
                 listModel.clear();
 
@@ -132,13 +131,13 @@ public class HomePage extends JFrame {
         String message = tfInput.getText();
         if (!message.trim().isEmpty()) {
             listModel.addElement("You: " + message);
-            LinkedList<String> history = dataChat.contentChat.get(selectedUser);
+            LinkedList<String> history = dataChat.contentChat.get(dataChat.selectedUser);
             if(history == null){
                 history = new LinkedList<>();
             }
             history.add("You" + ": " + message);
             tfInput.setText("");
-            new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + selectedUser + "&&data:" + message);
+            new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + dataChat.selectedUser + "&&data:" + message);
         }
     }
 }

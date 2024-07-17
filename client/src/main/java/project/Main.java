@@ -1,6 +1,6 @@
 package project;
 import project.View.LoginForm;
-import project.socket.Recieve;
+import project.socket.Receive;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -15,7 +15,7 @@ public class Main {
             mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             Socket s = new Socket("localhost", 3005);
-            new Recieve(s).start();
+            new Receive(s).start();
 
             LoginForm loginForm = new LoginForm(mainFrame, s);
             mainFrame.setVisible(false);

@@ -1,7 +1,7 @@
 package project.Utils;
 
 public class helpers {
-    public static TypeRecieve formatData(String receiveMsg) {
+    public static TypeReceive formatData(String receiveMsg) {
         String[] pairs = receiveMsg.split("&&");
 
         String type = null;
@@ -26,7 +26,7 @@ public class helpers {
             }
         }
 
-        TypeRecieve result = new TypeRecieve(type, send, content);
+        TypeReceive result = new TypeReceive(type, send, content);
         return result;
     }
 }

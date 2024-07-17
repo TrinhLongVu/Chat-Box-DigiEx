@@ -1,11 +1,10 @@
 package project.socket;
 
-import project.Utils.TypeRecieve;
+import project.Utils.TypeReceive;
 import project.Utils.helpers;
 import project.View.HomePage;
 import project.data.dataChat;
 
-import javax.swing.JList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,11 +14,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Recieve extends Thread {
+public class Receive extends Thread {
     String receiveMsg = "";
     BufferedReader br;
 
-    public Recieve(Socket ss) {
+    public Receive(Socket ss) {
         InputStream is;
         try {
             is = ss.getInputStream();
@@ -35,7 +34,7 @@ public class Recieve extends Thread {
                 this.receiveMsg = this.br.readLine();
                 if (receiveMsg != null) {
                     System.out.println("Received: " + receiveMsg);
-                    TypeRecieve data = helpers.formatData(receiveMsg);
+                    TypeReceive data = helpers.formatData(receiveMsg);
 
                     switch (data.getType()){
                         case "online": {
@@ -47,6 +46,8 @@ public class Recieve extends Thread {
                             for(String user : dataChat.userOnline ){
                                 HomePage.listModelUsers.addElement(user);
                             }
+                            System.out.println(dataChat.selectedUser);
+                            break;
                         }
                         case "chat": {
                             String content = data.getContent();
@@ -57,12 +58,13 @@ public class Recieve extends Thread {
                                 dataChat.contentChat.put(userSend, history);
                             }
                             history.add(userSend + ": " + content);
-                            if(HomePage.selectedUser.equals(userSend)) {
+                            if(dataChat.selectedUser.equals(userSend)) {
                                 HomePage.listModel.clear();
                                 for(Object hist: history) {
                                     HomePage.listModel.addElement((String)hist);
                                 }
                             }
+                            break;
                         }
                     }
                 }

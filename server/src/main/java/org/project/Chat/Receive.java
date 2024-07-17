@@ -3,7 +3,7 @@ package org.project.Chat;
 import org.project.Data.Client;
 import org.project.Data.DataSave;
 import org.project.payload.TypeReceive;
-import org.project.Utils.Helper;
+import org.project.Utils.helper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,8 +33,8 @@ public class Receive extends Thread {
         try {
             do {
                 this.receiveMsg = this.br.readLine();
-                TypeReceive data = Helper.FormatData(receiveMsg);
-                System.out.println(receiveMsg);
+                TypeReceive data = helper.FormatData(receiveMsg);
+                System.out.println("message::::" + receiveMsg);
 
                 switch (data.getType()) {
                     case "login": {
@@ -52,8 +52,10 @@ public class Receive extends Thread {
 
                     }
                     case "chat": {
+                        System.out.println("oke co the fui:::::" + data.getNameReceive());
                         for (Client client : DataSave.clients) {
                             if (client.getName().equals(data.getNameReceive())) {
+
                                 new Send(client.getSocket()).sendData(
                                         "type:chat&&send:" + data.getNameSend() + "&&content:" + data.getData());
                             }
