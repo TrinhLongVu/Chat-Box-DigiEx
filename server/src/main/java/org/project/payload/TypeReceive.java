@@ -1,22 +1,22 @@
 package org.project.payload;
 
 // "type: login, name: Hoang"
-public class TypeRecieve {
+public class TypeReceive {
     private String _type;
     private String _send;
-    private String _recieve;
+    private String _receive;
     private String _data;
 
 
-    public TypeRecieve(String type, String send, String recieve, String data) {
+    public TypeReceive(String type, String send, String receive, String data) {
         _type = type;
-        _recieve = recieve;
+        _receive = receive;
         _data = data;
         _send = send;
     }
 
     public String getType() {return _type;}
     public String getNameSend() {return _send;}
-    public String getNameRecieve() {return _recieve;}
+    public String getNameReceive() {return _receive;}
     public String getData() {return _data;}
 }

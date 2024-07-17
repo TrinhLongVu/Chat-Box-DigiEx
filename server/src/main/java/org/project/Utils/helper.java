@@ -1,9 +1,9 @@
 package org.project.Utils;
 
-import org.project.payload.TypeRecieve;
+import org.project.payload.TypeReceive;
 
-public class helper {
-    public static TypeRecieve FormatData(String receiveMsg) {
+public class Helper {
+    public static TypeReceive FormatData(String receiveMsg) {
 
         String[] pairs = receiveMsg.split(",");
 
@@ -33,7 +33,7 @@ public class helper {
             }
         }
 
-        TypeRecieve result = new TypeRecieve(type, send, recieve, data);
+        TypeReceive result = new TypeReceive(type, send, recieve, data);
         return result;
     }
 }

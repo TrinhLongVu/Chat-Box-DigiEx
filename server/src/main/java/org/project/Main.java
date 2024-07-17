@@ -1,26 +1,57 @@
 package org.project;
 
-import org.project.Chat.Recieve;
+import javax.swing.*;
 
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+public class Main extends JFrame {
+    private JButton startButton;
+    private JButton stopButton;
+    private JLabel statusLabel;
+    private ServerManager serverManager;
 
-public class Main {
-    public static void main(String[] args) {
-        try
-        {
-            ServerSocket s = new ServerSocket(3005);
-            do
-            {
-                Socket ss = s.accept(); //synchronous
-                new Recieve(ss).start();
+    public Main() {
+        serverManager = new ServerManager();
+
+        setTitle("Server Control");
+        setSize(300, 150);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Initialize components
+        startButton = new JButton("Start Server");
+        stopButton = new JButton("Stop Server");
+        statusLabel = new JLabel("Server is stopped.");
+
+        // Layout setup
+        JPanel panel = new JPanel();
+        panel.add(startButton);
+        panel.add(stopButton);
+        panel.add(statusLabel);
+
+        add(panel);
+
+        // Add action listeners
+        startButton.addActionListener(e -> {
+            if (!serverManager.isRunning()) {
+                serverManager.startServer(3005);
+                statusLabel.setText("Server is running.");
+            } else {
+                statusLabel.setText("Server is already running.");
             }
-            while (true);
-        }
-        catch(IOException e)
-        {
-            System.out.println("There're some error");
-        }
+        });
+
+        stopButton.addActionListener(e -> {
+            if (serverManager.isRunning()) {
+                serverManager.stopServer();
+                statusLabel.setText("Server is stopped.");
+            } else {
+                statusLabel.setText("Server is not running.");
+            }
+        });
+
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(Main::new);
     }
 }
