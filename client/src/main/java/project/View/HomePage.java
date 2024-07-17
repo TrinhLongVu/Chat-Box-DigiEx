@@ -16,12 +16,12 @@ public class HomePage extends JFrame {
     private JTextArea userArea;
     private JButton btnSend;
     public static DefaultListModel<String> listModel = new DefaultListModel<>();
+    public static DefaultListModel<String> listModelUsers = new DefaultListModel<>();
     private JPanel homePanel;
     private JTextField tfInput;
     private JList<String> chatList;
     private JLabel userLabel;
     public static JList<String> JlistUsers;
-    public static DefaultListModel<String> listModelUsers = new DefaultListModel<>();
     private Socket _socket = null;
     private String _myName = "";
     private JButton btnCreateGroup; // Changed from Button to JButton for consistency

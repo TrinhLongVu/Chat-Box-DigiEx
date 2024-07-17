@@ -5,6 +5,7 @@ import project.Utils.helpers;
 import project.View.HomePage;
 import project.data.dataChat;
 
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,11 +43,11 @@ public class Receive extends Thread {
                             String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
                             List<String> namesList = Arrays.asList(namesArray);
                             dataChat.userOnline = namesList;
+
                             HomePage.listModelUsers.clear();
-                            for(String user : dataChat.userOnline ){
+                            for (String user : dataChat.userOnline) {
                                 HomePage.listModelUsers.addElement(user);
                             }
-                            System.out.println(dataChat.selectedUser);
                             break;
                         }
                         case "chat": {
