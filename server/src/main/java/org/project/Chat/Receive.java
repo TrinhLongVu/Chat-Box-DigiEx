@@ -18,6 +18,7 @@ public class Receive extends Thread {
     String receiveMsg = "";
     BufferedReader br;
     private Socket _socket;
+    private Client currentClient;
 
     public Receive(Socket ss) {
         InputStream is = null;
@@ -37,10 +38,15 @@ public class Receive extends Thread {
                 TypeReceive data = helper.FormatData(receiveMsg);
                 System.out.println("message::::" + receiveMsg);
 
+                if (data == null) {
+                    System.out.println("Received invalid data: " + receiveMsg);
+                    continue;
+                }
+
                 switch (data.getType()) {
                     case "login": {
-                        Client newClient = new Client(data.getNameSend(), _socket);
-                        DataSave.clients.add(newClient);
+                        currentClient = new Client(data.getNameSend(), _socket);
+                        DataSave.clients.add(currentClient);
                         helper.sendUserOnline();
                         break;
                     }
@@ -99,6 +105,25 @@ public class Receive extends Thread {
             }while (true);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        finally {
+            cleanup();
+        }
+    }
+
+    private void cleanup() {
+        try {
+            System.out.println("Closing connection....");
+            if (_socket != null && !_socket.isClosed()) {
+                _socket.close();
+            }
+            if (currentClient != null) {
+                DataSave.clients.remove(currentClient);
+                helper.sendUserOnline();
+                System.out.println("Client " + currentClient.getName() + " disconnected and removed from active clients.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error closing client socket: " + e.getMessage());
         }
     }
 }

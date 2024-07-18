@@ -13,7 +13,7 @@ public class LoginForm extends JDialog {
     private JButton btnOK;
     private JButton btnCancel;
     private JPanel loginPanel;
-    private Socket _socket;
+    private Socưket _socket;
 
     public LoginForm(JFrame parent, Socket socket) {
         super(parent);
