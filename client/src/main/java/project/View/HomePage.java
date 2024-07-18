@@ -54,18 +54,32 @@ public class HomePage extends JFrame {
 
         JlistUsers.addListSelectionListener((ListSelectionEvent e) -> {
             if (!e.getValueIsAdjusting()) {
-                dataChat.selectedUser = JlistUsers.getSelectedValue();
-                userLabel.setText(_myName + " is chatting with user: " + dataChat.selectedUser);
-
-                LinkedList<String> history = dataChat.contentChat.get(dataChat.selectedUser);
-                if(history == null){
-                    history = new LinkedList<>();
-                    dataChat.contentChat.put(dataChat.selectedUser, history);
+                String selectedValue = JlistUsers.getSelectedValue();
+                if (selectedValue == null) {
+                    if(!dataChat.selectedUser.equals("")){
+                        int i = 0;
+                        for(String online: dataChat.userOnline){
+                            if(online.equals(dataChat.selectedUser)){
+                                JlistUsers.setSelectedIndex(i);
+                            }
+                            i++;
+                        }
+                    }
                 }
-                listModel.clear();
+                else if (selectedValue != null) {
+                    dataChat.selectedUser = selectedValue;
 
-                for(String content: history) {
-                    listModel.addElement(content);
+                    userLabel.setText(_myName + " is chatting with user: " + dataChat.selectedUser);
+                    LinkedList<String> history = dataChat.contentChat.get(dataChat.selectedUser);
+                    if (history == null) {
+                        history = new LinkedList<>();
+                        dataChat.contentChat.put(dataChat.selectedUser, history);
+                    }
+                    listModel.clear();
+
+                    for (String content : history) {
+                        listModel.addElement(content);
+                    }
                 }
             }
         });

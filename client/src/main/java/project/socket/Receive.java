@@ -48,6 +48,8 @@ public class Receive extends Thread {
                             for (String user : dataChat.userOnline) {
                                 HomePage.listModelUsers.addElement(user);
                             }
+
+                            System.out.println("user selected" + dataChat.selectedUser);
                             break;
                         }
                         case "chat": {
