@@ -29,20 +29,4 @@ public class Send extends Thread {
             throw new RuntimeException(e);
         }
     }
-
-    public void run() {
-        try {
-            DataInputStream din = new DataInputStream(System.in);
-            while (true) {
-                String k = din.readLine();
-                if (k != null) {
-                    bw.write(k);
-                    bw.newLine();
-                    bw.flush();
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
