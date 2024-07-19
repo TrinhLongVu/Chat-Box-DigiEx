@@ -1,6 +1,7 @@
 package project.Utils;
 
-public class helpers {
+import project.Utils.TypeReceive;
+public class Helper {
     public static TypeReceive formatData(String receiveMsg) {
         String[] pairs = receiveMsg.split("&&");
 
@@ -22,6 +23,8 @@ public class helpers {
                     break;
                 case "content":
                     content = value;
+                    break;
+                default:
                     break;
             }
         }

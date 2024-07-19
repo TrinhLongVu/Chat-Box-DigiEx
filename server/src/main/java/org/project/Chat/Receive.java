@@ -35,12 +35,15 @@ public class Receive extends Thread {
         try {
             do {
                 this.receiveMsg = this.br.readLine();
-                TypeReceive data = helper.FormatData(receiveMsg);
                 System.out.println("message::::" + receiveMsg);
+                TypeReceive data = null;
+                if(this.receiveMsg != null) {
+                    data = helper.FormatData(receiveMsg);
+                }
 
                 if (data == null) {
                     System.out.println("Received invalid data: " + receiveMsg);
-                    continue;
+                    break;
                 }
 
                 switch (data.getType()) {

@@ -1,6 +1,6 @@
 package project.View;
 
-import project.data.dataChat;
+import project.data.DataSave;
 import project.socket.Send;
 
 import javax.swing.*;
@@ -56,10 +56,10 @@ public class HomePage extends JFrame {
             if (!e.getValueIsAdjusting()) {
                 String selectedValue = JlistUsers.getSelectedValue();
                 if (selectedValue == null) {
-                    if(!dataChat.selectedUser.equals("")){
+                    if(!DataSave.selectedUser.equals("")){
                         int i = 0;
-                        for(String online: dataChat.userOnline){
-                            if(online.equals(dataChat.selectedUser)){
+                        for(String online: DataSave.userOnline){
+                            if(online.equals(DataSave.selectedUser)){
                                 JlistUsers.setSelectedIndex(i);
                             }
                             i++;
@@ -67,13 +67,13 @@ public class HomePage extends JFrame {
                     }
                 }
                 else if (selectedValue != null) {
-                    dataChat.selectedUser = selectedValue;
+                    DataSave.selectedUser = selectedValue;
 
-                    userLabel.setText(_myName + " is chatting with user: " + dataChat.selectedUser);
-                    LinkedList<String> history = dataChat.contentChat.get(dataChat.selectedUser);
+                    userLabel.setText(_myName + " is chatting with user: " + DataSave.selectedUser);
+                    LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
                     if (history == null) {
                         history = new LinkedList<>();
-                        dataChat.contentChat.put(dataChat.selectedUser, history);
+                        DataSave.contentChat.put(DataSave.selectedUser, history);
                     }
                     listModel.clear();
 
@@ -145,13 +145,13 @@ public class HomePage extends JFrame {
         String message = tfInput.getText();
         if (!message.trim().isEmpty()) {
             listModel.addElement("You: " + message);
-            LinkedList<String> history = dataChat.contentChat.get(dataChat.selectedUser);
+            LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
             if(history == null){
                 history = new LinkedList<>();
             }
             history.add("You" + ": " + message);
             tfInput.setText("");
-            new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + dataChat.selectedUser + "&&data:" + message);
+            new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
         }
     }
 }

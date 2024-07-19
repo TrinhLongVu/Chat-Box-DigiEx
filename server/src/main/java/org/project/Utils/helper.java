@@ -37,6 +37,8 @@ public class helper {
                 case "data":
                     data = value;
                     break;
+                default:
+                    break;
             }
         }
 

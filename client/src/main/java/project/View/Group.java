@@ -1,6 +1,6 @@
 package project.View;
 
-import project.data.dataChat;
+import project.data.DataSave;
 import project.socket.Send;
 
 import javax.swing.*;
@@ -54,7 +54,7 @@ public class Group extends JDialog {
         panel.add(namePanel);
         panel.add(new JLabel("Select users:"));
 
-        for (String online : dataChat.userOnline) {
+        for (String online : DataSave.userOnline) {
             JCheckBox checkBox = new JCheckBox(online);
             panel.add(checkBox);
         }
