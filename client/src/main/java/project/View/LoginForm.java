@@ -2,7 +2,7 @@ package project.View;
 
 import javax.swing.*;
 
-import project.Chat.Send;
+import src.lib.Send;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;

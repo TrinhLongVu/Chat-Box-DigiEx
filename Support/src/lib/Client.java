@@ -1,7 +1,6 @@
-package org.project.Payload;
+package src.lib;
 
 import java.net.Socket;
-
 
 public class Client {
     private String _name;

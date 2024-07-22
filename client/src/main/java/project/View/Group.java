@@ -1,7 +1,7 @@
 package project.View;
 
-import project.Chat.Send;
-import project.Data.DataSave;
+import src.lib.Send;
+import src.lib.DataSave;
 
 import javax.swing.*;
 import java.awt.*;

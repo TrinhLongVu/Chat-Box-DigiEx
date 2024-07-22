@@ -1,9 +1,12 @@
-package org.project.Chat;
+package src.lib;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-public class Send extends Thread {
+public class Send {
     BufferedWriter bw;
 
     public Send(Socket ss) {

@@ -1,13 +1,13 @@
-package project.Utils;
+package src.lib;
 
-import project.Utils.TypeReceive;
 public class Helper {
-    public static TypeReceive formatData(String receiveMsg) {
+    public static TypeReceive FormatData(String receiveMsg) {
         String[] pairs = receiveMsg.split("&&");
 
         String type = null;
         String send = null;
-        String content = null;
+        String receive = null;
+        String data = null;
 
         for (String pair : pairs) {
             String[] keyValue = pair.split(":", 2);
@@ -21,15 +21,18 @@ public class Helper {
                 case "send":
                     send = value;
                     break;
-                case "content":
-                    content = value;
+                case "receive":
+                    receive = value;
+                    break;
+                case "data":
+                    data = value;
                     break;
                 default:
                     break;
             }
         }
 
-        TypeReceive result = new TypeReceive(type, send, content);
+        TypeReceive result = new TypeReceive(type, send, receive, data);
         return result;
     }
 }

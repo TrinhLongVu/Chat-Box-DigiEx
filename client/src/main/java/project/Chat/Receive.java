@@ -1,6 +1,6 @@
 package project.Chat;
 
-import project.Utils.TypeReceive;
+import src.lib.TypeReceive;
 import project.View.HomePage;
 
 import javax.swing.*;
@@ -13,8 +13,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import project.Data.DataSave;
-import project.Utils.Helper;
+import src.lib.DataSave;
+import src.lib.Helper;
 public class Receive extends Thread {
     String receiveMsg = "";
     BufferedReader br;
@@ -35,11 +35,11 @@ public class Receive extends Thread {
                 this.receiveMsg = this.br.readLine();
                 if (receiveMsg != null) {
                     System.out.println("Received: " + receiveMsg);
-                    TypeReceive data = Helper.formatData(receiveMsg);
+                    TypeReceive data = Helper.FormatData(receiveMsg);
 
                     switch (data.getType()){
                         case "online": {
-                            String content = data.getContent();
+                            String content = data.getData();
                             String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
                             List<String> namesList = Arrays.asList(namesArray);
                             DataSave.userOnline = namesList;
@@ -53,9 +53,9 @@ public class Receive extends Thread {
                             break;
                         }
                         case "chat": {
-                            String content = data.getContent();
+                            String content = data.getData();
                             String userSend = data.getNameSend();
-                            LinkedList history = project.Data.DataSave.contentChat.get(userSend);
+                            LinkedList history = DataSave.contentChat.get(userSend);
                             if(history == null){
                                 history = new LinkedList<>();
                                 DataSave.contentChat.put(userSend, history);
@@ -70,7 +70,7 @@ public class Receive extends Thread {
                             break;
                         }
                         case "chat-group": {
-                            String content = data.getContent();
+                            String content = data.getData();
                             String userSend[] = data.getNameSend().split(",");
 
                             LinkedList history = DataSave.contentChat.get(userSend[1]);

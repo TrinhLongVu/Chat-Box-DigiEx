@@ -1,9 +1,10 @@
 package org.project.Chat;
 
-import org.project.Data.DataSave;
-import org.project.Payload.Client;
-import org.project.Payload.TypeReceive;
-import org.project.Utils.helper;
+import src.lib.DataSave;
+import src.lib.Client;
+import src.lib.TypeReceive;
+import src.lib.Helper;
+import src.lib.Send;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,6 +32,28 @@ public class Receive extends Thread {
         _socket = ss;
     }
 
+    public static void sendUserOnline() {
+        String resultSend = "";
+        for(Client client: DataSave.clients) {
+            List<String> names = DataSave.clients.stream()
+                    .filter((c) -> !c.getName().equals(client.getName()))
+                    .map((clientName) -> clientName.getName())
+                    .collect(Collectors.toList());
+            resultSend = "type:online&&data:" + names.toString();
+
+            for (Map.Entry<String, String> dataName : DataSave.groups.entrySet())  {
+                String usersInGroup[] = dataName.getValue().split(", ");
+                for(String userInGroup: usersInGroup) {
+                    if(userInGroup.equals(client.getName())) {
+                        resultSend = resultSend.substring(0, resultSend.length() - 1) + ", " + dataName.getKey() + "]";
+                    }
+                }
+            }
+
+            new Send(client.getSocket()).sendData(resultSend);
+        }
+    }
+
     public void run() {
         try {
             do {
@@ -38,7 +61,7 @@ public class Receive extends Thread {
                 System.out.println("message::::" + receiveMsg);
                 TypeReceive data = null;
                 if(this.receiveMsg != null) {
-                    data = helper.FormatData(receiveMsg);
+                    data = Helper.FormatData(receiveMsg);
                 }
 
                 if (data == null) {
@@ -50,14 +73,14 @@ public class Receive extends Thread {
                     case "login": {
                         currentClient = new Client(data.getNameSend(), _socket);
                         DataSave.clients.add(currentClient);
-                        helper.sendUserOnline();
+                        sendUserOnline();
                         break;
                     }
                     case "chat": {
                         for (Client client : DataSave.clients) {
                             if (client.getName().equals(data.getNameReceive())) {
                                 new Send(client.getSocket()).sendData(
-                                        "type:chat&&send:" + data.getNameSend() + "&&content:" + data.getData());
+                                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
                             }
                         }
 
@@ -69,7 +92,7 @@ public class Receive extends Thread {
                                     for (Client client : DataSave.clients) {
                                         if (client.getName().equals(userInGroup) && !client.getName().equals(data.getNameSend())) {
                                             new Send(client.getSocket()).sendData(
-                                                    "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive() + "&&content:" + data.getData());
+                                                    "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive() + "&&data:" + data.getData());
                                         }
                                     }
                                 }
@@ -79,7 +102,7 @@ public class Receive extends Thread {
                     }
                     case "group": {
                         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-                        helper.sendUserOnline();
+                        sendUserOnline();
                         break;
                     }
 
@@ -92,7 +115,7 @@ public class Receive extends Thread {
                                     for (Client client : DataSave.clients) {
                                         if (client.getName().equals(userInGroup)) {
                                             new Send(client.getSocket()).sendData(
-                                                    "type:chat-group&&send:" + data.getNameSend() + "&&content:" + data.getData());
+                                                    "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
                                         }
                                     }
                                 }
@@ -122,7 +145,7 @@ public class Receive extends Thread {
             }
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
-                helper.sendUserOnline();
+                sendUserOnline();
                 System.out.println("Client " + currentClient.getName() + " disconnected and removed from active clients.");
             }
         } catch (IOException e) {
