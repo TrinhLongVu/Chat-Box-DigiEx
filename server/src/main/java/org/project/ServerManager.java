@@ -5,18 +5,30 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.project.Chat.Receive;
+import src.lib.Send;
 
 public class ServerManager {
     private ServerSocket serverSocket;
-    private static final int THREAD_POOL_SIZE = 10;
+    private static final int THREAD_POOL_SIZE = 2;
+    private static final int LIMIT_QUEUE_SIZE = 1;
     private volatile boolean running;
     private ExecutorService threadPool;
+    private LinkedBlockingQueue<Socket> pendingConnections;
 
     public ServerManager() {
-        threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        threadPool = new ThreadPoolExecutor(
+            THREAD_POOL_SIZE,
+            THREAD_POOL_SIZE,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
+        );
+        pendingConnections = new LinkedBlockingQueue<>();
     }
 
     public void startServer(int port) {
@@ -30,10 +42,26 @@ public class ServerManager {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
+                        
+                        if (threadFree() > 2) {
+                            System.out.println("waiting.....");
+                            // new Send(clientSocket).sendData("Server is overloaded, adding client to pending queue.");
+                        }
+                        
+                        try {
+                            threadPool.submit(new Receive(clientSocket));
+                        } catch (RejectedExecutionException e) {
+                            System.out.println("Server is overloaded, adding client to pending queue.");
+                         //   new Send(clientSocket).sendData("Server is overloaded, adding client to pending queue.");
+                            // handle overloaded
+                            pendingConnections.offer(clientSocket);
+                        }
                         System.out.println("quantity thread ::::: " + Thread.activeCount());
-                        threadPool.submit(new Receive(clientSocket));
+                        System.out.println("pool thread ::::: " + ((ThreadPoolExecutor) threadPool).getActiveCount());
+                        System.out.println("Queued task count: " + ((ThreadPoolExecutor) threadPool).getQueue().size());
+
                     } catch (IOException e) {
-                        if (running) { // Only log errors if the server is running
+                        if (running) {
                             System.out.println("Error accepting connection: " + e.getMessage());
                         }
                     }
@@ -75,5 +103,9 @@ public class ServerManager {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public int threadFree() {
+        return THREAD_POOL_SIZE - ((ThreadPoolExecutor) threadPool).getActiveCount();
     }
 }
