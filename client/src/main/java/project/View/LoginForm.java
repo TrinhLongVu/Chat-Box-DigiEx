@@ -1,8 +1,9 @@
 package project.View;
 
-import project.socket.Send;
-
 import javax.swing.*;
+
+import project.Chat.Send;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

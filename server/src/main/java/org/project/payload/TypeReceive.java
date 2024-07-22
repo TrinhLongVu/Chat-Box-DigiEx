@@ -1,4 +1,4 @@
-package org.project.payload;
+package org.project.Payload;
 
 // "type: login, name: Hoang"
 public class TypeReceive {

@@ -1,8 +1,7 @@
-package project.socket;
+package project.Chat;
 
 import project.Utils.TypeReceive;
 import project.View.HomePage;
-import project.data.DataSave;
 
 import javax.swing.*;
 import java.io.BufferedReader;
@@ -13,6 +12,8 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import project.Data.DataSave;
 import project.Utils.Helper;
 public class Receive extends Thread {
     String receiveMsg = "";
@@ -54,7 +55,7 @@ public class Receive extends Thread {
                         case "chat": {
                             String content = data.getContent();
                             String userSend = data.getNameSend();
-                            LinkedList history = project.data.DataSave.contentChat.get(userSend);
+                            LinkedList history = project.Data.DataSave.contentChat.get(userSend);
                             if(history == null){
                                 history = new LinkedList<>();
                                 DataSave.contentChat.put(userSend, history);

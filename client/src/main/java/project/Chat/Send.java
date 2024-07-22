@@ -1,4 +1,4 @@
-package project.socket;
+package project.Chat;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;

@@ -1,8 +1,8 @@
 package org.project.Chat;
 
-import org.project.Data.Client;
 import org.project.Data.DataSave;
-import org.project.payload.TypeReceive;
+import org.project.Payload.Client;
+import org.project.Payload.TypeReceive;
 import org.project.Utils.helper;
 
 import java.io.BufferedReader;

@@ -1,11 +1,11 @@
 package org.project;
 
 
-import org.project.Chat.Receive;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import org.project.Chat.Receive;
 
 public class ServerManager {
     private ServerSocket serverSocket;

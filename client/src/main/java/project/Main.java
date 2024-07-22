@@ -1,6 +1,6 @@
 package project;
+import project.Chat.Receive;
 import project.View.LoginForm;
-import project.socket.Receive;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -14,7 +14,7 @@ public class Main {
             JFrame mainFrame = new JFrame();
             mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            Socket s = new Socket("192.168.0.51", 3005);
+            Socket s = new Socket("localhost", 3005);
             new Receive(s).start();
 
             LoginForm loginForm = new LoginForm(mainFrame, s);

@@ -1,4 +1,4 @@
-package org.project.Data;
+package org.project.Payload;
 
 import java.net.Socket;
 
