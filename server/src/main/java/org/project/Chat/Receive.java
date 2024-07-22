@@ -13,40 +13,37 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-public class Receive extends Thread {
-    String receiveMsg = "";
-    BufferedReader br;
+public class Receive implements Runnable {
+    private BufferedReader br;
     private Socket _socket;
     private Client currentClient;
 
-    public Receive(Socket ss) {
-        InputStream is = null;
+    public Receive(Socket socket) {
+        this._socket = socket;
         try {
-            is = ss.getInputStream();
+            InputStream is = socket.getInputStream();
+            this.br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error initializing BufferedReader", e);
         }
-        br = new BufferedReader(new InputStreamReader(is));
-        _socket = ss;
     }
 
     public static void sendUserOnline() {
-        String resultSend = "";
-        for(Client client: DataSave.clients) {
+        String resultSend;
+        for (Client client : DataSave.clients) {
             List<String> names = DataSave.clients.stream()
-                    .filter((c) -> !c.getName().equals(client.getName()))
-                    .map((clientName) -> clientName.getName())
+                    .filter(c -> !c.getName().equals(client.getName()))
+                    .map(Client::getName)
                     .collect(Collectors.toList());
             resultSend = "type:online&&data:" + names.toString();
 
-            for (Map.Entry<String, String> dataName : DataSave.groups.entrySet())  {
-                String usersInGroup[] = dataName.getValue().split(", ");
-                for(String userInGroup: usersInGroup) {
-                    if(userInGroup.equals(client.getName())) {
-                        resultSend = resultSend.substring(0, resultSend.length() - 1) + ", " + dataName.getKey() + "]";
-                    }
+            for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
+                String[] usersInGroup = dataName.getValue().split(", ");
+                if (List.of(usersInGroup).contains(client.getName())) {
+                    resultSend = resultSend.substring(0, resultSend.length() - 1) + ", " + dataName.getKey() + "]";
                 }
             }
 
@@ -54,86 +51,88 @@ public class Receive extends Thread {
         }
     }
 
+    @Override
     public void run() {
+        String receiveMsg;
         try {
-            do {
-                this.receiveMsg = this.br.readLine();
+            while ((receiveMsg = br.readLine()) != null) {
                 System.out.println("message::::" + receiveMsg);
-                TypeReceive data = null;
-                if(this.receiveMsg != null) {
-                    data = Helper.FormatData(receiveMsg);
-                }
+                TypeReceive data = Helper.FormatData(receiveMsg);
 
                 if (data == null) {
                     System.out.println("Received invalid data: " + receiveMsg);
-                    break;
+                    continue;
                 }
 
                 switch (data.getType()) {
-                    case "login": {
-                        currentClient = new Client(data.getNameSend(), _socket);
-                        DataSave.clients.add(currentClient);
-                        sendUserOnline();
+                    case "login":
+                        handleLogin(data);
                         break;
-                    }
-                    case "chat": {
-                        for (Client client : DataSave.clients) {
-                            if (client.getName().equals(data.getNameReceive())) {
-                                new Send(client.getSocket()).sendData(
-                                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
-                            }
-                        }
+                    case "chat":
+                        handleChat(data);
+                        break;
+                    case "group":
+                        handleGroup(data);
+                        break;
+                    case "chat-group":
+                        handleChatGroup(data);
+                        break;
+                    default:
+                        System.out.println("Type not found: " + data.getType());
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading from socket: " + e.getMessage());
+        } finally {
+            cleanup();
+        }
+    }
 
-                        for (Map.Entry<String, String> dataName : DataSave.groups.entrySet())  {
-                            // check in group
-                            if(dataName.getKey().equals(data.getNameReceive())) {
-                                String usersInGroup[] = dataName.getValue().split(", ");
-                                for(String userInGroup: usersInGroup) {
-                                    for (Client client : DataSave.clients) {
-                                        if (client.getName().equals(userInGroup) && !client.getName().equals(data.getNameSend())) {
-                                            new Send(client.getSocket()).sendData(
-                                                    "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive() + "&&data:" + data.getData());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    case "group": {
-                        DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-                        sendUserOnline();
-                        break;
-                    }
+    private void handleLogin(TypeReceive data) {
+        currentClient = new Client(data.getNameSend(), _socket);
+        DataSave.clients.add(currentClient);
+        sendUserOnline();
+    }
 
-                    case "chat-group": {
-                        for (Map.Entry<String, String> dataName : DataSave.groups.entrySet())  {
-                            // check in group
-                            if(dataName.getKey().equals(data.getNameReceive())) {
-                                String usersInGroup[] = dataName.getValue().split(", ");
-                                for(String userInGroup: usersInGroup) {
-                                    for (Client client : DataSave.clients) {
-                                        if (client.getName().equals(userInGroup)) {
-                                            new Send(client.getSocket()).sendData(
-                                                    "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    default: {
-                        System.out.println("Type not found");
-                        break;
+    private void handleChat(TypeReceive data) {
+        for (Client client : DataSave.clients) {
+            if (client.getName().equals(data.getNameReceive())) {
+                new Send(client.getSocket()).sendData(
+                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+            }
+        }
+
+        for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
+            if (dataName.getKey().equals(data.getNameReceive())) {
+                String[] usersInGroup = dataName.getValue().split(", ");
+                for (String userInGroup : usersInGroup) {
+                    if (!userInGroup.equals(data.getNameSend())) {
+                        DataSave.clients.stream()
+                                .filter(client -> client.getName().equals(userInGroup))
+                                .forEach(client -> new Send(client.getSocket()).sendData(
+                                        "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive() + "&&data:" + data.getData()));
                     }
                 }
-            }while (true);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            }
         }
-        finally {
-            cleanup();
+    }
+
+    private void handleGroup(TypeReceive data) {
+        DataSave.groups.put(data.getNameSend(), data.getNameReceive());
+        sendUserOnline();
+    }
+
+    private void handleChatGroup(TypeReceive data) {
+        for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
+            if (dataName.getKey().equals(data.getNameReceive())) {
+                String[] usersInGroup = dataName.getValue().split(", ");
+                for (String userInGroup : usersInGroup) {
+                    DataSave.clients.stream()
+                            .filter(client -> client.getName().equals(userInGroup))
+                            .forEach(client -> new Send(client.getSocket()).sendData(
+                                    "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData()));
+                }
+            }
         }
     }
 
@@ -153,3 +152,4 @@ public class Receive extends Thread {
         }
     }
 }
+
