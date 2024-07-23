@@ -32,7 +32,7 @@ public class Main extends JFrame {
         // Add action listeners
         startButton.addActionListener(e -> {
             if (!serverManager.isRunning()) {
-                serverManager.startServer(3005);
+                serverManager.startServer(1234);
                 statusLabel.setText("Server is running.");
             } else {
                 statusLabel.setText("Server is already running.");

@@ -17,15 +17,8 @@ public class Main {
             Socket s = new Socket("localhost", 3005);
             new Receive(s).start();
 
-            LoginForm loginForm = new LoginForm(mainFrame, s);
+            new LoginForm(mainFrame, s);
             mainFrame.setVisible(false);
-
-            loginForm.addWindowListener(new java.awt.event.WindowAdapter() {
-                @Override
-                public void windowClosed(java.awt.event.WindowEvent windowEvent) {
-                    System.exit(0); 
-                }
-            });
 
         } catch (IOException e) {
             System.out.println("There're some error");

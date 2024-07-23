@@ -2,6 +2,7 @@ package project.Chat;
 
 import src.lib.TypeReceive;
 import project.View.HomePage;
+import project.View.LoginForm;
 
 import javax.swing.*;
 import java.io.BufferedReader;
@@ -15,11 +16,15 @@ import java.util.List;
 
 import src.lib.DataSave;
 import src.lib.Helper;
+import src.lib.Send;
+
 public class Receive extends Thread {
-    String receiveMsg = "";
-    BufferedReader br;
+    private String receiveMsg = "";
+    private BufferedReader br;
+    private Socket socket;
 
     public Receive(Socket ss) {
+        this.socket = ss;
         InputStream is;
         try {
             is = ss.getInputStream();
@@ -86,6 +91,31 @@ public class Receive extends Thread {
                                 }
                             }
                             break;
+                        }
+                        case "server": {
+                            String[] hostAndPort = data.getData().split("@");
+                            System.out.println(hostAndPort[0] + "...." + hostAndPort[1]);
+                        
+                            int port;
+                            String host = hostAndPort[0];
+                        
+                            try {
+                                port = Integer.parseInt(hostAndPort[1]);
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid port number format");
+                                return;
+                            }
+                        
+                            Socket s = null;
+                            try {
+                                s = new Socket(host, port);
+                                new Receive(s).start();
+                                new Send(s).sendData("type:login&&send:" + LoginForm.username);
+                                new HomePage(null, s, LoginForm.username);
+                            } catch (IOException e) {
+                                System.out.println("Unable to connect to server: " + e.getMessage());
+                            }
+                            return;
                         }
                         default:
                             System.out.println("Received invalid data: " + receiveMsg);
