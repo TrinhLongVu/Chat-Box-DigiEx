@@ -111,6 +111,7 @@ public class Receive extends Thread {
                                 s = new Socket(host, port);
                                 new Receive(s).start();
                                 new Send(s).sendData("type:login&&send:" + LoginForm.username);
+                                System.out.print("send oke :::: type:login&&send:" + LoginForm.username);
                                 new HomePage(null, s, LoginForm.username);
                             } catch (IOException e) {
                                 System.out.println("Unable to connect to server: " + e.getMessage());

@@ -15,8 +15,9 @@ import src.lib.Send;
 
 public class ServerManager {
     private ServerSocket serverSocket;
-    private static final int THREAD_POOL_SIZE = 2;
+    private static final int THREAD_POOL_SIZE = 3;
     private static final int LIMIT_QUEUE_SIZE = 1;
+
     private volatile boolean running;
     private ExecutorService threadPool;
     private LinkedBlockingQueue<Socket> pendingConnections;

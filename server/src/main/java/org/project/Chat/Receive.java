@@ -20,6 +20,7 @@ public class Receive implements Runnable {
     private BufferedReader br;
     private Socket _socket;
     private Client currentClient;
+    private static String userOnines = "[]";
 
     public Receive(Socket socket) {
         this._socket = socket;
@@ -32,13 +33,9 @@ public class Receive implements Runnable {
     }
 
     public static void sendUserOnline() {
-        String resultSend;
+        String resultSend = "";
         for (Client client : DataSave.clients) {
-            List<String> names = DataSave.clients.stream()
-                    .filter(c -> !c.getName().equals(client.getName()))
-                    .map(Client::getName)
-                    .collect(Collectors.toList());
-            resultSend = "type:online&&data:" + names.toString();
+            resultSend = "type:online&&data:" + getAllExceptMe(userOnines, client.getName());
 
             for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
                 String[] usersInGroup = dataName.getValue().split(", ");
@@ -77,6 +74,11 @@ public class Receive implements Runnable {
                     case "chat-group":
                         handleChatGroup(data);
                         break;
+                    case "users": {
+                        userOnines = data.getData();
+                        sendUserOnline();
+                        break;
+                    }
                     default:
                         System.out.println("Type not found: " + data.getType());
                 }
@@ -145,11 +147,20 @@ public class Receive implements Runnable {
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
                 sendUserOnline();
-                System.out.println("Client " + currentClient.getName() + " disconnected and removed from active clients.");
+                System.out.println(
+                        "Client " + currentClient.getName() + " disconnected and removed from active clients.");
             }
         } catch (IOException e) {
             System.out.println("Error closing client socket: " + e.getMessage());
         }
+    }
+    
+    private static String getAllExceptMe(String listUserOnline, String myName) {
+        String regex = "\\b" + myName + "\\b,?\\s?";
+        String result = listUserOnline.replaceAll(regex, "");
+        result = result.replaceAll(",\\s*\\]", "]");
+        result = result.replaceAll("\\[\\s*\\]", "[]");
+        return result;
     }
 }
 
