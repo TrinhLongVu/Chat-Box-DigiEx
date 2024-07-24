@@ -35,6 +35,7 @@ public class LoadBalancer extends Thread {
             Socket server1 = new Socket("localhost", 1234);
             // Socket server2 = new Socket("192.168.0.60", 3005);
             Socket server3 = new Socket("localhost", 1235);
+            
             Database.serverList.add(new ServerInfo("localhost", 1234, server1));
             // Database.serverList.add(new ServerInfo("192.168.0.60", 3005, server2));
             Database.serverList.add(new ServerInfo("localhost", 1235, server3));
@@ -42,6 +43,11 @@ public class LoadBalancer extends Thread {
             new Thread(new Receive(server1, getAvailableServer())).start();
             // new Thread(new Receive(server2, getAvailableServer())).start();
             new Thread(new Receive(server3, getAvailableServer())).start();
+
+            new Send(server1).sendData("type:load-balancer");
+            // new Send(server2).send("type:load-balancer");
+            new Send(server3).sendData("type:load-balancer");
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -185,15 +191,13 @@ class Receive implements Runnable{
 
                 switch (data.getType()) {
                     case "login": {
-                        System.out.print("data:::::::");
+                        
                         Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
                         for (ServerInfo server : Database.serverList) {
-                            System.out.println("having server in serverlist...");
-
                             List<String> names = Database.clients.stream()
-                                .map(ClientInfo::getName)
-                                .collect(Collectors.toList());
-                                    
+                                    .map(ClientInfo::getName)
+                                    .collect(Collectors.toList());
+
                             new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
                         }
                         return;
@@ -212,7 +216,7 @@ class Receive implements Runnable{
         String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("message::::" + receiveMsg);
+                System.out.println("mes  sage::::" + receiveMsg);
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
                 if (data == null) {
@@ -221,8 +225,17 @@ class Receive implements Runnable{
                 }
 
                 switch (data.getType()) {
-                    case "users": {
-                        System.out.println("Type not found: " + data.getData());
+                    case "chat": {
+                        for (ClientInfo client : Database.clients) {
+                            if (client.getName().equals(data.getNameReceive())) {
+                                for (ServerInfo server : Database.serverList) {
+                                    if (client.getServerinfo().equals(server.toString())) {
+                                        new Send(server.getSocket()).sendData(receiveMsg);
+                                    }
+                                }
+                            }
+                        }
+                        break;
                     }
                 }
             }

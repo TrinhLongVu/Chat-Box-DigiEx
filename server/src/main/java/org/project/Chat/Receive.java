@@ -16,14 +16,18 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+class balancer {
+    public static Socket loadBalanSocket = null;
+}
+
 public class Receive implements Runnable {
     private BufferedReader br;
-    private Socket _socket;
+    private Socket socket;
     private Client currentClient;
     private static String userOnines = "[]";
 
     public Receive(Socket socket) {
-        this._socket = socket;
+        this.socket = socket;
         try {
             InputStream is = socket.getInputStream();
             this.br = new BufferedReader(new InputStreamReader(is));
@@ -62,11 +66,14 @@ public class Receive implements Runnable {
                 }
 
                 switch (data.getType()) {
+                    case "load-balancer":
+                        balancer.loadBalanSocket = this.socket;
+                        break;
                     case "login":
                         handleLogin(data);
                         break;
                     case "chat":
-                        handleChat(data);
+                        handleChat(data, receiveMsg);
                         break;
                     case "group":
                         handleGroup(data);
@@ -91,19 +98,27 @@ public class Receive implements Runnable {
     }
 
     private void handleLogin(TypeReceive data) {
-        currentClient = new Client(data.getNameSend(), _socket);
+        currentClient = new Client(data.getNameSend(), socket);
         DataSave.clients.add(currentClient);
         sendUserOnline();
     }
 
-    private void handleChat(TypeReceive data) {
+    private void handleChat(TypeReceive data, String receiveMsg) {
+        Socket receiver = null;
         for (Client client : DataSave.clients) {
             if (client.getName().equals(data.getNameReceive())) {
-                new Send(client.getSocket()).sendData(
-                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+                receiver = client.getSocket();
             }
         }
+        // if receive have in server then send else send message to load balancer
+        if (receiver != null) {
+            new Send(receiver).sendData(
+                    "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+        } else {
+            new Send(balancer.loadBalanSocket).sendData(receiveMsg);
+        }
 
+        // group handle later
         for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
             if (dataName.getKey().equals(data.getNameReceive())) {
                 String[] usersInGroup = dataName.getValue().split(", ");
@@ -141,8 +156,8 @@ public class Receive implements Runnable {
     private void cleanup() {
         try {
             System.out.println("Closing connection....");
-            if (_socket != null && !_socket.isClosed()) {
-                _socket.close();
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
             }
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
