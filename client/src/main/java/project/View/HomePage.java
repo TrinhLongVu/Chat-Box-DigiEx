@@ -154,8 +154,8 @@ public class HomePage extends JFrame {
             history.add("You: " + message); // Note the space after "You:"
             tfInput.setText("");
             try {
-                new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
-            } catch (IOException e) {
+                new Send(socket).sendData("type:chat&&send:" + myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
+            } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "An error occurred while sending message: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
