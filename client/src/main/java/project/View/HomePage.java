@@ -20,11 +20,11 @@ public class HomePage extends JFrame {
     private JPanel homePanel;
     private JTextField tfInput;
     private JList<String> chatList;
-    private JLabel userLabel;
+    public static JLabel userLabel = new JLabel();
     public static JList<String> JlistUsers;
     private Socket _socket = null;
     private String _myName = "";
-    private JButton btnCreateGroup; // Changed from Button to JButton for consistency
+    private JButton btnCreateGroup;
 
     public HomePage(JFrame parent, Socket socket, String myName) {
         _socket = socket;
@@ -38,7 +38,7 @@ public class HomePage extends JFrame {
         homePanel = new JPanel(new BorderLayout());
         chatList = new JList<>(listModel);
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        userLabel = new JLabel("Chatting with user: ");
+        userLabel.setText(myName);
 
         userArea = new JTextArea();
         userArea.setEditable(false);
@@ -56,30 +56,32 @@ public class HomePage extends JFrame {
             if (!e.getValueIsAdjusting()) {
                 String selectedValue = JlistUsers.getSelectedValue();
                 if (selectedValue == null) {
-                    if(!DataSave.selectedUser.equals("")){
+                    if (!DataSave.selectedUser.equals("")) {
                         int i = 0;
-                        for(String online: DataSave.userOnline){
-                            if(online.equals(DataSave.selectedUser)){
+                        for (String online : DataSave.userOnline) {
+                            if (online.equals(DataSave.selectedUser)) {
                                 JlistUsers.setSelectedIndex(i);
                             }
                             i++;
                         }
                     }
-                }
-                else if (selectedValue != null) {
+                } else if (selectedValue != null) {
                     DataSave.selectedUser = selectedValue;
 
-                    userLabel.setText(_myName + " is chatting with user: " + DataSave.selectedUser);
-                    LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
-                    if (history == null) {
-                        history = new LinkedList<>();
-                        DataSave.contentChat.put(DataSave.selectedUser, history);
-                    }
-                    listModel.clear();
+                    // Update userLabel on the EDT
+                    SwingUtilities.invokeLater(() -> {
+                        userLabel.setText(_myName + " is chatting with user: " + DataSave.selectedUser);
+                        LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
+                        if (history == null) {
+                            history = new LinkedList<>();
+                            DataSave.contentChat.put(DataSave.selectedUser, history);
+                        }
+                        listModel.clear();
 
-                    for (String content : history) {
-                        listModel.addElement(content);
-                    }
+                        for (String content : history) {
+                            listModel.addElement(content);
+                        }
+                    });
                 }
             }
         });
@@ -102,7 +104,7 @@ public class HomePage extends JFrame {
         inputPanel.add(buttonPanel, BorderLayout.EAST);
 
         JPanel chatPanel = new JPanel(new BorderLayout());
-        chatPanel.add(userLabel, BorderLayout.NORTH);
+        chatPanel.add(userLabel, BorderLayout.NORTH); // Ensure userLabel is added
         chatPanel.add(scrollPane, BorderLayout.CENTER);
 
         homePanel.add(chatPanel, BorderLayout.CENTER);
@@ -146,10 +148,10 @@ public class HomePage extends JFrame {
         if (!message.trim().isEmpty()) {
             listModel.addElement("You: " + message);
             LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
-            if(history == null){
+            if (history == null) {
                 history = new LinkedList<>();
             }
-            history.add("You" + ": " + message);
+            history.add("You: " + message); // Note the space after "You:"
             tfInput.setText("");
             new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
         }

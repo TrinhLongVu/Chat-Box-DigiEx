@@ -55,6 +55,12 @@ public class Receive extends Thread {
                         case "server":
                             handleServer(data.getData());
                             return;
+                        case "error":
+                            System.out.println("error: " + data.getData());
+                            SwingUtilities.invokeLater(() -> {
+                                HomePage.userLabel.setText("error: " + data.getData()); 
+                            });
+                            break;
                         default:
                             System.out.println("Received invalid data: " + data);
                             break;
@@ -65,20 +71,20 @@ public class Receive extends Thread {
             throw new RuntimeException(e);
         }
     }
-    
-
 
     private void handleOnline(String content) {
         String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
         List<String> namesList = Arrays.asList(namesArray);
         DataSave.userOnline = namesList;
 
-        HomePage.listModelUsers.clear();
-        for (String user : DataSave.userOnline) {
-            HomePage.listModelUsers.addElement(user);
-        }
+        SwingUtilities.invokeLater(() -> {
+            HomePage.listModelUsers.clear();
+            for (String user : DataSave.userOnline) {
+                HomePage.listModelUsers.addElement(user);
+            }
+        });
 
-        System.out.println("user selected" + DataSave.selectedUser);
+        System.out.println("user selected: " + DataSave.selectedUser);
     }
 
     private void handleChat(String content, String userSend) {
@@ -88,11 +94,14 @@ public class Receive extends Thread {
             DataSave.contentChat.put(userSend, history);
         }
         history.add(userSend + ": " + content);
+        final LinkedList<String> finalHistory = history; 
         if (DataSave.selectedUser.equals(userSend)) {
-            HomePage.listModel.clear();
-            for (String hist : history) {
-                HomePage.listModel.addElement(hist);
-            }
+            SwingUtilities.invokeLater(() -> {
+                HomePage.listModel.clear();
+                for (String hist : finalHistory) {
+                    HomePage.listModel.addElement(hist);
+                }
+            });
         }
     }
 
@@ -104,11 +113,14 @@ public class Receive extends Thread {
             DataSave.contentChat.put(userSend[1], history);
         }
         history.add(userSend[0] + ": " + content);
+        final LinkedList<String> finalHistory = history; 
         if (DataSave.selectedUser.equals(userSend[1])) {
-            HomePage.listModel.clear();
-            for (String hist : history) {
-                HomePage.listModel.addElement(hist);
-            }
+            SwingUtilities.invokeLater(() -> {
+                HomePage.listModel.clear();
+                for (String hist : finalHistory) {
+                    HomePage.listModel.addElement(hist);
+                }
+            });
         }
     }
 
@@ -117,7 +129,7 @@ public class Receive extends Thread {
         System.out.println(hostAndPort[0] + "...." + hostAndPort[1]);
         int port;
         String host = hostAndPort[0];
-    
+
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
@@ -125,8 +137,7 @@ public class Receive extends Thread {
             return;
         }
         Socket s = null;
-        try
-        {
+        try {
             this.socket.close();
             s = new Socket(host, port);
             new Receive(s).start();

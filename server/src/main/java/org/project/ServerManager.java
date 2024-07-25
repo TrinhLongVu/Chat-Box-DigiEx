@@ -15,12 +15,12 @@ import src.lib.Send;
 
 public class ServerManager {
     private ServerSocket serverSocket;
-    private static final int THREAD_POOL_SIZE = 3;
+    // 1 for thread pool and 1 for client
+    private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
 
     private volatile boolean running;
     private ExecutorService threadPool;
-    private LinkedBlockingQueue<Socket> pendingConnections;
 
     public ServerManager() {
         threadPool = new ThreadPoolExecutor(
@@ -29,7 +29,6 @@ public class ServerManager {
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
         );
-        pendingConnections = new LinkedBlockingQueue<>();
     }
 
     public void startServer(int port) {
@@ -53,9 +52,13 @@ public class ServerManager {
                             threadPool.submit(new Receive(clientSocket));
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, adding client to pending queue.");
-                         //   new Send(clientSocket).sendData("Server is overloaded, adding client to pending queue.");
+                            //   new Send(clientSocket).sendData("Server is overloaded, adding client to pending queue.");
                             // handle overloaded
-                            pendingConnections.offer(clientSocket);
+                        }
+                        
+                        if (((ThreadPoolExecutor) threadPool).getQueue().size() >= LIMIT_QUEUE_SIZE) {
+                            new Send(clientSocket)
+                                    .sendData("type:error&&data: server is full, please try again later.");
                         }
                         System.out.println("quantity thread ::::: " + Thread.activeCount());
                         System.out.println("pool thread ::::: " + ((ThreadPoolExecutor) threadPool).getActiveCount());

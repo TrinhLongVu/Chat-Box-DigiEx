@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ class Database {
 public class LoadBalancer extends Thread {
     private static int LOAD_BALANCER_PORT;
     private boolean isClient = true;
+    private final int MAX_CLIENTS = 2;
 
     public LoadBalancer(int port, boolean isClient) {
         LOAD_BALANCER_PORT = port;
@@ -71,7 +73,7 @@ public class LoadBalancer extends Thread {
 
     private ServerInfo getAvailableServer() {
         for (ServerInfo server : Database.serverList) {
-            if (server.getActiveClients() < 1) {
+            if (server.getActiveClients() < MAX_CLIENTS) {
                 return server;
             }
         }
@@ -86,11 +88,11 @@ public class LoadBalancer extends Thread {
             availableServer.incrementClients();
             new Receive(clientSocket, availableServer).receiveData();
             new Send(clientSocket).sendData("type:server" + "&&" + "data:" + availableServer.toString());
-            clientSocket.close();
         } else {
             System.out.println("All servers are full. Please try again later.");
-            clientSocket.close();
+            // handle when servers full...........
         }
+        clientSocket.close();
     }
 
     public static void main(String[] args) throws IOException {
@@ -193,13 +195,7 @@ class Receive implements Runnable{
                     case "login": {
                         
                         Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
-                        for (ServerInfo server : Database.serverList) {
-                            List<String> names = Database.clients.stream()
-                                    .map(ClientInfo::getName)
-                                    .collect(Collectors.toList());
-
-                            new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
-                        }
+                        updateUserOnline();
                         return;
                     }
                     default:
@@ -209,6 +205,16 @@ class Receive implements Runnable{
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void updateUserOnline() {
+        for (ServerInfo server : Database.serverList) {
+            List<String> names = Database.clients.stream()
+                    .map(ClientInfo::getName)
+                    .collect(Collectors.toList());
+
+            new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
         }
     }
 
@@ -237,6 +243,23 @@ class Receive implements Runnable{
                         }
                         break;
                     }
+
+                    case "disconnect": {
+                        Iterator<ClientInfo> iterator = Database.clients.iterator();
+                        while (iterator.hasNext()) {
+                            ClientInfo client = iterator.next();
+                            if (client.getName().equals(data.getNameSend())) {
+                                for (ServerInfo server : Database.serverList) {
+                                    if (client.getServerinfo().equals(server.toString())) {
+                                        server.decrementClients();
+                                    }
+                                }
+                                iterator.remove(); // Safe removal
+                            }
+                        }
+                        updateUserOnline();
+                    }
+                    
                 }
             }
         } catch (IOException e) {
