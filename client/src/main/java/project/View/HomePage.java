@@ -22,13 +22,13 @@ public class HomePage extends JFrame {
     private JList<String> chatList;
     public static JLabel userLabel = new JLabel();
     public static JList<String> JlistUsers;
-    private Socket _socket = null;
-    private String _myName = "";
+    private Socket socket = null;
+    private String myName = "";
     private JButton btnCreateGroup;
 
     public HomePage(JFrame parent, Socket socket, String myName) {
-        _socket = socket;
-        _myName = myName;
+        this.socket = socket;
+        this.myName = myName;
         setTitle("Home Page");
         setMinimumSize(new Dimension(450, 474));
         setLocationRelativeTo(parent);
@@ -70,7 +70,7 @@ public class HomePage extends JFrame {
 
                     // Update userLabel on the EDT
                     SwingUtilities.invokeLater(() -> {
-                        userLabel.setText(_myName + " is chatting with user: " + DataSave.selectedUser);
+                        userLabel.setText(this.myName + " is chatting with user: " + DataSave.selectedUser);
                         LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
                         if (history == null) {
                             history = new LinkedList<>();
@@ -136,7 +136,7 @@ public class HomePage extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false); // Hide the HomePage
-                Group groupDialog = new Group(HomePage.this, _socket, _myName);  // Pass HomePage instance
+                Group groupDialog = new Group(HomePage.this, this.socket, this.myName);  // Pass HomePage instance
                 groupDialog.setVisible(true); // Show the GroupDialog
                 setVisible(true);
             }
@@ -153,7 +153,7 @@ public class HomePage extends JFrame {
             }
             history.add("You: " + message); // Note the space after "You:"
             tfInput.setText("");
-            new Send(_socket).sendData("type:chat&&send:" + _myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
+            new Send(this.socket).sendData("type:chat&&send:" + this.myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
         }
     }
 }

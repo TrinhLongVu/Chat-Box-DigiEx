@@ -14,13 +14,13 @@ public class LoginForm extends JDialog {
     private JButton btnOK;
     private JButton btnCancel;
     private JPanel loginPanel;
-    private Socket _socket;
+    private Socket socket;
 
     static public String username = "";
 
     public LoginForm(JFrame parent, Socket socket) {
         super(parent);
-        _socket = socket;
+        this.socket = socket;
         setTitle("Login");
 
         // Initialize components
@@ -48,9 +48,9 @@ public class LoginForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 username = tfEmail.getText();
-                new Send(_socket).sendData("type:login&&send:" + username);
+                new Send(this.socket).sendData("type:login&&send:" + username);
                 dispose();
-                // new HomePage(null, _socket, username);
+                // new HomePage(null, this.socket, username);
             }
         });
 
