@@ -3,6 +3,7 @@ package project.View;
 import src.lib.Send;
 import src.lib.DataSave;
 
+import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
 import java.net.Socket;
@@ -38,7 +39,11 @@ public class Group extends JDialog {
             }
             if (selectedUsers.length() > 0) {
                 System.out.println( selectedUsers.toString() + myName);
-                new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
+                try {
+                    new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             } else {
                 JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error", JOptionPane.ERROR_MESSAGE);
             }

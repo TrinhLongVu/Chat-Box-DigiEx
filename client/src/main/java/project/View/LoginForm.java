@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.Socket;
 
+import java.io.IOException;
+
 public class LoginForm extends JDialog {
     private JTextField tfEmail;
     private JButton btnOK;
@@ -48,7 +50,11 @@ public class LoginForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 username = tfEmail.getText();
-                new Send(socket).sendData("type:login&&send:" + username);
+                try {
+                    new Send(socket).sendData("type:login&&send:" + username);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
                 dispose();
                 // new HomePage(null, socket, username);
             }
