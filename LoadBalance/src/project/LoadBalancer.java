@@ -282,6 +282,7 @@ class Receive implements Runnable{
                                 iterator.remove(); // Safe removal
                             }
                         }
+                        System.out.print(Database.clients.toString());
                         updateUserOnline();
                     }
                     

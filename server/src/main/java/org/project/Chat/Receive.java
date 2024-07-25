@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 class balancer {
     public static Socket loadBalanSocket = null;
@@ -24,6 +25,7 @@ public class Receive implements Runnable {
     private Socket socket;
     private Client currentClient;
     private static String userOnines = "[]";
+    public static ConcurrentHashMap<Socket, Client> receiveClientMap = new ConcurrentHashMap<>();
 
     public Receive(Socket socket) {
         this.socket = socket;
@@ -34,6 +36,7 @@ public class Receive implements Runnable {
             throw new RuntimeException("Error initializing BufferedReader", e);
         }
     }
+    
 
     @Override
     public void run() {
@@ -69,8 +72,9 @@ public class Receive implements Runnable {
 
     private void cleanup() {
         try {
-            System.out.println("Closing connection....");
+            currentClient = receiveClientMap.get(socket);
             if (socket != null && !socket.isClosed()) {
+                System.out.println("Closing connection....");
                 socket.close();
             }
             if (currentClient != null) {
@@ -79,6 +83,7 @@ public class Receive implements Runnable {
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
                 new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
+                receiveClientMap.remove(socket);
             }
         } catch (IOException e) {
             System.out.println("Error closing client socket: " + e.getMessage());
@@ -143,6 +148,8 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
     public void handle(TypeReceive data, Socket socket, String userOnines, String message) {
         Client currentClient = new Client(data.getNameSend(), socket);
         DataSave.clients.add(currentClient);
+
+        Receive.receiveClientMap.put(socket, currentClient);
         SendUserOnlines.handle(userOnines);
     }
 }
