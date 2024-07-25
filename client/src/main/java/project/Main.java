@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,6 +28,7 @@ public class Main {
                 mainFrame.setVisible(false);
                 break;
             } catch (IOException e) {
+                JOptionPane.showMessageDialog(mainFrame, "An error occurred, we are trying to reconnect to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 System.out.println("There're some error");
                 try {
                     Thread.sleep(RECONNECT_DELAY); // Wait before retrying
