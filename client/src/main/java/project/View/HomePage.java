@@ -8,6 +8,7 @@ import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
 
@@ -151,11 +152,12 @@ public class HomePage extends JFrame {
             if (history == null) {
                 history = new LinkedList<>();
             }
-            history.add("You: " + message); // Note the space after "You:"
+            history.add("You: " + message);
             tfInput.setText("");
             try {
                 new Send(socket).sendData("type:chat&&send:" + myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
             } catch (Exception e) {
+                e.printStackTrace();
                 JOptionPane.showMessageDialog(this, "An error occurred while sending message: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
