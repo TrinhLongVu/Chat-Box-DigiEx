@@ -4,7 +4,7 @@ mkdir -p target/lib
 cp lib/support.jar target/lib/
 cp lib/server.jar target/lib/
 
-jar cvfm target/app.jar META-INF/MANIFEST.MF -C target/classes . -C target lib
+jar cvfm target/load.jar META-INF/MANIFEST.MF -C target/classes . -C target lib
 
-java -jar target/app.jar
+java -jar target/load.jar
 
