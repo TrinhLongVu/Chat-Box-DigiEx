@@ -41,86 +41,21 @@ public class Receive extends Thread {
                 if (receiveMsg != null) {
                     System.out.println("Received: " + receiveMsg);
                     TypeReceive data = Helper.FormatData(receiveMsg);
-
-                    switch (data.getType()) {
-                        case "online":
-                            handleOnline(data.getData());
-                            break;
-                        case "chat":
-                            handleChat(data.getData(), data.getNameSend());
-                            break;
-                        case "chat-group":
-                            handleChatGroup(data.getData(), data.getNameSend());
-                            break;
-                        case "server":
-                            handleServer(data.getData());
-                            return;
-                        case "error":
-                            System.out.println("error: " + data.getData());
-                            SwingUtilities.invokeLater(() -> {
-                                HomePage.userLabel.setText("error: " + data.getData()); 
-                            });
-                            break;
-                        default:
-                            System.out.println("Received invalid data: " + data);
-                            break;
+                    if (data.getType().equals("server")) {
+                        handleServer(data.getData());
+                        return;
+                    }
+                    MessageHandlerFactory factory = FactoryClientReceive.getFactory(data.getType());
+                    if (factory != null) {
+                        factory.handle(data, this.socket,receiveMsg);
+                    }
+                    else {
+                        
                     }
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private void handleOnline(String content) {
-        String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
-        List<String> namesList = Arrays.asList(namesArray);
-        DataSave.userOnline = namesList;
-
-        SwingUtilities.invokeLater(() -> {
-            HomePage.listModelUsers.clear();
-            for (String user : DataSave.userOnline) {
-                HomePage.listModelUsers.addElement(user);
-            }
-        });
-
-        System.out.println("user selected: " + DataSave.selectedUser);
-    }
-
-    private void handleChat(String content, String userSend) {
-        LinkedList<String> history = DataSave.contentChat.get(userSend);
-        if (history == null) {
-            history = new LinkedList<>();
-            DataSave.contentChat.put(userSend, history);
-        }
-        history.add(userSend + ": " + content);
-        final LinkedList<String> finalHistory = history; 
-        if (DataSave.selectedUser.equals(userSend)) {
-            SwingUtilities.invokeLater(() -> {
-                HomePage.listModel.clear();
-                for (String hist : finalHistory) {
-                    HomePage.listModel.addElement(hist);
-                }
-            });
-        }
-    }
-
-    private void handleChatGroup(String content, String userSendCombined) {
-        String[] userSend = userSendCombined.split(",");
-        LinkedList<String> history = DataSave.contentChat.get(userSend[1]);
-        if (history == null) {
-            history = new LinkedList<>();
-            DataSave.contentChat.put(userSend[1], history);
-        }
-        history.add(userSend[0] + ": " + content);
-        final LinkedList<String> finalHistory = history; 
-        if (DataSave.selectedUser.equals(userSend[1])) {
-            SwingUtilities.invokeLater(() -> {
-                HomePage.listModel.clear();
-                for (String hist : finalHistory) {
-                    HomePage.listModel.addElement(hist);
-                }
-            });
         }
     }
 
