@@ -19,13 +19,9 @@ public class Send {
         bw = new BufferedWriter(new OutputStreamWriter(os));
     }
 
-    public void sendData(String data) {
-        try {
-            bw.write(data);
-            bw.newLine();
-            bw.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void sendData(String data) throws IOException {
+        bw.write(data);
+        bw.newLine();
+        bw.flush();
     }
 }
