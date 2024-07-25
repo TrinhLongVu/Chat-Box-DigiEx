@@ -11,10 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 class balancer {
     public static Socket loadBalanSocket = null;
@@ -36,7 +35,78 @@ public class Receive implements Runnable {
         }
     }
 
-    public static void sendUserOnline() {
+    @Override
+    public void run() {
+        String receiveMsg;
+        try {
+            while ((receiveMsg = br.readLine()) != null) {
+                System.out.println("message::::" + receiveMsg);
+                TypeReceive data = Helper.FormatData(receiveMsg);
+
+                if (data == null) {
+                    System.out.println("Received invalid data: " + receiveMsg);
+                    continue;
+                }
+
+                if (data.getType().equals("users")) {
+                    userOnines = data.getData();
+                    SendUserOnlines.handle(userOnines);;
+                    continue;
+                }
+                MessageHandlerFactory factory = FactoryReceive.getFactory(data.getType());
+                if (factory != null) {
+                    factory.handle(data, socket, userOnines, receiveMsg);
+                } else {
+                    System.out.println("Received invalid data: " + data);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading from socket: " + e.getMessage());
+        } finally {
+            cleanup();
+        }
+    }
+
+    private void cleanup() {
+        try {
+            System.out.println("Closing connection....");
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+            if (currentClient != null) {
+                DataSave.clients.remove(currentClient);
+                SendUserOnlines.handle(userOnines);
+                System.out.println(
+                        "Client " + currentClient.getName() + " disconnected and removed from active clients.");
+                new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
+            }
+        } catch (IOException e) {
+            System.out.println("Error closing client socket: " + e.getMessage());
+        }
+    }
+}
+
+class FactoryReceive {
+    private static final Map<String, MessageHandlerFactory> factoryMap = new HashMap<>();
+    static {
+        factoryMap.put("load-balancer", new loadBalancerMessageHandlerFactory());
+        factoryMap.put("login", new LoginMessageHandlerFactory());
+        factoryMap.put("chat", new ChatMessageHandlerFactory());
+        factoryMap.put("group", new GroupMessageHandlerFactory());
+        factoryMap.put("chat-group", new ChatGroupMessageHandlerFactory());
+    }
+
+    public static MessageHandlerFactory getFactory(String type) {
+        return factoryMap.get(type);
+    }
+}
+
+interface MessageHandlerFactory {
+    default void handle(TypeReceive data, Socket socket, String userOnines, String message){};
+}
+
+class SendUserOnlines {
+    public static void handle(String userOnines) {
         String resultSend = "";
         for (Client client : DataSave.clients) {
             resultSend = "type:online&&data:" + getAllExceptMe(userOnines, client.getName());
@@ -52,58 +122,34 @@ public class Receive implements Runnable {
         }
     }
 
+    private static String getAllExceptMe(String listUserOnline, String myName) {
+        String regex = "\\b" + myName + "\\b,?\\s?";
+        String result = listUserOnline.replaceAll(regex, "");
+        result = result.replaceAll(",\\s*\\]", "]");
+        result = result.replaceAll("\\[\\s*\\]", "[]");
+        return result;
+    }
+}
+
+class loadBalancerMessageHandlerFactory implements MessageHandlerFactory {
     @Override
-    public void run() {
-        String receiveMsg;
-        try {
-            while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("message::::" + receiveMsg);
-                TypeReceive data = Helper.FormatData(receiveMsg);
-
-                if (data == null) {
-                    System.out.println("Received invalid data: " + receiveMsg);
-                    continue;
-                }
-
-                switch (data.getType()) {
-                    case "load-balancer":
-                        balancer.loadBalanSocket = this.socket;
-                        break;
-                    case "login":
-                        handleLogin(data);
-                        break;
-                    case "chat":
-                        handleChat(data, receiveMsg);
-                        break;
-                    case "group":
-                        handleGroup(data);
-                        break;
-                    case "chat-group":
-                        handleChatGroup(data);
-                        break;
-                    case "users": {
-                        userOnines = data.getData();
-                        sendUserOnline();
-                        break;
-                    }
-                    default:
-                        System.out.println("Type not found: " + data.getType());
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading from socket: " + e.getMessage());
-        } finally {
-            cleanup();
-        }
+    public void handle(TypeReceive data, Socket socket, String userOnines, String message) {
+        balancer.loadBalanSocket = socket;
     }
+}
 
-    private void handleLogin(TypeReceive data) {
-        currentClient = new Client(data.getNameSend(), socket);
+class LoginMessageHandlerFactory implements MessageHandlerFactory {
+    @Override
+    public void handle(TypeReceive data, Socket socket, String userOnines, String message) {
+        Client currentClient = new Client(data.getNameSend(), socket);
         DataSave.clients.add(currentClient);
-        sendUserOnline();
+        SendUserOnlines.handle(userOnines);
     }
+}
 
-    private void handleChat(TypeReceive data, String receiveMsg) {
+class ChatMessageHandlerFactory implements MessageHandlerFactory {
+    @Override
+    public void handle(TypeReceive data, Socket socket, String userOnines, String receiveMsg) {
         Socket receiver = null;
         for (Client client : DataSave.clients) {
             if (client.getName().equals(data.getNameReceive())) {
@@ -127,19 +173,26 @@ public class Receive implements Runnable {
                         DataSave.clients.stream()
                                 .filter(client -> client.getName().equals(userInGroup))
                                 .forEach(client -> new Send(client.getSocket()).sendData(
-                                        "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive() + "&&data:" + data.getData()));
+                                        "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive()
+                                                + "&&data:" + data.getData()));
                     }
                 }
             }
         }
     }
+}
 
-    private void handleGroup(TypeReceive data) {
+class GroupMessageHandlerFactory implements MessageHandlerFactory {
+    @Override
+    public void handle(TypeReceive data, Socket socket, String userOnines, String receiveMsg) {
         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-        sendUserOnline();
+        SendUserOnlines.handle(userOnines);
     }
+}
 
-    private void handleChatGroup(TypeReceive data) {
+class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
+    @Override 
+    public void handle(TypeReceive data, Socket socket, String userOnines, String receiveMsg) {
         for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
             if (dataName.getKey().equals(data.getNameReceive())) {
                 String[] usersInGroup = dataName.getValue().split(", ");
@@ -152,31 +205,4 @@ public class Receive implements Runnable {
             }
         }
     }
-
-    private void cleanup() {
-        try {
-            System.out.println("Closing connection....");
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
-            if (currentClient != null) {
-                DataSave.clients.remove(currentClient);
-                sendUserOnline();
-                System.out.println(
-                        "Client " + currentClient.getName() + " disconnected and removed from active clients.");
-                new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
-            }
-        } catch (IOException e) {
-            System.out.println("Error closing client socket: " + e.getMessage());
-        }
-    }
-    
-    private static String getAllExceptMe(String listUserOnline, String myName) {
-        String regex = "\\b" + myName + "\\b,?\\s?";
-        String result = listUserOnline.replaceAll(regex, "");
-        result = result.replaceAll(",\\s*\\]", "]");
-        result = result.replaceAll("\\[\\s*\\]", "[]");
-        return result;
-    }
 }
-
