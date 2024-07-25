@@ -18,9 +18,9 @@ public class LoginForm extends JDialog {
 
     static public String username = "";
 
-    public LoginForm(JFrame parent, Socket socket) {
+    public LoginForm(JFrame parent, Socket newSocket) {
         super(parent);
-        this.socket = socket;
+        this.socket = newSocket;
         setTitle("Login");
 
         // Initialize components
@@ -48,9 +48,9 @@ public class LoginForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 username = tfEmail.getText();
-                new Send(this.socket).sendData("type:login&&send:" + username);
+                new Send(socket).sendData("type:login&&send:" + username);
                 dispose();
-                // new HomePage(null, this.socket, username);
+                // new HomePage(null, socket, username);
             }
         });
 

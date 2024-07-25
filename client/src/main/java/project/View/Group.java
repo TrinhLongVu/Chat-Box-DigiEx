@@ -11,10 +11,10 @@ public class Group extends JDialog {
 
     private Socket socket = null;
     private String myName;
-    public Group(JFrame parent, Socket socket, String myName) {
+    public Group(JFrame parent, Socket newSocket, String newName) {
         super(parent, "Create Group", true); // true for modal dialog
-        this.socket = socket;
-        this.myName = myName;
+        socket = newSocket;
+        myName = newName;
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setSize(400, 300);
         setLocationRelativeTo(parent);
@@ -37,8 +37,8 @@ public class Group extends JDialog {
                 }
             }
             if (selectedUsers.length() > 0) {
-                System.out.println( selectedUsers.toString() + this.myName);
-                new Send(this.socket).sendData("type:group&&receive:" + selectedUsers.toString() + this.myName + "&&" + "send:" + fieldName.getText());
+                System.out.println( selectedUsers.toString() + myName);
+                new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
             } else {
                 JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error", JOptionPane.ERROR_MESSAGE);
             }
