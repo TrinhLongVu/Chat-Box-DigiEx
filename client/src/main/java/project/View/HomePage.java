@@ -2,6 +2,7 @@ package project.View;
 
 import src.lib.Send;
 import src.lib.DataSave;
+import src.lib.LogHandler;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -14,6 +15,8 @@ import java.util.LinkedList;
 
 public class HomePage extends JFrame {
 
+    private LogHandler logger;
+    private final String logFileName = "Logger/application.log";
     private JTextArea userArea;
     private JButton btnSend;
     public static DefaultListModel<String> listModel = new DefaultListModel<>();
@@ -34,6 +37,13 @@ public class HomePage extends JFrame {
         setMinimumSize(new Dimension(450, 474));
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        try {
+            logger = new LogHandler(logFileName);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Failed to initialize logger: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         // Initialize components
         homePanel = new JPanel(new BorderLayout());
@@ -156,10 +166,19 @@ public class HomePage extends JFrame {
             tfInput.setText("");
             try {
                 new Send(socket).sendData("type:chat&&send:" + myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
-            } catch (Exception e) {
-                e.printStackTrace();
+                logger.info("Message sent: " + message);
+            } catch (IOException e) {
+                logger.error("Failed to send message: " + e.getMessage());
                 JOptionPane.showMessageDialog(this, "An error occurred while sending message: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        if (logger != null) {
+            logger.close();
         }
     }
 }
