@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -43,17 +42,10 @@ public class ServerManager {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
                         
-                        if (threadFree() > 2) {
-                            System.out.println("waiting.....");
-                            // new Send(clientSocket).sendData("Server is overloaded, adding client to pending queue.");
-                        }
-                        
                         try {
                             threadPool.submit(new Receive(clientSocket));
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, adding client to pending queue.");
-                            //   new Send(clientSocket).sendData("Server is overloaded, adding client to pending queue.");
-                            // handle overloaded
                         }
                         
                         if (((ThreadPoolExecutor) threadPool).getQueue().size() >= LIMIT_QUEUE_SIZE) {

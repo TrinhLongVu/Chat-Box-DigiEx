@@ -17,6 +17,7 @@ import javax.xml.crypto.Data;
 import src.lib.Send;
 import src.lib.Helper;
 import src.lib.TypeReceive;
+import org.project.ServerManager;
 
 class Database {
     public static List<ClientInfo> clients = new ArrayList<>();
@@ -27,29 +28,18 @@ public class LoadBalancer extends Thread {
     private static int LOAD_BALANCER_PORT;
     private boolean isClient = true;
     private final int MAX_CLIENTS = 1;
+    private int PORT_DEFAULT = 1234;
 
     public LoadBalancer(int port, boolean isClient) {
         LOAD_BALANCER_PORT = port;
         this.isClient = isClient;
         Database.serverList = new ArrayList<>();
-        
         try {
-            Socket server1 = new Socket("localhost", 1234);
-            // Socket server2 = new Socket("192.168.0.60", 3005);
-            Socket server3 = new Socket("localhost", 1235);
-            
-            Database.serverList.add(new ServerInfo("localhost", 1234, server1));
-            // Database.serverList.add(new ServerInfo("192.168.0.60", 3005, server2));
-            Database.serverList.add(new ServerInfo("localhost", 1235, server3));
-
-            new Thread(new Receive(server1, getAvailableServer())).start();
-            // new Thread(new Receive(server2, getAvailableServer())).start();
-            new Thread(new Receive(server3, getAvailableServer())).start();
-
-            new Send(server1).sendData("type:load-balancer");
-            // new Send(server2).send("type:load-balancer");
-            new Send(server3).sendData("type:load-balancer");
-
+            new ServerManager().startServer(PORT_DEFAULT);
+            Socket server = new Socket("localhost", PORT_DEFAULT);
+            Database.serverList.add(new ServerInfo("localhost", PORT_DEFAULT, server));
+            new Thread(new Receive(server, getAvailableServer())).start();
+            new Send(server).sendData("type:load-balancer");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -84,17 +74,54 @@ public class LoadBalancer extends Thread {
         Socket clientSocket = serverSocket.accept();
         System.out.println("Client connected to load balancer");
         ServerInfo availableServer = getAvailableServer();
+
         if (availableServer != null) {
             availableServer.incrementClients();
-            new Receive(clientSocket, availableServer).receiveData();
-            new Send(clientSocket).sendData("type:server" + "&&" + "data:" + availableServer.toString());
+            handleClientConnection(clientSocket, availableServer);
         } else {
-            System.out.println("All servers are full. Please try again later.");
-            // handle when servers full...........
+            handleFullServers(clientSocket);
         }
         clientSocket.close();
     }
 
+    private void handleClientConnection(Socket clientSocket, ServerInfo server) {
+        new Receive(clientSocket, server).receiveData();
+        new Send(clientSocket).sendData("type:server&&data:" + server.toString());
+    }
+    
+    // Method to handle the case when all servers are full
+    private void handleFullServers(Socket clientSocket) {
+        System.out.println("All servers are full. Please try again later.");
+
+        // Start a new server
+        PORT_DEFAULT++;
+        new ServerManager().startServer(PORT_DEFAULT);
+
+        // Connect to the new server
+        try {
+            Socket newServerSocket = new Socket("localhost", PORT_DEFAULT);
+            ServerInfo newServer = new ServerInfo("localhost", PORT_DEFAULT, newServerSocket);
+            Database.serverList.add(newServer);
+
+            // Start receiving data from the new server
+            new Thread(new Receive(newServerSocket, newServer)).start();
+            new Send(newServerSocket).sendData("type:load-balancer");
+
+            // Handle the client connection with the newly started server
+            ServerInfo availableServer = getAvailableServer();
+            if (availableServer != null) {
+                availableServer.incrementClients();
+                handleClientConnection(clientSocket, availableServer);
+            } else {
+                // Should not reach here if handled correctly
+                System.out.println("Unexpected error: No available server after creating a new one.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Failed to connect to the new server.");
+        }
+    }
+    
     public static void main(String[] args) throws IOException {
         int clientport = 3005;
         boolean isClient = true;
@@ -164,8 +191,6 @@ class ClientInfo {
     }
 }
 
-
-
 class Receive implements Runnable{
     private String receiveMsg = "";
     private BufferedReader br;
@@ -173,8 +198,8 @@ class Receive implements Runnable{
     private ServerInfo availableServer;
 
     public Receive(Socket ss, ServerInfo availableServer) {
-        this.socket = ss;
         this.availableServer = availableServer;
+        this.socket = ss;
         InputStream is;
         try {
             is = ss.getInputStream();
