@@ -35,7 +35,7 @@ public class HomePage extends JFrame {
         setTitle("Home Page");
         setMinimumSize(new Dimension(450, 474));
         setLocationRelativeTo(parent);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         try {
             logger = new LogHandler();
