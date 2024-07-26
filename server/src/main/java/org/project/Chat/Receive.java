@@ -78,7 +78,6 @@ public class Receive implements Runnable {
                 SendUserOnlines.handle(userOnines);
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
-                
                         try {
                             new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
                         } catch (IOException e) {
