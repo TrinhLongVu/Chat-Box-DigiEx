@@ -63,7 +63,6 @@ public class LoginForm extends JDialog {
         btnCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Cancel button clicked");
                 dispose();
                 System.exit(0);
             }

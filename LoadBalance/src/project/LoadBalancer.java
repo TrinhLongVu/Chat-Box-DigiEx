@@ -251,7 +251,7 @@ class Receive implements Runnable{
         String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("mes  sage::::" + receiveMsg);
+                System.out.println("message::::" + receiveMsg);
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
                 if (data == null) {

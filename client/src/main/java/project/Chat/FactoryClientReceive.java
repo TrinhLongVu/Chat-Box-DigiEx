@@ -52,7 +52,6 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
             }
         });
 
-        System.out.println("user selected: " + DataSave.selectedUser);
     }
 }
 

@@ -52,7 +52,6 @@ public class ServerManager {
                             new Send(clientSocket)
                                     .sendData("type:error&&data: server is full, please try again later.");
                         }
-                        System.out.println("quantity thread ::::: " + Thread.activeCount());
                         System.out.println("pool thread ::::: " + ((ThreadPoolExecutor) threadPool).getActiveCount());
                         System.out.println("Queued task count: " + ((ThreadPoolExecutor) threadPool).getQueue().size());
 
