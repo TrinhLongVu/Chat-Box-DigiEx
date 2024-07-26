@@ -16,7 +16,6 @@ import java.util.LinkedList;
 public class HomePage extends JFrame {
 
     private LogHandler logger;
-    private final String logFileName = "Logger/application.log";
     private JTextArea userArea;
     private JButton btnSend;
     public static DefaultListModel<String> listModel = new DefaultListModel<>();
@@ -39,7 +38,7 @@ public class HomePage extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         try {
-            logger = new LogHandler(logFileName);
+            logger = new LogHandler();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Failed to initialize logger: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             return;

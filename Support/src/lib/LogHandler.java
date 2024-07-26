@@ -5,14 +5,32 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class LogHandler {
+    private static final Logger logger = Logger.getLogger(LogHandler.class.getName());
+    private static final String LOG_FILE_PATH = "Logger/application.log";
     private BufferedWriter writer;
     private DateTimeFormatter dateTimeFormatter;
 
-    public LogHandler(String filePath) throws IOException {
-        writer = new BufferedWriter(new FileWriter(filePath, true));
-        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public LogHandler() throws IOException {
+        try {
+            Files.createDirectories(Paths.get("Logger"));
+
+            FileHandler fileHandler = new FileHandler(LOG_FILE_PATH, true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(fileHandler);
+
+            writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true));
+            dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");            
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to set up logger", e);
+        }
     }
 
     private void log(String level, String message) {
