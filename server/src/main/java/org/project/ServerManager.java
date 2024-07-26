@@ -2,6 +2,8 @@ package org.project;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,6 +19,7 @@ public class ServerManager {
     // 1 for thread pool and 1 for client
     private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
+    private Map<Integer, Socket> currentSocketMap = new HashMap<>(THREAD_POOL_SIZE);
 
     private volatile boolean running;
     private ExecutorService threadPool;
@@ -41,6 +44,15 @@ public class ServerManager {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
+
+                        if (currentSocketMap.size() >= THREAD_POOL_SIZE) {
+                            new Send(clientSocket)
+                                    .sendData("type:error&&data: server is full, please try again later.");
+                            clientSocket.close();
+                            continue;
+                        } else {
+                            currentSocketMap.put(null, clientSocket);
+                        }
                         
                         try {
                             threadPool.submit(new Receive(clientSocket));

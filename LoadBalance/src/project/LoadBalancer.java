@@ -87,7 +87,12 @@ public class LoadBalancer extends Thread {
 
     private void handleClientConnection(Socket clientSocket, ServerInfo server) {
         new Receive(clientSocket, server).receiveData();
-        new Send(clientSocket).sendData("type:server&&data:" + server.toString());
+        
+        try {
+            new Send(clientSocket).sendData("type:server&&data:" + server.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     // Method to handle the case when all servers are full
@@ -130,8 +135,3 @@ public class LoadBalancer extends Thread {
         loadBalancerClient.start();
     }
 }
-
-
-
-
-
