@@ -27,7 +27,7 @@ class Database {
 public class LoadBalancer extends Thread {
     private static int LOAD_BALANCER_PORT;
     private boolean isClient = true;
-    private final int MAX_CLIENTS = 1;
+    private final int MAX_CLIENTS = 2;
     private int PORT_DEFAULT = 1234;
 
     public LoadBalancer(int port, boolean isClient) {
