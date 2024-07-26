@@ -78,7 +78,12 @@ public class Receive implements Runnable {
                 SendUserOnlines.handle(userOnines);
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
-                new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
+                
+                        try {
+                            new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
             }
         } catch (IOException e) {
             System.out.println("Error closing client socket: " + e.getMessage());
@@ -118,7 +123,11 @@ class SendUserOnlines {
                 }
             }
 
-            new Send(client.getSocket()).sendData(resultSend);
+            try {
+                new Send(client.getSocket()).sendData(resultSend);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -156,12 +165,17 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                 receiver = client.getSocket();
             }
         }
-        // if receive have in server then send else send message to load balancer
-        if (receiver != null) {
-            new Send(receiver).sendData(
+
+        try {
+            // if receive have in server then send else send message to load balancer
+            if (receiver != null) {
+                new Send(receiver).sendData(
                     "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
-        } else {
-            new Send(balancer.loadBalanSocket).sendData(receiveMsg);
+            } else {
+                new Send(balancer.loadBalanSocket).sendData(receiveMsg);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         // group handle later
@@ -171,10 +185,16 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                 for (String userInGroup : usersInGroup) {
                     if (!userInGroup.equals(data.getNameSend())) {
                         DataSave.clients.stream()
-                                .filter(client -> client.getName().equals(userInGroup))
-                                .forEach(client -> new Send(client.getSocket()).sendData(
+                            .filter(client -> client.getName().equals(userInGroup))
+                            .forEach(client -> {
+                                try {
+                                    new Send(client.getSocket()).sendData(
                                         "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive()
-                                                + "&&data:" + data.getData()));
+                                            + "&&data:" + data.getData());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            });
                     }
                 }
             }
@@ -199,8 +219,15 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
                 for (String userInGroup : usersInGroup) {
                     DataSave.clients.stream()
                             .filter(client -> client.getName().equals(userInGroup))
-                            .forEach(client -> new Send(client.getSocket()).sendData(
-                                    "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData()));
+                            .forEach(client -> {
+                                try {
+                                    new Send(client.getSocket()).sendData(
+                                    "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        );
                 }
             }
         }
