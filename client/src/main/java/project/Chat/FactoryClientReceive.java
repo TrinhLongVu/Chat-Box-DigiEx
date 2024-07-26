@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import project.View.HomePage;
@@ -108,8 +109,6 @@ class ErrorMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         System.out.println("error: " + data.getData());
-        SwingUtilities.invokeLater(() -> {
-            HomePage.userLabel.setText("error: " + data.getData()); 
-        });
+        JOptionPane.showMessageDialog(null, "error: " + data.getData());
     }
 }

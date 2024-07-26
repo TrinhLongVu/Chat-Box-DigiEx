@@ -24,7 +24,8 @@ public class Receive extends Thread {
             is = ss.getInputStream();
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -49,7 +50,8 @@ public class Receive extends Thread {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

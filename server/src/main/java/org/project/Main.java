@@ -39,8 +39,6 @@ public class Main extends JFrame {
         // Add action listeners
         startButton.addActionListener(e -> {
             if (!serverManager.isRunning()) {
-                // new ServerManager().startServer(1234);
-                // new ServerManager().startServer(1235);
                 serverManager.startServer(SERVER_PORT);
                 statusLabel.setText("Server is running.");
                 portTextField.setText("Port: " + SERVER_PORT);

@@ -48,7 +48,7 @@ public class ServerManager {
                             System.out.println("Server is overloaded, adding client to pending queue.");
                         }
                         
-                        if (((ThreadPoolExecutor) threadPool).getQueue().size() >= LIMIT_QUEUE_SIZE) {
+                        if (((ThreadPoolExecutor) threadPool).getQueue().size() > 0) {
                             new Send(clientSocket)
                                     .sendData("type:error&&data: server is full, please try again later.");
                         }
