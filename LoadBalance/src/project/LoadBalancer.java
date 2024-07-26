@@ -12,17 +12,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.xml.crypto.Data;
 
 import src.lib.Send;
 import src.lib.Helper;
 import src.lib.TypeReceive;
 import org.project.ServerManager;
 
-class Database {
-    public static List<ClientInfo> clients = new ArrayList<>();
-    public static List<ServerInfo> serverList = new ArrayList<>();
-}
+import project.Chat.ServerInfo;
+import project.Chat.Database;
+import project.Chat.ClientInfo;
+import project.Chat.Receive;
+
+
 
 public class LoadBalancer extends Thread {
     private static int LOAD_BALANCER_PORT;
@@ -130,170 +131,7 @@ public class LoadBalancer extends Thread {
     }
 }
 
-class ServerInfo {
-    private String host;
-    private int port;
-    private int activeClients;
-    private Socket socket;
 
-    public ServerInfo(String host, int port, Socket ss) {
-        this.host = host;
-        this.socket = ss;
-        this.port = port;
-        this.activeClients = 0;
-    }
 
-    public String getHost() {
-        return host;
-    }
 
-    public Socket getSocket() {
-        return socket;
-    }
 
-    public int getPort() {
-        return port;
-    }
-
-    public synchronized int getActiveClients() {
-        return activeClients;
-    }
-
-    public synchronized void incrementClients() {
-        activeClients++;
-    }
-
-    public synchronized void decrementClients() {
-        activeClients--;
-    }
-
-    @Override
-    public String toString() {
-        return this.host + "@" + this.port;
-    }
-}
-
-class ClientInfo {
-    private String name;
-    private String serverinfo;
-
-    public ClientInfo(String name, String serverinfo) {
-        this.name = name;
-        this.serverinfo = serverinfo;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getServerinfo() {
-        return serverinfo;
-    }
-}
-
-class Receive implements Runnable{
-    private String receiveMsg = "";
-    private BufferedReader br;
-    private Socket socket;
-    private ServerInfo availableServer;
-
-    public Receive(Socket ss, ServerInfo availableServer) {
-        this.availableServer = availableServer;
-        this.socket = ss;
-        InputStream is;
-        try {
-            is = ss.getInputStream();
-            br = new BufferedReader(new InputStreamReader(is));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void receiveData() {
-        try {
-            this.receiveMsg = this.br.readLine();
-            if (receiveMsg != null) {
-                System.out.println("Received: " + receiveMsg);
-                TypeReceive data = Helper.FormatData(receiveMsg);
-
-                switch (data.getType()) {
-                    case "login": {
-                        
-                        Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
-                        updateUserOnline();
-                        return;
-                    }
-                    default:
-                        System.out.println("Received invalid data: " + receiveMsg);
-                        break;
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void updateUserOnline() {
-        for (ServerInfo server : Database.serverList) {
-            List<String> names = Database.clients.stream()
-                    .map(ClientInfo::getName)
-                    .collect(Collectors.toList());
-
-            try {
-                new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void run() {
-        String receiveMsg;
-        try {
-            while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("message::::" + receiveMsg);
-                TypeReceive data = Helper.FormatData(receiveMsg);
-
-                if (data == null) {
-                    System.out.println("Received invalid data: " + receiveMsg);
-                    continue;
-                }
-
-                switch (data.getType()) {
-                    case "chat": {
-                        for (ClientInfo client : Database.clients) {
-                            if (client.getName().equals(data.getNameReceive())) {
-                                for (ServerInfo server : Database.serverList) {
-                                    if (client.getServerinfo().equals(server.toString())) {
-                                        new Send(server.getSocket()).sendData(receiveMsg);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-
-                    case "disconnect": {
-                        Iterator<ClientInfo> iterator = Database.clients.iterator();
-                        while (iterator.hasNext()) {
-                            ClientInfo client = iterator.next();
-                            if (client.getName().equals(data.getNameSend())) {
-                                for (ServerInfo server : Database.serverList) {
-                                    if (client.getServerinfo().equals(server.toString())) {
-                                        server.decrementClients();
-                                    }
-                                }
-                                iterator.remove(); // Safe removal
-                            }
-                        }
-                        System.out.print(Database.clients.toString());
-                        updateUserOnline();
-                    }
-                    
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading from socket: " + e.getMessage());
-        }
-    }
-}
