@@ -56,7 +56,7 @@ public class ServerManager {
                             // handle overloaded
                         }
                         
-                        if (((ThreadPoolExecutor) threadPool).getQueue().size() >= LIMIT_QUEUE_SIZE) {
+                        if (((ThreadPoolExecutor) threadPool).getQueue().size() > 0) {
                             new Send(clientSocket)
                                     .sendData("type:error&&data: server is full, please try again later.");
                         }
