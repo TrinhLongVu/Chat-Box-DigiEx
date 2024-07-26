@@ -214,7 +214,11 @@ class Receive implements Runnable{
                     .map(ClientInfo::getName)
                     .collect(Collectors.toList());
 
-            new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
+            try {
+                new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
