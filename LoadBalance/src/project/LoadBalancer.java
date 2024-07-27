@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.xml.crypto.Data;
 
 import src.lib.Send;
 import src.lib.Helper;
@@ -36,11 +37,17 @@ public class LoadBalancer extends Thread {
         this.isClient = isClient;
         Database.serverList = new ArrayList<>();
         try {
-            new ServerManager().startServer(PORT_DEFAULT);
+            ServerManager serverManager = new ServerManager();
+            serverManager.startServer(PORT_DEFAULT);
+            serverManager.setIsRunning(true);
             Socket server = new Socket("localhost", PORT_DEFAULT);
             Database.serverList.add(new ServerInfo("localhost", PORT_DEFAULT, server));
+            ServerManagerInfo serverManagerInfo = new ServerManagerInfo(PORT_DEFAULT, serverManager);
+            Database.serverManagerInfoList.add(serverManagerInfo);
+            System.out.println("Status when created: " + serverManagerInfo.getServerManager().isRunning());
             new Thread(new Receive(server, getAvailableServer())).start();
             new Send(server).sendData("type:load-balancer");
+            System.out.println("Server started on port " + PORT_DEFAULT + ". Status: " + serverManager.isRunning());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -50,20 +57,24 @@ public class LoadBalancer extends Thread {
         try {
             ServerSocket serverSocket = new ServerSocket(LOAD_BALANCER_PORT);
             System.out.println("Load balancer started on port " + LOAD_BALANCER_PORT);
+            System.out.println("--------------------------------------------");
     
             while (true) {
                 if (isClient) {
-                    hanleClientLoad(serverSocket);
+                    handleClientLoad(serverSocket);
+                } else {
+                    System.out.println("Waiting for client...");
                 }
             }
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("error::::" + e.getMessage());
         }
-       
     }
 
     private ServerInfo getAvailableServer() {
         for (ServerInfo server : Database.serverList) {
+            System.out.println("Checking server on port " + server.getPort() + " with " + server.getActiveClients() + " active clients.");
             if (server.getActiveClients() < MAX_CLIENTS) {
                 return server;
             }
@@ -71,19 +82,55 @@ public class LoadBalancer extends Thread {
         return null;
     }
 
-    private void hanleClientLoad(ServerSocket serverSocket) throws IOException {
+    private void handleClientLoad(ServerSocket serverSocket) throws IOException {
+        System.out.println("--------------------------------------------");
         Socket clientSocket = serverSocket.accept();
         System.out.println("Client connected to load balancer");
-        ServerInfo availableServer = getAvailableServer();
 
+        ServerInfo availableServer = getAvailableServer();
+    
         if (availableServer != null) {
             availableServer.incrementClients();
             handleClientConnection(clientSocket, availableServer);
+            System.out.println("--------------------------------------------");
+            System.out.println("New client connected to server " + availableServer.getPort());
+            System.out.println("--------------------------------------------");
         } else {
-            handleFullServers(clientSocket);
+            System.out.println("--------------------------------------------");
+            System.out.println("No available server found. Checking for free server manager...");
+            ServerManagerInfo serverManagerInfo = getServerManagerInfoFree();
+            if (serverManagerInfo == null) {
+                System.out.println("No free server manager found. Starting new server...");
+                handleFullServers(clientSocket);
+            } else {
+                System.out.println("Found a free server manager. Handling client...");
+                handleClientWithServerManager(clientSocket, serverManagerInfo);
+            }
+            System.out.println("--------------------------------------------");
         }
         clientSocket.close();
+        System.out.println("--------------------------------------------");
     }
+
+    private void handleClientWithServerManager(Socket clientSocket, ServerManagerInfo serverManagerInfo) {
+        System.out.println("Handling client with server manager on port " + serverManagerInfo.getPort());
+        try {
+            Socket newServerSocket = new Socket("localhost", serverManagerInfo.getPort());
+            ServerInfo newServer = new ServerInfo("localhost", serverManagerInfo.getPort(), newServerSocket);
+            Database.serverList.add(newServer);
+    
+            // Start receiving data from the new server
+            new Thread(new Receive(newServerSocket, newServer)).start();
+            new Send(newServerSocket).sendData("type:load-balancer");
+    
+            // Handle the client connection with the newly started server
+            newServer.incrementClients();
+            handleClientConnection(clientSocket, newServer);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Failed to connect to the new server.");
+        }
+    }    
 
     private void handleClientConnection(Socket clientSocket, ServerInfo server) {
         new Receive(clientSocket, server).receiveData();
@@ -94,25 +141,39 @@ public class LoadBalancer extends Thread {
             e.printStackTrace();
         }
     }
+
+    private ServerManagerInfo getServerManagerInfoByPort(int port) {
+        for (ServerManagerInfo serverManagerInfo : Database.serverManagerInfoList) {
+            if (serverManagerInfo.getPort() == port) {
+                return serverManagerInfo;
+            }
+        }
+        return null;
+    }
     
-    // Method to handle the case when all servers are full
     private void handleFullServers(Socket clientSocket) {
-        System.out.println("All servers are full. Please try again later.");
-
-        // Start a new server
+        System.out.println("All servers are full. Starting a new server...");
+    
+        // Increment the port for the new server
         PORT_DEFAULT++;
-        new ServerManager().startServer(PORT_DEFAULT);
-
-        // Connect to the new server
+        int newServerPort = PORT_DEFAULT;
+        ServerManager newServerManager = new ServerManager();
+        newServerManager.startServer(newServerPort);
+        ServerManagerInfo newServerManagerInfo = new ServerManagerInfo(newServerPort, newServerManager);
+    
         try {
-            Socket newServerSocket = new Socket("localhost", PORT_DEFAULT);
-            ServerInfo newServer = new ServerInfo("localhost", PORT_DEFAULT, newServerSocket);
+            // Start the new server
+            Database.serverManagerInfoList.add(newServerManagerInfo);
+    
+            // Connect to the new server
+            Socket newServerSocket = new Socket("localhost", newServerPort);
+            ServerInfo newServer = new ServerInfo("localhost", newServerPort, newServerSocket);
             Database.serverList.add(newServer);
-
+    
             // Start receiving data from the new server
             new Thread(new Receive(newServerSocket, newServer)).start();
             new Send(newServerSocket).sendData("type:load-balancer");
-
+    
             // Handle the client connection with the newly started server
             ServerInfo availableServer = getAvailableServer();
             if (availableServer != null) {
@@ -122,12 +183,24 @@ public class LoadBalancer extends Thread {
                 // Should not reach here if handled correctly
                 System.out.println("Unexpected error: No available server after creating a new one.");
             }
+    
+            System.out.println("New server started on port " + newServerPort);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Failed to connect to the new server.");
+            System.out.println("Failed to start and connect to the new server.");
         }
     }
     
+    
+
+    public ServerManagerInfo getServerManagerInfoFree() {
+        System.out.println("Checking for free server manager...");
+        for (ServerManagerInfo serverManagerInfo : Database.serverManagerInfoList) {
+            System.out.println("Found free server manager on port " + serverManagerInfo.getPort() + " and " + serverManagerInfo.isRunning);
+        }
+        return null;
+    }
+
     public static void main(String[] args) throws IOException {
         int clientport = 3005;
         boolean isClient = true;

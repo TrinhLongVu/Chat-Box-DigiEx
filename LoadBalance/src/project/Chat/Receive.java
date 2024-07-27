@@ -1,4 +1,5 @@
 package project.Chat;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +8,10 @@ import java.net.Socket;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.project.ServerManager;
+
+import project.ServerManagerInfo;
 import src.lib.Helper;
 import src.lib.Send;
 import src.lib.TypeReceive;
@@ -106,6 +111,7 @@ public class Receive implements Runnable{
                                 iterator.remove(); // Safe removal
                             }
                         }
+                        
                         System.out.print(Database.clients.toString());
                         updateUserOnline();
                     }
