@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.xml.crypto.Data;
 
@@ -35,7 +36,7 @@ public class LoadBalancer extends Thread {
     public LoadBalancer(int port, boolean isClient) {
         LOAD_BALANCER_PORT = port;
         this.isClient = isClient;
-        Database.serverList = new ArrayList<>();
+        Database.serverList = new CopyOnWriteArrayList<>();
         try {
             ServerManager serverManager = new ServerManager();
             serverManager.startServer(PORT_DEFAULT);
@@ -144,15 +145,6 @@ public class LoadBalancer extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private ServerManagerInfo getServerManagerInfoByPort(int port) {
-        for (ServerManagerInfo serverManagerInfo : Database.serverManagerInfoList) {
-            if (serverManagerInfo.getPort() == port) {
-                return serverManagerInfo;
-            }
-        }
-        return null;
     }
     
     private void handleFullServers(Socket clientSocket) {
