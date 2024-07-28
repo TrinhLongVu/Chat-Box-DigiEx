@@ -5,18 +5,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.swing.*;
 
-import org.project.ServerManager;
-
+import project.LoadBalancer;
 import project.ServerManagerInfo;
+import project.ServerManagerUI;
 import src.lib.Helper;
 import src.lib.Send;
 import src.lib.TypeReceive;
 
-public class Receive implements Runnable{
+public class Receive implements Runnable {
     private String receiveMsg = "";
     private BufferedReader br;
     private Socket socket;
@@ -43,7 +43,6 @@ public class Receive implements Runnable{
 
                 switch (data.getType()) {
                     case "login": {
-                        
                         Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
                         updateUserOnline();
                         return;
@@ -73,7 +72,6 @@ public class Receive implements Runnable{
     }
 
     public void run() {
-        String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
                 System.out.println("message::::" + receiveMsg);
@@ -99,27 +97,44 @@ public class Receive implements Runnable{
                     }
 
                     case "disconnect": {
-                        Iterator<ClientInfo> iterator = Database.clients.iterator();
-                        while (iterator.hasNext()) {
-                            ClientInfo client = iterator.next();
+                        // Using removeIf to remove the client
+                        Database.clients.removeIf(client -> {
                             if (client.getName().equals(data.getNameSend())) {
                                 for (ServerInfo server : Database.serverList) {
                                     if (client.getServerinfo().equals(server.toString())) {
                                         server.decrementClients();
+                                        if (server.getActiveClients() == 0) {
+                                            for (ServerManagerInfo serverManagerInfo : Database.serverManagerInfoList) {
+                                                if (serverManagerInfo.getPort() == server.getPort()) {
+                                                    serverManagerInfo.setIsRunning(false);
+                                                    updateUI();
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                                iterator.remove(); // Safe removal
+                                return true; // Remove the client
                             }
-                        }
-                        
+                            return false; // Do not remove the client
+                        });
+
                         System.out.print(Database.clients.toString());
                         updateUserOnline();
+                        break;
                     }
-                    
                 }
             }
         } catch (IOException e) {
             System.err.println("Error reading from socket: " + e.getMessage());
         }
+    }
+
+    private void updateUI() {
+        SwingUtilities.invokeLater(() -> {
+            ServerManagerUI ui = LoadBalancer.getUI();
+            if (ui != null) {
+                ui.updateServerList(Database.serverManagerInfoList);
+            }
+        });
     }
 }
