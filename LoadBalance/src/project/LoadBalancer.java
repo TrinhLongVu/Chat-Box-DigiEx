@@ -96,7 +96,9 @@ public class LoadBalancer extends Thread {
             System.out.println("New client connected to server " + availableServer.getPort());
             System.out.println("--------------------------------------------");
         } else {
+
             System.out.println("--------------------------------------------");
+
             System.out.println("No available server found. Checking for free server manager...");
             ServerManagerInfo serverManagerInfo = getServerManagerInfoFree();
             if (serverManagerInfo == null) {
@@ -106,7 +108,9 @@ public class LoadBalancer extends Thread {
                 System.out.println("Found a free server manager. Handling client...");
                 handleClientWithServerManager(clientSocket, serverManagerInfo);
             }
+
             System.out.println("--------------------------------------------");
+
         }
         clientSocket.close();
         System.out.println("--------------------------------------------");
@@ -159,11 +163,14 @@ public class LoadBalancer extends Thread {
         int newServerPort = PORT_DEFAULT;
         ServerManager newServerManager = new ServerManager();
         newServerManager.startServer(newServerPort);
+        newServerManager.setIsRunning(true);
         ServerManagerInfo newServerManagerInfo = new ServerManagerInfo(newServerPort, newServerManager);
     
         try {
             // Start the new server
             Database.serverManagerInfoList.add(newServerManagerInfo);
+
+            Thread.sleep(1000);
     
             // Connect to the new server
             Socket newServerSocket = new Socket("localhost", newServerPort);
@@ -185,7 +192,7 @@ public class LoadBalancer extends Thread {
             }
     
             System.out.println("New server started on port " + newServerPort);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             System.out.println("Failed to start and connect to the new server.");
         }
@@ -196,7 +203,10 @@ public class LoadBalancer extends Thread {
     public ServerManagerInfo getServerManagerInfoFree() {
         System.out.println("Checking for free server manager...");
         for (ServerManagerInfo serverManagerInfo : Database.serverManagerInfoList) {
-            System.out.println("Found free server manager on port " + serverManagerInfo.getPort() + " and " + serverManagerInfo.isRunning);
+            if (serverManagerInfo.getServerManager().isRunning() == false) {
+                System.out.println("Found free server manager on port " + serverManagerInfo.getPort());
+                return serverManagerInfo;
+            }
         }
         return null;
     }
