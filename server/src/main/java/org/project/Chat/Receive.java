@@ -79,7 +79,7 @@ public class Receive implements Runnable {
             }
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
-                SendUserOnlines.handle(userOnlines);
+                SendUsersOnline.handle(userOnlines);
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
                 try {

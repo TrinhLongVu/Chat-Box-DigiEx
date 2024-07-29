@@ -43,7 +43,7 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
         DataSave.clients.add(currentClient);
 
         Receive.receiveClientMap.put(socket, currentClient);
-        SendUserOnlines.handle(userOnlines);
+        SendUsersOnline.handle(userOnlines);
     }
 }
 
@@ -97,7 +97,7 @@ class GroupMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String receiveMsg) {
         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-        SendUserOnlines.handle(userOnlines);
+        SendUsersOnline.handle(userOnlines);
     }
 }
 

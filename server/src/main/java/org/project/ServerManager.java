@@ -41,20 +41,22 @@ public class ServerManager {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
-                        
+                        boolean clientHandled = false;
                         try {
                             threadPool.submit(new Receive(clientSocket));
+                            clientHandled = true;
                         } catch (RejectedExecutionException e) {
-                            System.out.println("Server is overloaded, adding client to pending queue.");
+                            System.out.println("Server is overloaded, client will be informed.");
                         }
-                        
-                        if (((ThreadPoolExecutor) threadPool).getQueue().size() > 0) {
+                        ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
+                        System.out.println("Thread pool active count: " + tpe.getActiveCount());
+                        System.out.println("Thread pool queued task count: " + tpe.getQueue().size());
+                        System.out.println("Thread pool completed task count: " + tpe.getCompletedTaskCount());
+                        System.out.println("send" + clientHandled + "...");
+                        if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
-                                    .sendData("type:error&&data: server is full, please try again later.");
+                                .sendData("type:error&&data: server is full, please try again later.");
                         }
-                        System.out.println("pool thread ::::: " + ((ThreadPoolExecutor) threadPool).getActiveCount());
-                        System.out.println("Queued task count: " + ((ThreadPoolExecutor) threadPool).getQueue().size());
-
                     } catch (IOException e) {
                         if (running) {
                             System.out.println("Error accepting connection: " + e.getMessage());
