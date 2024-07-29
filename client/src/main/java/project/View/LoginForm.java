@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.net.Socket;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class LoginForm extends JDialog {
     private JTextField tfEmail;
@@ -54,6 +55,9 @@ public class LoginForm extends JDialog {
                     new Send(socket).sendData("type:login&&send:" + username);
                 } catch (IOException ex) {
                     ex.printStackTrace();
+                    Logger.getLogger(LoginForm.class.getName()).log(java.util.logging.Level.SEVERE,
+                            "Error: {0}" , ex.getMessage());
+
                 }
                 dispose();
                 // new HomePage(null, socket, username);

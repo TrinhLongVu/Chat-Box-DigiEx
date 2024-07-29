@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 public class HomePage extends JFrame {
 
@@ -40,7 +41,9 @@ public class HomePage extends JFrame {
         try {
             logger = new LogHandler();
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Failed to initialize logger: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to initialize logger: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(HomePage.class.getName()).log(java.util.logging.Level.SEVERE, "Error: {0}", e.getMessage());
             return;
         }
 

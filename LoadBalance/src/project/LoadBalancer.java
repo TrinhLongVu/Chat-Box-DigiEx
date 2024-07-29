@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import src.lib.Send;
 import src.lib.TypeReceive;
@@ -31,6 +32,8 @@ public class LoadBalancer extends Thread {
             initializeServerManager();
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+
         }
     }
 
@@ -59,14 +62,16 @@ public class LoadBalancer extends Thread {
             }
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+
         }
     }
 
     private ServerInfo getAvailableServer() {
         return Database.serverList.stream()
-            .filter(server -> server.getActiveClients() < MAX_CLIENTS)
-            .findFirst()
-            .orElse(null);
+                .filter(server -> server.getActiveClients() < MAX_CLIENTS)
+                .findFirst()
+                .orElse(null);
     }
 
     private void handleClientLoad(ServerSocket serverSocket) throws IOException {
@@ -106,6 +111,8 @@ public class LoadBalancer extends Thread {
                     connectToNewServer(serverManagerInfo.getPort(), clientSocket);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+
                 }
                 return;
             }
@@ -145,6 +152,9 @@ public class LoadBalancer extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Failed to connect to the new server.");
+            Logger.getLogger(LoadBalancer.class.getName()).log(null,
+                    "Failed to start and connect to the new server: {0}", e.getMessage());
+
         }
     }
 

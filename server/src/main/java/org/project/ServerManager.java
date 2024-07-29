@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import org.project.Chat.Receive;
 import src.lib.Send;
@@ -47,6 +48,7 @@ public class ServerManager {
                             clientHandled = true;
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, client will be informed.");
+                            Logger.getLogger(ServerManager.class.getName()).log(null, "Server is overloaded, adding client to pending queue. " + e.getMessage());
                         }
                         ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                         System.out.println("Thread pool active count: " + tpe.getActiveCount());

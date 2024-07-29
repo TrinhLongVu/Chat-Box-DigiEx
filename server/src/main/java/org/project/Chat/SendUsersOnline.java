@@ -5,6 +5,7 @@ import src.lib.DataSave;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import src.lib.Send;
 
 public class SendUsersOnline {
@@ -24,6 +25,8 @@ public class SendUsersOnline {
                 new Send(client.getSocket()).sendData(resultSend);
             } catch (IOException e) {
                 e.printStackTrace();
+                Logger.getLogger(SendUsersOnline.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+
             }
         }
     }

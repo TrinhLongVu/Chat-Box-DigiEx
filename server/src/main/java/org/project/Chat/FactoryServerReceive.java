@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import src.lib.Client;
 import src.lib.DataSave;
 import src.lib.Send;
@@ -61,12 +62,13 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
             // if receive have in server then send else send message to load balancer
             if (receiver != null) {
                 new Send(receiver).sendData(
-                    "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
             } else {
                 new Send(balancer.loadBalanSocket).sendData(receiveMsg);
             }
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
         }
 
         // group handle later
@@ -76,16 +78,19 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                 for (String userInGroup : usersInGroup) {
                     if (!userInGroup.equals(data.getNameSend())) {
                         DataSave.clients.stream()
-                            .filter(client -> client.getName().equals(userInGroup))
-                            .forEach(client -> {
-                                try {
-                                    new Send(client.getSocket()).sendData(
-                                        "type:chat-group&&send:" + data.getNameSend() + "," + data.getNameReceive()
-                                            + "&&data:" + data.getData());
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            });
+                                .filter(client -> client.getName().equals(userInGroup))
+                                .forEach(client -> {
+                                    try {
+                                        new Send(client.getSocket()).sendData(
+                                                "type:chat-group&&send:" + data.getNameSend() + ","
+                                                        + data.getNameReceive()
+                                                        + "&&data:" + data.getData());
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(null,
+                                                "An error occurred: {0}" , e.getMessage());
+                                    }
+                                });
                     }
                 }
             }

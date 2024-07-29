@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 public class Group extends JDialog {
 
@@ -43,6 +44,8 @@ public class Group extends JDialog {
                     new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
                 } catch (IOException ex) {
                     ex.printStackTrace();
+                    Logger.getLogger(Group.class.getName()).log(java.util.logging.Level.SEVERE, "Error: {0}", ex.getMessage());
+
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error", JOptionPane.ERROR_MESSAGE);
