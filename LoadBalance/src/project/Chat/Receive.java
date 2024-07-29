@@ -7,6 +7,9 @@ import java.net.Socket;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.xml.crypto.Data;
+
 import src.lib.Helper;
 import src.lib.Send;
 import src.lib.TypeReceive;
@@ -99,8 +102,25 @@ public class Receive implements Runnable{
                             ClientInfo client = iterator.next();
                             if (client.getName().equals(data.getNameSend())) {
                                 for (ServerInfo server : Database.serverList) {
+                                    Database.clients.remove(client);
                                     if (client.getServerinfo().equals(server.toString())) {
                                         server.decrementClients();
+                                    }
+                                    
+
+                                    if (server.getActiveClients() == 0) {
+                                        server.getSocket().close();
+                                        Database.serverList.remove(server);
+                                        for (ServerManagerInfo serverManager : Database.oldServerManager) {
+                                            if (serverManager.getPort() == server.getPort()) {
+                                                serverManager.setOpenning(false);
+                                                System.out.print(serverManager.getOpenning());
+                                                serverManager.getServerManager().stopServer();
+                                                System.out.print(Database.clients.toString());
+                                                updateUserOnline();
+                                                return;
+                                            }
+                                        }
                                     }
                                 }
                                 iterator.remove(); // Safe removal
