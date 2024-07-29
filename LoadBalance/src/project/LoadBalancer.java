@@ -8,6 +8,10 @@ import java.util.List;
 
 import src.lib.Send;
 import src.lib.TypeReceive;
+import java.util.concurrent.CopyOnWriteArrayList;
+import javax.swing.SwingUtilities;
+
+import src.lib.Send;
 import org.project.ServerManager;
 
 import project.Chat.ServerInfo;
@@ -21,6 +25,7 @@ public class LoadBalancer extends Thread {
     private static final int MAX_CLIENTS = 2;
     private static final int INITIAL_PORT = 1234;
     private int portDefault = INITIAL_PORT;
+    private static ServerManagerUI ui;
 
     public LoadBalancer(int port, boolean isClient) {
         LOAD_BALANCER_PORT = port;
@@ -47,7 +52,17 @@ public class LoadBalancer extends Thread {
         new Send(serverSocket).sendData("type:load-balancer");
     }
 
-    @Override
+    private void updateUI() {
+        SwingUtilities.invokeLater(() -> {
+            ui.updateServerList(Database.serverManagerInfoList);
+        });
+    }
+
+    public static ServerManagerUI getUI() {
+        return ui;
+    }
+
+
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(LOAD_BALANCER_PORT)) {
             System.out.println("Load balancer started on port " + LOAD_BALANCER_PORT);
@@ -82,6 +97,29 @@ public class LoadBalancer extends Thread {
             }
         }
     }
+
+    private void handleClientWithServerManager(Socket clientSocket, ServerManagerInfo serverManagerInfo) {
+        System.out.println("Handling client with server manager on port " + serverManagerInfo.getPort());
+        try {
+            serverManagerInfo.getServerManager().setIsRunning(true);
+            Socket newServerSocket = new Socket("localhost", serverManagerInfo.getPort());
+            ServerInfo newServer = new ServerInfo("localhost", serverManagerInfo.getPort(), newServerSocket);
+            Database.serverList.add(newServer);
+    
+            // Start receiving data from the new server
+            new Thread(new Receive(newServerSocket, newServer)).start();
+            new Send(newServerSocket).sendData("type:load-balancer");
+    
+            // Handle the client connection with the newly started server
+            newServer.incrementClients();
+            handleClientConnection(clientSocket, newServer);
+
+            updateUI();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Failed to connect to the new server.");
+        }
+    }    
 
     private void handleClientConnection(Socket clientSocket, ServerInfo server) {
         new Receive(clientSocket, server).receiveData();
@@ -144,12 +182,12 @@ public class LoadBalancer extends Thread {
             connectToNewServer(portDefault, clientSocket);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Failed to connect to the new server.");
+            System.out.println("Failed to start and connect to the new server.");
         }
     }
 
-    public static void main(String[] args) {
-        int clientPort = 3005;
+    public static void main(String[] args) throws IOException {
+        int clientport = 3005;
         boolean isClient = true;
         LoadBalancer loadBalancerClient = new LoadBalancer(clientPort, isClient);
         loadBalancerClient.start();

@@ -2,6 +2,8 @@ package org.project;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -66,7 +68,7 @@ public class ServerManager {
             } catch (IOException e) {
                 System.out.println("Error starting server: " + e.getMessage());
             } finally {
-                shutdown();
+                // shutdown();
             }
         }).start();
     }
@@ -94,12 +96,20 @@ public class ServerManager {
         }
     }
 
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
     public void stopServer() {
         shutdown();
     }
 
     public boolean isRunning() {
         return running;
+    }
+
+    public void setIsRunning(boolean isRunning) {
+        this.running = isRunning;
     }
 
     public int threadFree() {

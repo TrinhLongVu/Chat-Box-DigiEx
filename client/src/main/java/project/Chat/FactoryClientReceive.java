@@ -41,7 +41,7 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
     public void handle(TypeReceive data, Socket socket, String message) {
         String content = data.getData();
 
-         String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
+        String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
         List<String> namesList = Arrays.asList(namesArray);
         DataSave.userOnline = namesList;
 
