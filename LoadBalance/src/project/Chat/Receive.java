@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,7 @@ public class Receive implements Runnable{
                 new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
             } catch (Exception e) {
                 e.printStackTrace();
-                Logger.getLogger(Receive.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+                Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
             }
         }
@@ -137,7 +138,7 @@ public class Receive implements Runnable{
             }
         } catch (IOException e) {
             System.err.println("Error reading from socket: " + e.getMessage());
-            Logger.getLogger(Receive.class.getName()).log(null, "Error reading from socket: {0}", e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
 
         }
     }

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class balancer {
@@ -66,7 +67,7 @@ public class Receive implements Runnable {
             }
         } catch (IOException e) {
             System.err.println("Error reading from socket: " + e.getMessage());
-            Logger.getLogger(Receive.class.getName()).log(null, "Error reading from socket: {0}", e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
 
         } finally {
             cleanup();
@@ -89,13 +90,13 @@ public class Receive implements Runnable {
                     new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Logger.getLogger(Receive.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+                    Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
                 }
 
             }
         } catch (IOException e) {
             System.out.println("Error closing client socket: " + e.getMessage());
-            Logger.getLogger(Receive.class.getName()).log(null, "Error closing client socket: {0}", e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}", e.getMessage());
         }
     }
 }
