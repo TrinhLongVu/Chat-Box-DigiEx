@@ -4,6 +4,8 @@ import java.io.IOException;
 import src.lib.Client;
 import src.lib.DataSave;
 import java.util.Map;
+import java.util.logging.Logger;
+
 import src.lib.Send;
 import java.util.List;
 
@@ -24,6 +26,7 @@ public class SendUsersOnline {
                 new Send(client.getSocket()).sendData(resultSend);
             } catch (IOException e) {
                 e.printStackTrace();
+                Logger.getLogger(SendUsersOnline.class.getName()).log(null, "An error occurred: " + e.getMessage());
             }
         }
     }

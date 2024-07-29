@@ -8,7 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.Socket;
-
+import java.util.logging.Logger;
 import java.io.IOException;
 
 public class LoginForm extends JDialog {
@@ -53,6 +53,7 @@ public class LoginForm extends JDialog {
                 try {
                     new Send(socket).sendData("type:login&&send:" + username);
                 } catch (IOException ex) {
+                    Logger.getLogger(LoginForm.class.getName()).log(java.util.logging.Level.SEVERE, "Error: " + ex.getMessage());
                     ex.printStackTrace();
                 }
                 dispose();

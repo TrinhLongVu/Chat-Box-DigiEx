@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import org.project.Chat.Receive;
 import src.lib.Send;
@@ -58,6 +59,7 @@ public class ServerManager {
                             threadPool.submit(new Receive(clientSocket));
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, adding client to pending queue.");
+                            Logger.getLogger(ServerManager.class.getName()).log(null, "Server is overloaded, adding client to pending queue. " + e.getMessage());
                         }
                         
                         if (((ThreadPoolExecutor) threadPool).getQueue().size() > 0) {
@@ -71,10 +73,12 @@ public class ServerManager {
                         if (running) {
                             System.out.println("Error accepting connection: " + e.getMessage());
                         }
+                        Logger.getLogger(ServerManager.class.getName()).log(null, "Error accepting connection: " + e.getMessage());
                     }
                 }
             } catch (IOException e) {
                 System.out.println("Error starting server: " + e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(null, "Error starting server: " + e.getMessage());
             } finally {
                 // shutdown();
             }
@@ -89,6 +93,7 @@ public class ServerManager {
                 serverSocket.close();
             } catch (IOException e) {
                 System.out.println("Error closing server socket: " + e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(null, "Error closing server socket: " + e.getMessage());
             }
         }
         if (threadPool != null && !threadPool.isShutdown()) {
@@ -100,6 +105,7 @@ public class ServerManager {
             } catch (InterruptedException e) {
                 threadPool.shutdownNow();
                 Thread.currentThread().interrupt();
+                Logger.getLogger(ServerManager.class.getName()).log(null, "Error shutting down server: " + e.getMessage());
             }
         }
     }

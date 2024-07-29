@@ -1,6 +1,7 @@
 package project.Chat;
 
 import src.lib.TypeReceive;
+import project.Main;
 import project.View.HomePage;
 import project.View.LoginForm;
 
@@ -10,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.logging.Logger;
+
 import src.lib.Helper;
 import src.lib.Send;
 
@@ -26,6 +29,7 @@ public class Receive extends Thread {
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getLogger(Main.class.getName()).log(null, "An error occurred: " + e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -52,6 +56,7 @@ public class Receive extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getLogger(Receive.class.getName()).log(null, "An error occurred: " + e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -65,7 +70,8 @@ public class Receive extends Thread {
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
-            System.out.println("Invalid port number format");
+            Logger.getLogger(Receive.class.getName()).log(null, "Invalid port number format: " + e.getMessage());
+
             return;
         }
         Socket s = null;
@@ -76,7 +82,8 @@ public class Receive extends Thread {
             new Send(s).sendData("type:login&&send:" + LoginForm.username);
             new HomePage(null, s, LoginForm.username);
         } catch (IOException e) {
-            System.out.println("Unable to connect to server: " + e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(null, "Unable to connect to server: " + e.getMessage());
+            
         }
     }
 }

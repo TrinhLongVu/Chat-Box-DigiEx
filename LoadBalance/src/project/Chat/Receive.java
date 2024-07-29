@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.*;
 
@@ -67,6 +68,7 @@ public class Receive implements Runnable {
                 new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
             } catch (Exception e) {
                 e.printStackTrace();
+                Logger.getLogger(Receive.class.getName()).log(null, "An error occurred: " + e.getMessage());
             }
         }
     }
@@ -126,6 +128,7 @@ public class Receive implements Runnable {
             }
         } catch (IOException e) {
             System.err.println("Error reading from socket: " + e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(null, "Error reading from socket: " + e.getMessage());
         }
     }
 

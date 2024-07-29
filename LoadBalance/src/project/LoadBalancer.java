@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Logger;
+
 import javax.swing.SwingUtilities;
 
 import src.lib.Send;
@@ -49,6 +51,7 @@ public class LoadBalancer extends Thread {
             updateUI();
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: " + e.getMessage());
         }
     }
 
@@ -78,6 +81,7 @@ public class LoadBalancer extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("error::::" + e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: " + e.getMessage());
         }
     }
 
@@ -145,6 +149,7 @@ public class LoadBalancer extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Failed to connect to the new server.");
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: " + e.getMessage());
         }
     }    
 
@@ -155,6 +160,7 @@ public class LoadBalancer extends Thread {
             new Send(clientSocket).sendData("type:server&&data:" + server.toString());
         } catch (IOException e) {
             e.printStackTrace();
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: " + e.getMessage());
         }
     }
     
@@ -200,7 +206,8 @@ public class LoadBalancer extends Thread {
             updateUI();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            System.out.println("Failed to start and connect to the new server.");
+            // System.out.println("Failed to start and connect to the new server.");
+            Logger.getLogger(LoadBalancer.class.getName()).log(null, "Failed to start and connect to the new server: " + e.getMessage());
         }
     }
     

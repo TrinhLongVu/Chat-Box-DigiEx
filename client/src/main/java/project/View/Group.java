@@ -5,8 +5,12 @@ import src.lib.DataSave;
 
 import java.io.IOException;
 import javax.swing.*;
+
+import project.Chat.Receive;
+
 import java.awt.*;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 public class Group extends JDialog {
 
@@ -43,6 +47,8 @@ public class Group extends JDialog {
                     new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
                 } catch (IOException ex) {
                     ex.printStackTrace();
+                    Logger.getLogger(Group.class.getName()).log(java.util.logging.Level.SEVERE, "Error: " + ex.getMessage());
+
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error", JOptionPane.ERROR_MESSAGE);
