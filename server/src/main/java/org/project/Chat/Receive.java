@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class Balancer {
-    public static Socket loadBalanceSocket = null;
+class balancer {
+    public static Socket loadBalanSocket = null;
 }
 
 public class Receive implements Runnable {
@@ -85,7 +85,7 @@ public class Receive implements Runnable {
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
                 try {
-                    new Send(Balancer.loadBalanceSocket).sendData("type:disconnect&&send:" + currentClient.getName());
+                    new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
                 } catch (IOException e) {
                     Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
                 }

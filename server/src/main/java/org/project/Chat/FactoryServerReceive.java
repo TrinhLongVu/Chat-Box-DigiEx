@@ -37,7 +37,7 @@ interface MessageHandlerFactory {
 class loadBalancerMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String message) {
-        Balancer.loadBalanceSocket = socket;
+        balancer.loadBalanSocket = socket;
     }
 }
 
@@ -50,7 +50,7 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
         Receive.receiveClientMap.put(socket, currentClient);
         SendUsersOnline.handle(userOnlines);
         try {
-            new Send(Balancer.loadBalanceSocket).sendData(
+            new Send(balancer.loadBalanSocket).sendData(
                 "type:server-send-clients&&send:" + data.getNameSend() + "," + ServerManager.PORT);
         } catch (IOException e) {
             e.printStackTrace();
@@ -75,7 +75,7 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                 new Send(receiver).sendData(
                         "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
             } else {
-                new Send(Balancer.loadBalanceSocket).sendData(receiveMsg);
+                new Send(balancer.loadBalanSocket).sendData(receiveMsg);
             }
         } catch (IOException e) {
             Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
