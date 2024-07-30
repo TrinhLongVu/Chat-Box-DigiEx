@@ -70,7 +70,8 @@ public class LoadBalancer extends Thread {
 
     private void handleClientLoad(ServerSocket serverSocket) throws IOException {
         try (Socket clientSocket = serverSocket.accept()) {
-            System.out.println("Client connected to load balancer");
+            System.out.println("Client connected to load balancer....");
+            Thread.sleep(2000);
             ServerInfo availableServer = getAvailableServer();
 
             if (availableServer != null) {
@@ -79,6 +80,9 @@ public class LoadBalancer extends Thread {
             } else {
                 handleFullServers(clientSocket);
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
         }
     }
 
