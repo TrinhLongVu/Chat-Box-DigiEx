@@ -1,10 +1,22 @@
-find src -name "*.java" -print | xargs javac -cp lib/support.jar -cp lib/server.jar -d target/classes
+current_dir=$(pwd)
+
+echo "Build Support library"
+cd ../support
+./run.sh
+
+echo "Build Server library"
+cd ../server
+./build_and_run.sh
+
+# Return to the original directory
+cd "$current_dir"
+
+find src -name "*.java" -print | xargs javac -cp ../support/target/support.jar -cp ../server/target/server.jar -d target/classes
 
 mkdir -p target/lib
-cp lib/support.jar target/lib/
-cp lib/server.jar target/lib/
+cp ../support/target/support.jar target/lib/
+cp ../server/target/server.jar target/lib/
 
 jar cvfm target/load.jar META-INF/MANIFEST.MF -C target/classes . -C target lib
 
 java -jar target/load.jar
-

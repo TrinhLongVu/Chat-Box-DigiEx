@@ -36,21 +36,6 @@ public class Receive implements Runnable{
     public void receiveData() {
         try {
             this.receiveMsg = this.br.readLine();
-            if (receiveMsg != null) {
-                System.out.println("Received: " + receiveMsg);
-                TypeReceive data = Helper.FormatData(receiveMsg);
-
-                switch (data.getType()) {
-                    case "login-load": {
-                        // Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
-                        // updateUserOnline();
-                        return;
-                    }
-                    default:
-                        System.out.println("Received invalid data: " + receiveMsg);
-                        break;
-                }
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
