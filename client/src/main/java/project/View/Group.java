@@ -44,7 +44,6 @@ public class Group extends JDialog {
                 try {
                     new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
                 } catch (IOException ex) {
-                    ex.printStackTrace();
                     Logger.getLogger(Group.class.getName()).log(Level.SEVERE, "Error: {0}", ex.getMessage());
 
                 }

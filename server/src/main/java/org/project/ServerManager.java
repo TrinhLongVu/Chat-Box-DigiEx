@@ -43,10 +43,8 @@ public class ServerManager {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
-                        boolean clientHandled = false;
                         try {
                             threadPool.submit(new Receive(clientSocket));
-                            clientHandled = true;
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, client will be informed.");
                             Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING, "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
@@ -55,7 +53,6 @@ public class ServerManager {
                         System.out.println("Thread pool active count: " + tpe.getActiveCount());
                         System.out.println("Thread pool queued task count: " + tpe.getQueue().size());
                         System.out.println("Thread pool completed task count: " + tpe.getCompletedTaskCount());
-                        System.out.println("send" + clientHandled + "...");
                         if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
                                 .sendData("type:error&&data: server is full, please try again later.");

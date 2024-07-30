@@ -38,7 +38,6 @@ public class Main {
                 try {
                     Thread.sleep(RECONNECT_DELAY); // Wait before retrying
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
 
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error: {0}", ie.getMessage());
 

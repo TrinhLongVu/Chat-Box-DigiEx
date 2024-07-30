@@ -1,6 +1,5 @@
 package org.project.Chat;
 
-import src.lib.DataSave;
 import src.lib.Client;
 import src.lib.TypeReceive;
 import src.lib.Helper;
@@ -11,15 +10,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class balancer {
-    public static Socket loadBalanSocket = null;
+class Balancer {
+    public static Socket loadBalanceSocket = null;
 }
 
 public class Receive implements Runnable {
@@ -55,7 +52,7 @@ public class Receive implements Runnable {
 
                 if (data.getType().equals("users")) {
                     userOnlines = data.getData();
-                    SendUsersOnline.handle(userOnlines);;
+                    SendUsersOnline.handle(userOnlines);
                     continue;
                 }
                 MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
@@ -87,9 +84,8 @@ public class Receive implements Runnable {
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
                 try {
-                    new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
+                    new Send(Balancer.loadBalanceSocket).sendData("type:disconnect&&send:" + currentClient.getName());
                 } catch (IOException e) {
-                    e.printStackTrace();
                     Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
                 }
 

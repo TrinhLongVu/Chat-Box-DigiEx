@@ -27,7 +27,6 @@ public class Receive extends Thread {
             is = ss.getInputStream();
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            e.printStackTrace();
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0} ", e.getMessage());
 
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
@@ -35,6 +34,7 @@ public class Receive extends Thread {
         }
     }
 
+    @Override
     public void run() {
         try {
             while (true) {
@@ -55,7 +55,6 @@ public class Receive extends Thread {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
@@ -77,10 +76,9 @@ public class Receive extends Thread {
             System.out.println("Invalid port number format");
             return;
         }
-        Socket s = null;
         try {
             this.socket.close();
-            s = new Socket(host, port);
+            Socket s = new Socket(host, port);
             new Receive(s).start();
             new Send(s).sendData("type:login&&send:" + LoginForm.username);
             new HomePage(null, s, LoginForm.username);

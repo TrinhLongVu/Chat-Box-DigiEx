@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.xml.crypto.Data;
 
 import src.lib.Helper;
 import src.lib.Send;
@@ -67,13 +66,13 @@ public class Receive implements Runnable{
             try {
                 new Send(server.getSocket()).sendData("type:users&&data:" + names.toString());
             } catch (Exception e) {
-                e.printStackTrace();
                 Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
             }
         }
     }
 
+    @Override
     public void run() {
         String receiveMsg;
         try {

@@ -25,7 +25,6 @@ public class SendUsersOnline {
             try {
                 new Send(client.getSocket()).sendData(resultSend);
             } catch (IOException e) {
-                e.printStackTrace();
                 Logger.getLogger(SendUsersOnline.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
             }

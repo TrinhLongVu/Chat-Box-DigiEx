@@ -55,7 +55,6 @@ public class LoginForm extends JDialog {
                 try {
                     new Send(socket).sendData("type:login&&send:" + username);
                 } catch (IOException ex) {
-                    ex.printStackTrace();
                     Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE,
                             "Error: {0}" , ex.getMessage());
 
