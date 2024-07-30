@@ -1,3 +1,17 @@
+# Save the current directory
+current_dir=$(pwd)
+
+echo "Build Support library"
+cd ../support
+./run.sh
+
+echo "Build Server library"
+cd ../server
+./build_and_run.sh
+
+# Return to the original directory
+cd "$current_dir"
+
 find src -name "*.java" -print | xargs javac -cp ../support/target/support.jar -cp ../server/target/server.jar -d target/classes
 
 mkdir -p target/lib
