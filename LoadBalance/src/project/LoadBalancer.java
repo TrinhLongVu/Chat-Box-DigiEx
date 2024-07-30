@@ -144,6 +144,7 @@ public class LoadBalancer extends Thread {
         try {
             connectToNewServer(portDefault, clientSocket);
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Failed to connect to the new server.");
             Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE,
                     "Failed to start and connect to the new server: {0}", e.getMessage());

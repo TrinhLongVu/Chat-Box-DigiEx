@@ -50,7 +50,7 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
         Receive.receiveClientMap.put(socket, currentClient);
         SendUsersOnline.handle(userOnlines);
         try {
-            new Send(balancer.loadBalanSocket).sendData(
+            new Send(Balancer.loadBalanceSocket).sendData(
                 "type:server-send-clients&&send:" + data.getNameSend() + "," + ServerManager.PORT);
         } catch (IOException e) {
             e.printStackTrace();
