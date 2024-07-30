@@ -1,4 +1,3 @@
-# Save the current directory
 current_dir=$(pwd)
 
 echo "Build Support library"
@@ -21,4 +20,3 @@ cp ../server/target/server.jar target/lib/
 jar cvfm target/load.jar META-INF/MANIFEST.MF -C target/classes . -C target lib
 
 java -jar target/load.jar
-
