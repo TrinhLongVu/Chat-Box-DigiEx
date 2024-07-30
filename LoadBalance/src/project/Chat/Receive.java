@@ -41,10 +41,9 @@ public class Receive implements Runnable{
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
                 switch (data.getType()) {
-                    case "login": {
-                        
-                        Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
-                        updateUserOnline();
+                    case "login-load": {
+                        // Database.clients.add(new ClientInfo(data.getNameSend(), availableServer.toString()));
+                        // updateUserOnline();
                         return;
                     }
                     default:
@@ -99,40 +98,50 @@ public class Receive implements Runnable{
                         break;
                     }
 
+                    case "server-send-clients": {
+                        String name_and_port[] = data.getNameSend().split(",");
+
+                        for (ServerInfo server : Database.serverList) {
+                            if (server.getPort() == Integer.valueOf(name_and_port[1])) {
+                                System.out.print("oke....");
+                                Database.clients.add(new ClientInfo(name_and_port[0], server.toString()));
+                                updateUserOnline();
+                            }
+                        }
+
+                        break;
+                    }
+
                     case "disconnect": {
                         Iterator<ClientInfo> iterator = Database.clients.iterator();
                         while (iterator.hasNext()) {
                             ClientInfo client = iterator.next();
                             if (client.getName().equals(data.getNameSend())) {
+                                iterator.remove(); // Safe removal using iterator
                                 for (ServerInfo server : Database.serverList) {
-                                    Database.clients.remove(client);
                                     if (client.getServerinfo().equals(server.toString())) {
                                         server.decrementClients();
                                     }
-                                    
-
+                    
                                     if (server.getActiveClients() == 0) {
                                         server.getSocket().close();
-                                        Database.serverList.remove(server);
                                         for (ServerManagerInfo serverManager : Database.oldServerManager) {
                                             if (serverManager.getPort() == server.getPort()) {
-                                                serverManager.setOpenning(false);
-                                                System.out.print(serverManager.getOpenning());
-                                                serverManager.getServerManager().stopServer();
-                                                System.out.print(Database.clients.toString());
+                                                Database.serverList.remove(server);
                                                 updateUserOnline();
+                                                serverManager.setOpenning(false);
+                                                serverManager.getServerManager().stopServer();
                                                 return;
                                             }
                                         }
                                     }
                                 }
-                                iterator.remove(); // Safe removal
                             }
                         }
                         System.out.print(Database.clients.toString());
                         updateUserOnline();
+                        break;
                     }
-                    
                 }
             }
         } catch (IOException e) {

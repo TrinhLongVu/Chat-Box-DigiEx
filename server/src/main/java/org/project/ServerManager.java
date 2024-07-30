@@ -18,6 +18,7 @@ public class ServerManager {
     // 1 for thread pool and 1 for client
     private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
+    public static int PORT;
 
     private volatile boolean running;
     private ExecutorService threadPool;
@@ -32,6 +33,7 @@ public class ServerManager {
     }
 
     public void startServer(int port) {
+        this.PORT = port;
         running = true;
         new Thread(() -> {
             try {

@@ -4,6 +4,9 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import org.project.ServerManager;
+
 import src.lib.Client;
 import src.lib.DataSave;
 import src.lib.Send;
@@ -45,6 +48,13 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
 
         Receive.receiveClientMap.put(socket, currentClient);
         SendUsersOnline.handle(userOnlines);
+        try {
+            new Send(balancer.loadBalanSocket).sendData(
+                "type:server-send-clients&&send:" + data.getNameSend() + "," + ServerManager.PORT);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Logger.getLogger(LoginMessageHandlerFactory.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+        } 
     }
 }
 

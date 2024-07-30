@@ -52,7 +52,7 @@ public class LoginForm extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 username = tfEmail.getText();
                 try {
-                    new Send(socket).sendData("type:login&&send:" + username);
+                    new Send(socket).sendData("type:login-load&&send:" + username);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     Logger.getLogger(LoginForm.class.getName()).log(java.util.logging.Level.SEVERE,
