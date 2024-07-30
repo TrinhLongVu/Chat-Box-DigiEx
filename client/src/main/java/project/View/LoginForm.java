@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.net.Socket;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class LoginForm extends JDialog {
@@ -54,8 +55,7 @@ public class LoginForm extends JDialog {
                 try {
                     new Send(socket).sendData("type:login-load&&send:" + username);
                 } catch (IOException ex) {
-                    ex.printStackTrace();
-                    Logger.getLogger(LoginForm.class.getName()).log(java.util.logging.Level.SEVERE,
+                    Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE,
                             "Error: {0}" , ex.getMessage());
 
                 }

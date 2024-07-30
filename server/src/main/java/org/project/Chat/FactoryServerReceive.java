@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.project.ServerManager;
@@ -36,7 +37,7 @@ interface MessageHandlerFactory {
 class loadBalancerMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String message) {
-        balancer.loadBalanSocket = socket;
+        Balancer.loadBalanceSocket = socket;
     }
 }
 
@@ -74,11 +75,10 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                 new Send(receiver).sendData(
                         "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
             } else {
-                new Send(balancer.loadBalanSocket).sendData(receiveMsg);
+                new Send(Balancer.loadBalanceSocket).sendData(receiveMsg);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
         }
 
         // group handle later
@@ -96,8 +96,7 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                                                         + data.getNameReceive()
                                                         + "&&data:" + data.getData());
                                     } catch (IOException e) {
-                                        e.printStackTrace();
-                                        Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(null,
+                                        Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE,
                                                 "An error occurred: {0}" , e.getMessage());
                                     }
                                 });
@@ -130,7 +129,8 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
                                     new Send(client.getSocket()).sendData(
                                     "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    Logger.getLogger(ChatGroupMessageHandlerFactory.class.getName()).log(Level.SEVERE,
+                                            "An error occurred: {0}", e.getMessage());
                                 }
                             }
                         );

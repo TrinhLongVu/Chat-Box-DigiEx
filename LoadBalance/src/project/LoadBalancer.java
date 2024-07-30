@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import src.lib.Send;
-import src.lib.TypeReceive;
 import org.project.ServerManager;
 
 import project.Chat.ServerInfo;
@@ -18,21 +17,18 @@ import project.Chat.Receive;
 
 public class LoadBalancer extends Thread {
     private static int LOAD_BALANCER_PORT;
-    private final boolean isClient;
     private static final int MAX_CLIENTS = 2;
     private static final int INITIAL_PORT = 1234;
     private int portDefault = INITIAL_PORT;
 
-    public LoadBalancer(int port, boolean isClient) {
+    public LoadBalancer(int port) {
         LOAD_BALANCER_PORT = port;
-        this.isClient = isClient;
         Database.serverList = new ArrayList<>();
 
         try {
             initializeServerManager();
         } catch (IOException e) {
-            e.printStackTrace();
-            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
         }
     }
@@ -56,13 +52,11 @@ public class LoadBalancer extends Thread {
             System.out.println("Load balancer started on port " + LOAD_BALANCER_PORT);
 
             while (true) {
-                if (isClient) {
-                    handleClientLoad(serverSocket);
-                }
+                handleClientLoad(serverSocket);
             }
         } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());
-            Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
         }
     }
@@ -93,7 +87,7 @@ public class LoadBalancer extends Thread {
         try {
             new Send(clientSocket).sendData("type:server&&data:" + server.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
         }
     }
 
@@ -110,8 +104,7 @@ public class LoadBalancer extends Thread {
                 try {
                     connectToNewServer(serverManagerInfo.getPort(), clientSocket);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    Logger.getLogger(LoadBalancer.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
 
                 }
                 return;
@@ -135,6 +128,7 @@ public class LoadBalancer extends Thread {
             handleClientConnection(clientSocket, availableServer);
         } else {
             System.out.println("Unexpected error: No available server after creating a new one.");
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.WARNING, "Unexpected error: No available server after creating a new one.");
         }
     }
 
@@ -150,9 +144,8 @@ public class LoadBalancer extends Thread {
         try {
             connectToNewServer(portDefault, clientSocket);
         } catch (IOException e) {
-            e.printStackTrace();
             System.out.println("Failed to connect to the new server.");
-            Logger.getLogger(LoadBalancer.class.getName()).log(null,
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE,
                     "Failed to start and connect to the new server: {0}", e.getMessage());
 
         }
@@ -160,8 +153,7 @@ public class LoadBalancer extends Thread {
 
     public static void main(String[] args) {
         int clientPort = 3005;
-        boolean isClient = true;
-        LoadBalancer loadBalancerClient = new LoadBalancer(clientPort, isClient);
+        LoadBalancer loadBalancerClient = new LoadBalancer(clientPort);
         loadBalancerClient.start();
     }
 }
