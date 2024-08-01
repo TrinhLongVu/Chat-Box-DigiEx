@@ -22,21 +22,20 @@ public class Main {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
 
-            try ( // Get the response from the LoadBalancer
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                // Close connections
-            } catch (Exception e) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error: {0}", e.getMessage());
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
             }
+
+            // Close connections
+            in.close();
             conn.disconnect();
 
 
         } catch (IOException e) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error: {0}", e.getMessage());
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error Test: {0}", e.getMessage());
         }
 
         //********** */

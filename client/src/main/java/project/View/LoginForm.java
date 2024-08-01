@@ -2,6 +2,7 @@ package project.View;
 
 import javax.swing.*;
 
+import src.lib.Helper;
 import src.lib.Send;
 
 import java.awt.*;
@@ -76,7 +77,9 @@ public class LoginForm extends JDialog {
         setVisible(true);
     }
     
-    private void handleServer(String data) {
+    private void handleServer(String receiveMsg) {
+        String data = Helper.FormatData(receiveMsg).getData();
+
         String[] hostAndPort = data.split("@");
         System.out.println(hostAndPort[0] + "...." + hostAndPort[1]);
         int port;
