@@ -27,7 +27,7 @@ import java.util.List;
 
 public class LoadBalancer {
     private static int LOAD_BALANCER_PORT;
-    private static final int MAX_CLIENTS = 2;
+    private static final int MAX_CLIENTS = 1;
     private static final int INITIAL_PORT = 1234;
     private int portDefault = INITIAL_PORT;
 
@@ -77,6 +77,7 @@ public class LoadBalancer {
                 .findFirst()
                 .orElse(null);
             String response = "type:server&&data:" + serverEmpty.toString();
+            serverEmpty.incrementClients();
             
 
             // Set the response headers and status code
