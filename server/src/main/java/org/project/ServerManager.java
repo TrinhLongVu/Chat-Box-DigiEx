@@ -45,6 +45,17 @@ public class ServerManager {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
+
+                        try {
+                            Socket brokerSocket = new Socket("localhost", 4000);
+                            System.out.println("Connected to message broker");
+                
+                            new Thread(new Receive(brokerSocket)).start();
+                            new Send(brokerSocket).sendData("Hello from server");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                         try {
                             threadPool.submit(new Receive(clientSocket));
                         } catch (RejectedExecutionException e) {
