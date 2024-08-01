@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import project.View.LoginForm;
+
 public class Main {
     public static void main(String[] args) {
         //******** */
@@ -21,6 +22,14 @@ public class Main {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
+           
+            // Write Response
+            // String confirmationMessage = "type:connection-confirmation&&status=connected&&server=";
+            // try (OutputStream os = conn.getOutputStream()) {
+            //     os.write(confirmationMessage.getBytes());
+            //     os.flush();
+            // }
+
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;

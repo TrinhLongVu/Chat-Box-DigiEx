@@ -8,9 +8,13 @@ import src.lib.Send;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.HttpURLConnection;
 import java.net.Socket;
-
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import project.Chat.Receive;
@@ -88,7 +92,8 @@ public class LoginForm extends JDialog {
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
-            Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}", e.getMessage());
+            Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}",
+                    e.getMessage());
 
             System.out.println("Invalid port number format");
             return;
@@ -98,9 +103,49 @@ public class LoginForm extends JDialog {
             new Receive(s).start();
             new Send(s).sendData("type:login&&send:" + LoginForm.username);
             new HomePage(null, s, LoginForm.username);
+            if (s.isConnected()) {
+                System.out.println("Connected to server");
+                notifyConnected(host, port);
+            }
         } catch (IOException e) {
             System.out.println("Unable to connect to server: " + e.getMessage());
-            Logger.getLogger(LoginForm.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}" , e.getMessage());
+            Logger.getLogger(LoginForm.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
+                    e.getMessage());
+        }
+    }
+
+    private void notifyConnected(String host, int port) {
+        try {
+            URL loadBalancerUrl = new URL("http://localhost:8080/login");
+
+            HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
+            loadBalancerConn.setRequestMethod("POST");
+            loadBalancerConn.setDoOutput(true);
+
+            // Message indicating successful connection to the server
+            String confirmationMessage = host + "@"+ port;
+            try (OutputStream os = loadBalancerConn.getOutputStream()) {
+                os.write(confirmationMessage.getBytes());
+                os.flush();
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
+            StringBuilder newContent = new StringBuilder();
+
+            String inputLine;
+            
+            while ((inputLine = in.readLine()) != null) {
+                newContent.append(inputLine);
+            }
+
+            // Close connections
+            in.close();
+            loadBalancerConn.disconnect();
+
+            System.out.println("Sent connection confirmation to LoadBalancer");
+        } catch (IOException e) {
+            Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Error sending confirmation to LoadBalancer: {0}",
+                    e.getMessage());
         }
     }
 }
