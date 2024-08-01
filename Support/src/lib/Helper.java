@@ -23,7 +23,8 @@ public class Helper {
         String send = keyValueMap.getOrDefault("send", null);
         String receive = keyValueMap.getOrDefault("receive", null);
         String data = keyValueMap.getOrDefault("data", null);
+        String flag = keyValueMap.getOrDefault("flag", null);
 
-        return new TypeReceive(type, send, receive, data);
+        return new TypeReceive(type, send, receive, data, flag);
     }
 }

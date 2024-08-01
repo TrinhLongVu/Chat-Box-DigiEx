@@ -10,23 +10,13 @@ import java.util.logging.Logger;
 import src.lib.Send;
 
 public class SendUsersOnline {
-    public static void handle(String userOnlines) {
-        String resultSend = "";
+    public static void handle(String newUser) {
         for (Client client : DataSave.clients) {
-            resultSend = "type:online&&data:" + getAllExceptMe(userOnlines, client.getName());
-
-            for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
-                String[] usersInGroup = dataName.getValue().split(", ");
-                if (List.of(usersInGroup).contains(client.getName())) {
-                    resultSend = resultSend.substring(0, resultSend.length() - 1) + ", " + dataName.getKey() + "]";
-                }
-            }
-
             try {
-                new Send(client.getSocket()).sendData(resultSend);
+                if(!client.getName().equals(newUser))
+                    new Send(client.getSocket()).sendData("type:online&&data:" + newUser);
             } catch (IOException e) {
                 Logger.getLogger(SendUsersOnline.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-
             }
         }
     }

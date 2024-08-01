@@ -1,6 +1,9 @@
 package broker;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -49,9 +52,17 @@ public class MessageBroker {
 
     private class ServerHandler implements Runnable {
         private Socket serverSocket;
-
+        private BufferedReader br;
+        
         public ServerHandler(Socket serverSocket) {
             this.serverSocket = serverSocket;
+            InputStream is;
+            try {
+                is = this.serverSocket.getInputStream();
+                br = new BufferedReader(new InputStreamReader(is));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
@@ -59,7 +70,8 @@ public class MessageBroker {
             try {
                 Receive receive = new Receive(serverSocket);
                 String message;
-                while ((message = receive.receiveMessage()) != null) {
+                while ((message = br.readLine()) != null) {
+                    receive.setReceiveMsg(message);
                     System.out.println("Received message: " + message);
                     broadcastMessage(message, serverSocket);
                 }

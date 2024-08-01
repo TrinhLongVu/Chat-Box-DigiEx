@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.border.Border;
+
 import org.project.ServerManager;
 
 import src.lib.Client;
@@ -37,41 +39,58 @@ interface MessageHandlerFactory {
 class loadBalancerMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String message) {
-        balancer.loadBalanSocket = socket;
+        // balancer.loadBalanSocket = socket;
     }
 }
 
 class LoginMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String message) {
-        Client currentClient = new Client(data.getNameSend(), socket);
-        DataSave.clients.add(currentClient);
-
-        Receive.receiveClientMap.put(socket, currentClient);
-        SendUsersOnline.handle(userOnlines);
+        if (BrokerInfo.brokerSocket == null) {
+            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}", " broker is not exits");
+        } else {
+            if (!data.haveFlag()) {
+                Client currentClient = new Client(data.getNameSend(), socket);
+                DataSave.clients.add(currentClient);
+                Receive.receiveClientMap.put(socket, currentClient);
+                try {
+                    new Send(BrokerInfo.brokerSocket).sendData(message + "&&flag:true" );
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                SendUsersOnline.handle(data.getNameSend());
+            }
+        }
     }
 }
 
 class ChatMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String receiveMsg) {
-        Socket receiver = null;
-        for (Client client : DataSave.clients) {
-            if (client.getName().equals(data.getNameReceive())) {
-                receiver = client.getSocket();
-            }
-        }
-
-        try {
-            // if receive have in server then send else send message to load balancer
-            if (receiver != null) {
-                new Send(receiver).sendData(
-                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+        if (BrokerInfo.brokerSocket == null) {
+            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}", " broker is not exits");
+        } else {
+            if (!data.haveFlag()) {
+                try {
+                    new Send(BrokerInfo.brokerSocket).sendData(receiveMsg + "&&flag:true" );
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } else {
-                new Send(balancer.loadBalanSocket).sendData(receiveMsg);
+                Socket receiver = null;
+                for (Client client : DataSave.clients) {
+                    if (client.getName().equals(data.getNameReceive())) {
+                        receiver = client.getSocket();
+                    }
+                }
+                try {
+                    new Send(receiver).sendData(
+                        "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+                } catch (IOException e) {
+                    Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
+                }
             }
-        } catch (IOException e) {
-            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
         }
 
         // group handle later
@@ -90,7 +109,7 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
                                                         + "&&data:" + data.getData());
                                     } catch (IOException e) {
                                         Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE,
-                                                "An error occurred: {0}" , e.getMessage());
+                                                "An error occurred: {0}", e.getMessage());
                                     }
                                 });
                     }
