@@ -58,15 +58,7 @@ public class LoginForm extends JDialog {
                 username = tfEmail.getText();
                 System.out.println(content);
                 handleServer(content);
-                // try {
-                //     // new Send(socket).sendData("type:login-load&&send:" + username);
-                //     // handleServer(content);
 
-                // } catch (IOException ex) {
-                //     Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE,
-                //             "Error: {0}", ex.getMessage());
-
-                // }
                 dispose();
             }
         });
@@ -105,7 +97,7 @@ public class LoginForm extends JDialog {
             new HomePage(null, s, LoginForm.username);
             if (s.isConnected()) {
                 System.out.println("Connected to server");
-                notifyConnected(host, port);
+                notifyConnected(host, port, LoginForm.username);
             }
         } catch (IOException e) {
             System.out.println("Unable to connect to server: " + e.getMessage());
@@ -114,7 +106,7 @@ public class LoginForm extends JDialog {
         }
     }
 
-    private void notifyConnected(String host, int port) {
+    private void notifyConnected(String host, int port, String name) {
         try {
             URL loadBalancerUrl = new URL("http://localhost:8080/login");
 
@@ -123,7 +115,7 @@ public class LoginForm extends JDialog {
             loadBalancerConn.setDoOutput(true);
 
             // Message indicating successful connection to the server
-            String confirmationMessage = host + "@"+ port;
+            String confirmationMessage = name + "&&" + host + "@"+ port;
             try (OutputStream os = loadBalancerConn.getOutputStream()) {
                 os.write(confirmationMessage.getBytes());
                 os.flush();

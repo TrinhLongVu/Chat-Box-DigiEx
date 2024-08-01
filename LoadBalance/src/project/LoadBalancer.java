@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.List;
+import project.Chat.ClientInfo;
 
 public class LoadBalancer {
     private static final int MAX_CLIENTS = 2;
@@ -39,19 +40,6 @@ public class LoadBalancer {
         Database.serverList = new ArrayList<>();
         Database.serverList.add(new ServerInfo("localhost", 1234, null));
         Database.serverList.add(new ServerInfo("localhost", 1235, null));
-
-        
-
-
-        // LOAD_BALANCER_PORT = port;
-        // Database.serverList = new ArrayList<>();
-
-        // try {
-        //     initializeServerManager();
-        // } catch (IOException e) {
-        //     Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-
-        // }
     }
 
     public static void main(String[] args) {
@@ -62,6 +50,7 @@ public class LoadBalancer {
             // Define a context that listens for requests
             server.createContext("/", new MyHandler());
             server.createContext("/login", new HandlerLogin());
+            server.createContext("/get-clients", new HandlerGetClients());
 
             // Start the server
             server.setExecutor(null);
@@ -115,7 +104,11 @@ public class LoadBalancer {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println("Received from client: " + line);
-                 String[] hostAndPort = line.split("@");
+                String[] nameAndServer = line.split("&&");
+                String name = nameAndServer[0];
+                ClientInfo client = new ClientInfo(name, nameAndServer[1]);
+                Database.clients.add(client);
+                String[] hostAndPort = nameAndServer[1].split("@");
                 String host = hostAndPort[0];
                 int port = Integer.parseInt(hostAndPort[1]);
                 Database.serverList.forEach(server -> {
@@ -125,11 +118,11 @@ public class LoadBalancer {
                         System.out.println("Number: " + server.getActiveClients());
                     }
                 });
+
             }
 
             reader.close(); // Close the input stream after reading
             String response = "Receieved Message";
-            
 
             // Set the response headers and status code
             exchange.sendResponseHeaders(200, response.length());
@@ -142,6 +135,32 @@ public class LoadBalancer {
                         e.getMessage());
             }
 
+        }
+    }
+    static class HandlerGetClients implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            System.out.println("Received get-clients request");
+            String response = "";
+            for (ClientInfo client : Database.clients) {
+                if (client == Database.clients.get(Database.clients.size() - 1)) {
+                    response += client.getName();
+                }
+                else {
+                    response += client.getName() + ", ";
+                }
+            }
+
+            // Set the response headers and status code
+            exchange.sendResponseHeaders(200, response.length());
+
+            try ( // Write the response body
+                    OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            } catch (IOException e) {
+                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                        e.getMessage());
+            }
         }
     }
 }
