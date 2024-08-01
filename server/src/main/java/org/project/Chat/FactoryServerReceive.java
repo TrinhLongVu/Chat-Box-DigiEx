@@ -123,7 +123,7 @@ class GroupMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String userOnlines, String receiveMsg) {
         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-        SendUsersOnline.handle(userOnlines);
+        SendUsersOnline.handle(data.getNameSend());
     }
 }
 

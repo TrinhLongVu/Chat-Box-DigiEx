@@ -20,12 +20,4 @@ public class SendUsersOnline {
             }
         }
     }
-
-    private static String getAllExceptMe(String listUserOnline, String myName) {
-        String regex = "\\b" + myName + "\\b,?\\s?";
-        String result = listUserOnline.replaceAll(regex, "");
-        result = result.replaceAll(",\\s*\\]", "]");
-        result = result.replaceAll("\\[\\s*\\]", "[]");
-        return result;
-    }
 }

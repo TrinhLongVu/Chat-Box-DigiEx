@@ -51,11 +51,6 @@ public class Receive implements Runnable {
                     continue;
                 }
 
-                if (data.getType().equals("users")) {
-                    userOnlines = data.getData();
-                    SendUsersOnline.handle(userOnlines);
-                    continue;
-                }
                 MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
                 if (factory != null) {
                     factory.handle(data, socket, userOnlines, receiveMsg);
@@ -80,16 +75,11 @@ public class Receive implements Runnable {
                 socket.close();
             }
             if (currentClient != null) {
+                // handle later
                 DataSave.clients.remove(currentClient);
                 SendUsersOnline.handle(userOnlines);
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
-                try {
-                    new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
-                } catch (IOException e) {
-                    Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-                }
-
             }
         } catch (IOException e) {
             System.out.println("Error closing client socket: " + e.getMessage());

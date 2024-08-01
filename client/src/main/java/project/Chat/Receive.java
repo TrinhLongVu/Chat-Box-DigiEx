@@ -36,7 +36,6 @@ public class Receive extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Receive thread is running");
         try {
             while (true) {
                 this.receiveMsg = this.br.readLine();
