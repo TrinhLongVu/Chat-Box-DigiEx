@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.project.Chat.Receive;
@@ -44,19 +45,27 @@ public class ServerManager {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
-                        boolean clientHandled = false;
+
+                        try {
+                            Socket brokerSocket = new Socket("localhost", 4000);
+                            System.out.println("Connected to message broker");
+                
+                            new Thread(new Receive(brokerSocket)).start();
+                            new Send(brokerSocket).sendData("Hello from server");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                         try {
                             threadPool.submit(new Receive(clientSocket));
-                            clientHandled = true;
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, client will be informed.");
-                            Logger.getLogger(ServerManager.class.getName()).log(null, "Server is overloaded, adding client to pending queue. " + e.getMessage());
+                            Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING, "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
                         }
                         ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                         System.out.println("Thread pool active count: " + tpe.getActiveCount());
                         System.out.println("Thread pool queued task count: " + tpe.getQueue().size());
                         System.out.println("Thread pool completed task count: " + tpe.getCompletedTaskCount());
-                        System.out.println("send" + clientHandled + "...");
                         if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
                                 .sendData("type:error&&data: server is full, please try again later.");
@@ -64,11 +73,15 @@ public class ServerManager {
                     } catch (IOException e) {
                         if (running) {
                             System.out.println("Error accepting connection: " + e.getMessage());
+
                         }
+                        Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error accepting connection: {0}", e.getMessage());
                     }
                 }
             } catch (IOException e) {
                 System.out.println("Error starting server: " + e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error starting server: {0}", e.getMessage());
+
             } finally {
                 shutdown();
             }
@@ -83,6 +96,8 @@ public class ServerManager {
                 serverSocket.close();
             } catch (IOException e) {
                 System.out.println("Error closing server socket: " + e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}", e.getMessage());
+
             }
         }
         if (threadPool != null && !threadPool.isShutdown()) {
@@ -92,6 +107,8 @@ public class ServerManager {
                     threadPool.shutdownNow();
                 }
             } catch (InterruptedException e) {
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}", e.getMessage());
+
                 threadPool.shutdownNow();
                 Thread.currentThread().interrupt();
             }

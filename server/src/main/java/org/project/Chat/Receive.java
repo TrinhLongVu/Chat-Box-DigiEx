@@ -1,20 +1,19 @@
 package org.project.Chat;
 
-import src.lib.DataSave;
 import src.lib.Client;
 import src.lib.TypeReceive;
 import src.lib.Helper;
 import src.lib.Send;
+import src.lib.DataSave;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class balancer {
@@ -54,7 +53,7 @@ public class Receive implements Runnable {
 
                 if (data.getType().equals("users")) {
                     userOnlines = data.getData();
-                    SendUsersOnline.handle(userOnlines);;
+                    SendUsersOnline.handle(userOnlines);
                     continue;
                 }
                 MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
@@ -66,7 +65,7 @@ public class Receive implements Runnable {
             }
         } catch (IOException e) {
             System.err.println("Error reading from socket: " + e.getMessage());
-            Logger.getLogger(Receive.class.getName()).log(null, "Error reading from socket: {0}", e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
 
         } finally {
             cleanup();
@@ -88,14 +87,13 @@ public class Receive implements Runnable {
                 try {
                     new Send(balancer.loadBalanSocket).sendData("type:disconnect&&send:" + currentClient.getName());
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    Logger.getLogger(Receive.class.getName()).log(null, "An error occurred: {0}", e.getMessage());
+                    Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
                 }
 
             }
         } catch (IOException e) {
             System.out.println("Error closing client socket: " + e.getMessage());
-            Logger.getLogger(Receive.class.getName()).log(null, "Error closing client socket: {0}", e.getMessage());
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}", e.getMessage());
         }
     }
 }

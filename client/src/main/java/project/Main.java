@@ -1,6 +1,7 @@
 package project;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -31,15 +32,14 @@ public class Main {
                         "An error occurred, we are trying to reconnect to the server: " + e.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
                 System.out.println("There're some error");
-                Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, "Error: {0}",
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error: {0}",
                         e.getMessage());
 
                 try {
                     Thread.sleep(RECONNECT_DELAY); // Wait before retrying
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
 
-                    Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, "Error: {0}", ie.getMessage());
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error: {0}", ie.getMessage());
 
                 }
             }

@@ -1,6 +1,5 @@
 package project.Chat;
 
-import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,11 +11,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import project.View.HomePage;
-import project.View.LoginForm;
 import src.lib.DataSave;
-import src.lib.Helper;
 import src.lib.TypeReceive;
-import src.lib.Send;
 
 public class FactoryClientReceive {
     private static final Map<String, MessageHandlerFactory> factoryMap = new HashMap<>();

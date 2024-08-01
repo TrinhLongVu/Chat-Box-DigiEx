@@ -11,6 +11,14 @@ client/Logger/
 support/target/
 
 
+client/target/
+client/lib/
+LoadBalance/lib/
+server/lib/
+server/target/
+client/Logger/
+support/target/
+
 ### IntelliJ IDEA ###
 server/.idea/modules.xml
 server/.idea/jarRepositories.xml
