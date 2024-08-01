@@ -37,7 +37,6 @@ public class Receive implements Runnable {
         }
     }
     
-
     @Override
     public void run() {
         String receiveMsg;
@@ -46,22 +45,18 @@ public class Receive implements Runnable {
                 System.out.println("message::::" + receiveMsg);
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
-                if (data == null) {
-                    System.out.println("Received invalid data: " + receiveMsg);
-                    continue;
-                }
-
-                MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
-                if (factory != null) {
-                    factory.handle(data, socket, userOnlines, receiveMsg);
-                } else {
-                    System.out.println("Received invalid data: " + data);
+                if (data != null) {
+                    MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
+                    if (factory != null) {
+                        factory.handle(data, socket, receiveMsg);
+                    } else {
+                        System.out.println("Received invalid data: " + data);
+                    }
                 }
             }
         } catch (IOException e) {
             System.err.println("Error reading from socket: " + e.getMessage());
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
-
         } finally {
             cleanup();
         }

@@ -94,11 +94,11 @@ public class LoginForm extends JDialog {
             Socket s = new Socket(host, port);
             new Receive(s).start();
             new Send(s).sendData("type:login&&send:" + LoginForm.username);
-            new HomePage(null, s, LoginForm.username);
             if (s.isConnected()) {
                 System.out.println("Connected to server");
                 notifyConnected(host, port, LoginForm.username);
             }
+            new HomePage(null, s, LoginForm.username);
         } catch (IOException e) {
             System.out.println("Unable to connect to server: " + e.getMessage());
             Logger.getLogger(LoginForm.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",

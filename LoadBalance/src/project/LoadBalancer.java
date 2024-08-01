@@ -84,7 +84,7 @@ public class LoadBalancer {
             exchange.sendResponseHeaders(200, response.length());
 
             try ( // Write the response body
-                    OutputStream os = exchange.getResponseBody()) {
+                OutputStream os = exchange.getResponseBody()) {
                 os.write(response.getBytes());
             } catch (IOException e) {
                 Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
@@ -145,7 +145,7 @@ public class LoadBalancer {
                     response += client.getName();
                 }
                 else {
-                    response += client.getName() + ", ";
+                    response += client.getName() + ",";
                 }
             }
 
