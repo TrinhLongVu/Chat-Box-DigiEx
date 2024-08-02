@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -198,14 +200,11 @@ public class LoadBalancer {
         Database.clients.removeIf(client -> client.getName().equals(name));
         Database.serverList.forEach(server -> {
             if (server.getHost().equals(host) && server.getPort() == port) {
-                if (server.getActiveClients() > 0) {
-                    server.decrementClients();
-                    System.out.println("Decremented clients for server: " + server.toString());
-                    System.out.println("Number: " + server.getActiveClients());
-                } else {
-                    System.out.println("No clients to decrement");
-                }
+                server.incrementClients();
+                System.out.println("Incremented clients for server: " + server.toString());
+                System.out.println("Number: " + server.getActiveClients());
             }
+        });
 
         String responseMessage = "Receieved Message";
         byte[] responseData = responseMessage.getBytes();
