@@ -23,6 +23,7 @@ public class FactoryServerReceive {
         factoryMap.put("chat", new ChatMessageHandlerFactory());
         factoryMap.put("group", new GroupMessageHandlerFactory());
         factoryMap.put("chat-group", new ChatGroupMessageHandlerFactory());
+        factoryMap.put("disconnect", new DisconnectHandlerFactory());
     }
 
     public static MessageHandlerFactory getFactory(String type) {
@@ -182,5 +183,14 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
                 }
             }
         }
+    }
+}
+
+
+
+class DisconnectHandlerFactory implements MessageHandlerFactory {
+    @Override
+    public void handle(TypeReceive data, Socket socket, String receiveMsg) {
+        SendUsersOnline.handle(null);
     }
 }

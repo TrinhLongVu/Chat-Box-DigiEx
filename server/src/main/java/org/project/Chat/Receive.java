@@ -76,7 +76,7 @@ public class Receive implements Runnable {
                 DataSave.clients.remove(currentClient);
                 String dataSend = currentClient.getName() + "&&localhost@" + ServerManager.PORT;  
                 CallAPI.PostData("http://localhost:8080/disconnect", dataSend);
-                SendUsersOnline.handle(null);
+                new Send(BrokerInfo.brokerSocket).sendData("type:disconnect");
 
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
