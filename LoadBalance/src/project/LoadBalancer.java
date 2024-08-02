@@ -8,25 +8,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import src.lib.Helper;
-import src.lib.Send;
-import src.lib.TypeReceive;
-
-import org.project.ServerManager;
-
 import project.Chat.ServerInfo;
-import project.Chat.ServerManagerInfo;
 import project.Chat.Database;
-import project.Chat.Receive;
 
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
@@ -34,8 +23,9 @@ import java.util.List;
 import project.Chat.ClientInfo;
 
 public class LoadBalancer {
-    private static final int MAX_CLIENTS = 1;
+    private static final int MAX_CLIENTS = 2;
     private static final int PORT = 8080;
+
     public LoadBalancer() {
         Database.serverList = new ArrayList<>();
         Database.serverList.add(new ServerInfo("localhost", 1234, null));
@@ -216,7 +206,6 @@ public class LoadBalancer {
                     System.out.println("No clients to decrement");
                 }
             }
-        });
 
         String responseMessage = "Receieved Message";
         byte[] responseData = responseMessage.getBytes();

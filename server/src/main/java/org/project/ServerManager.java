@@ -18,7 +18,7 @@ import src.lib.Send;
 public class ServerManager {
     private ServerSocket serverSocket;
 
-    private static final int THREAD_POOL_SIZE = 1;
+    private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
     public static int PORT;
     private final int PORT_BROKER = 4000;

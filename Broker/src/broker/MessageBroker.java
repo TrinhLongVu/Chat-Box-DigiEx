@@ -84,13 +84,12 @@ public class MessageBroker {
 
     private void broadcastMessage(String message, Socket senderSocket) {
         for (Socket serverSocket : connectedServers) {
-            if (serverSocket != senderSocket) {
-                try {
-                    new Send(serverSocket).sendData(message);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}", e.getMessage());
-                }
+            try {
+                System.out.println("send server socket::::" + serverSocket);
+                new Send(serverSocket).sendData(message);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}", e.getMessage());
             }
         }
     }

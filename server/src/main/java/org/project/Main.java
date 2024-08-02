@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public class Main extends JFrame {
 
-    private int SERVER_PORT = 1234;
+    private int SERVER_PORT = 1235;
 
     private JTextField portTextField;
     private JButton startButton;
@@ -40,8 +40,6 @@ public class Main extends JFrame {
         startButton.addActionListener(e -> {
             if (!serverManager.isRunning()) {
                 serverManager.startServer(SERVER_PORT);
-
-                new ServerManager().startServer(1235);
                 statusLabel.setText("Server is running.");
                 portTextField.setText("Port: " + SERVER_PORT);
             } else {
