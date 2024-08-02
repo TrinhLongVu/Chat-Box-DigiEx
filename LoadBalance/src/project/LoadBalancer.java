@@ -204,12 +204,13 @@ public class LoadBalancer {
         dataOut.flush();
     }
 
-    private static void handleCreateGroup(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
-            throws IOException {
+    private static void handleCreateGroup(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         System.out.println("Received create-group request");
+
         int contentLength = 0;
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
+            // System.out.println("Header: " + line);
             if (line.startsWith("Content-Length: ")) {
                 contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
             }
@@ -219,22 +220,11 @@ public class LoadBalancer {
         char[] body = new char[contentLength];
         in.read(body, 0, contentLength);
         String requestBody = new String(body);
-        System.out.println("Request body: " + requestBody);
 
         String[] nameAndServer = requestBody.split("&&");
         String name = nameAndServer[0];
         ClientInfo client = new ClientInfo(name, nameAndServer[1]);
         Database.clients.add(client);
-        String[] hostAndPort = nameAndServer[1].split("@");
-        String host = hostAndPort[0];
-        int port = Integer.parseInt(hostAndPort[1]);
-        Database.serverList.forEach(server -> {
-            if (server.getHost().equals(host) && server.getPort() == port) {
-                server.incrementClients();
-                System.out.println("Incremented clients for server: " + server.toString());
-                System.out.println("Number: " + server.getActiveClients());
-            }
-        });
 
         String responseMessage = "Receieved Message";
         byte[] responseData = responseMessage.getBytes();

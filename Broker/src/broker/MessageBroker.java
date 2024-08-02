@@ -85,7 +85,6 @@ public class MessageBroker {
     private void broadcastMessage(String message, Socket senderSocket) {
         for (Socket serverSocket : connectedServers) {
             try {
-                System.out.println("send server socket::::" + serverSocket);
                 new Send(serverSocket).sendData(message);
             } catch (IOException e) {
                 e.printStackTrace();
