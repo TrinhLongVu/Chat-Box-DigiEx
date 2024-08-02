@@ -50,7 +50,7 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
 
             SendMessageSocket(BrokerInfo.brokerSocket, message + "&&flag:true");
         } else {
-            SendUsersOnline.handle(data.getNameSend());
+            SendUsersOnline.handle(null);
         }
     }
 
@@ -77,9 +77,13 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
             SendMessageSocket(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
         } else {
             Socket receiver = findClientSocketByName(data.getNameReceive());
-            SendMessageSocket(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+            if (receiver != null) {
+               SendMessageSocket(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+            }
+            else{
+                handleChatGroup(data);
+            }
         }
-        handleChatGroup(data);
     }
     
     private void SendMessageSocket(Socket reciever, String data) {
@@ -101,6 +105,9 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
     }
     
     public void handleChatGroup(TypeReceive data) {
+
+        System.out.println("handle chat group....." + data.getData() + data.getNameReceive());
+
         for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
             if (dataName.getKey().equals(data.getNameReceive())) {
                 String[] usersInGroup = dataName.getValue().split(", ");
@@ -130,8 +137,27 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
 class GroupMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
-        DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-        SendUsersOnline.handle(data.getNameSend());
+        if (BrokerInfo.brokerSocket == null) {
+            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                    " broker is not exits");
+            return;
+        }
+
+        if (!data.haveFlag()) {
+            SendMessageSocket(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
+        } else {
+            DataSave.groups.put(data.getNameSend(), data.getNameReceive());
+            SendUsersOnline.handle(data.getNameSend());
+        }
+    }
+    
+    private void SendMessageSocket(Socket reciever, String data) {
+        try {
+            new Send(reciever).sendData(data);
+        } catch (IOException e) {
+            Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(Level.SEVERE,
+                    "An error occurred: {0}", e.getMessage());
+        }
     }
 }
 

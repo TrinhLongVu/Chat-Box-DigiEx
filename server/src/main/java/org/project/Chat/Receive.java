@@ -16,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.project.ServerManager;
+import org.project.Services.CallAPI;
+
 class balancer {
     public static Socket loadBalanSocket = null;
 }
@@ -71,8 +74,10 @@ public class Receive implements Runnable {
             if (currentClient != null) {
                 // handle later
                 DataSave.clients.remove(currentClient);
-                
-                SendUsersOnline.handle("");
+                String dataSend = currentClient.getName() + "&&localhost@" + ServerManager.PORT;  
+                CallAPI.PostData("http://localhost:8080/disconnect", dataSend);
+                SendUsersOnline.handle(null);
+
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
             }
