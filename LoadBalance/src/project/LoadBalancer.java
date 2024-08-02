@@ -277,6 +277,7 @@ public class LoadBalancer {
         out.println("Content-Length: " + responseLength);
         out.println();
         out.flush();
+    }
 
 
     private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
