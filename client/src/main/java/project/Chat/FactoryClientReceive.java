@@ -38,15 +38,18 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
     public void handle(TypeReceive data, Socket socket, String message) {
         String dataReceive = data.getData();
         String[] userOnlines = dataReceive.split(",");
+        DataSave.userOnline.clear();
         for (String userOnline : userOnlines) {
-            if(!userOnline.equals(LoginForm.username))
+            if (!userOnline.equals(LoginForm.username)) {
                 DataSave.userOnline.add(userOnline);
+            }
         }
 
         SwingUtilities.invokeLater(() -> {
             HomePage.listModelUsers.clear();
-            for (String user : DataSave.userOnline) {
-                HomePage.listModelUsers.addElement(user);
+            for (String userOnline : DataSave.userOnline) {
+                String user[] = userOnline.split("\\?");
+                HomePage.listModelUsers.addElement(user[0]);
             }
         });
     }

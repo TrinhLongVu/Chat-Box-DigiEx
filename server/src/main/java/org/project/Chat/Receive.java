@@ -24,7 +24,6 @@ public class Receive implements Runnable {
     private BufferedReader br;
     private Socket socket;
     private Client currentClient;
-    private static String userOnlines = "[]";
     public static ConcurrentHashMap<Socket, Client> receiveClientMap = new ConcurrentHashMap<>();
 
     public Receive(Socket socket) {
@@ -72,7 +71,8 @@ public class Receive implements Runnable {
             if (currentClient != null) {
                 // handle later
                 DataSave.clients.remove(currentClient);
-                SendUsersOnline.handle(userOnlines);
+                
+                SendUsersOnline.handle("");
                 System.out.println(
                         "Client " + currentClient.getName() + " disconnected and removed from active clients.");
             }

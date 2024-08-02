@@ -69,6 +69,7 @@ public class HomePage extends JFrame {
         JlistUsers.addListSelectionListener((ListSelectionEvent e) -> {
             if (!e.getValueIsAdjusting()) {
                 String selectedValue = JlistUsers.getSelectedValue();
+
                 if (selectedValue == null) {
                     if (!DataSave.selectedUser.equals("")) {
                         int i = 0;
@@ -80,11 +81,12 @@ public class HomePage extends JFrame {
                         }
                     }
                 } else if (selectedValue != null) {
-                    DataSave.selectedUser = selectedValue;
+                    int index = JlistUsers.getSelectedIndex();
+                    DataSave.selectedUser =  DataSave.userOnline.get(index);
 
                     // Update userLabel on the EDT
                     SwingUtilities.invokeLater(() -> {
-                        userLabel.setText(myName + " is chatting with user: " + DataSave.selectedUser);
+                        userLabel.setText(myName + " is chatting with user: " + DataSave.selectedUser.split("\\?")[0]);
                         LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
                         if (history == null) {
                             history = new LinkedList<>();
