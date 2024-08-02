@@ -6,10 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.border.Border;
-
-import org.project.ServerManager;
+import java.util.stream.Stream;
 
 import src.lib.Client;
 import src.lib.DataSave;
@@ -106,32 +103,23 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
     }
     
     public void handleChatGroup(TypeReceive data) {
-
-        System.out.println("handle chat group....." + data.getData() + data.getNameReceive());
-
-        for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
-            if (dataName.getKey().equals(data.getNameReceive())) {
-                String[] usersInGroup = dataName.getValue().split(", ");
-                for (String userInGroup : usersInGroup) {
-                    if (!userInGroup.equals(data.getNameSend())) {
-                        DataSave.clients.stream()
-                                .filter(client -> client.getName().equals(userInGroup))
-                                .forEach(client -> {
-                                    try {
-                                        new Send(client.getSocket()).sendData(
-                                                "type:chat-group&&send:" + data.getNameSend() + ","
-                                                        + data.getNameReceive()
-                                                        + "&&data:" + data.getData());
-                                    } catch (IOException e) {
-                                        Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(
-                                                Level.SEVERE,
-                                                "An error occurred: {0}", e.getMessage());
-                                    }
-                                });
+        DataSave.groups.entrySet().stream()
+            .filter(entry -> entry.getKey().equals(data.getNameReceive()))
+            .map(Map.Entry::getValue)
+            .flatMap(groupMembers -> Stream.of(groupMembers.split(", ")))
+            .filter(userInGroup -> !userInGroup.equals(data.getNameSend()))
+            .forEach(userInGroup -> DataSave.clients.stream()
+                .filter(client -> client.getName().equals(userInGroup))
+                .forEach(client -> {
+                    try {
+                        new Send(client.getSocket()).sendData(
+                            "type:chat-group&&send:" + data.getNameSend() + ","
+                            + data.getNameReceive() + "&&data:" + data.getData());
+                    } catch (IOException e) {
+                        Logger.getLogger(ChatMessageHandlerFactory.class.getName())
+                              .log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
                     }
-                }
-            }
-        }
+                }));
     }
 }
 

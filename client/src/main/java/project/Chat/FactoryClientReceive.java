@@ -1,10 +1,8 @@
 package project.Chat;
 
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.JOptionPane;
@@ -101,8 +99,6 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
         }
     }
 }
-
-
 
 class ErrorMessageHandlerFactory implements MessageHandlerFactory {
     @Override

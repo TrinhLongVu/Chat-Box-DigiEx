@@ -1,28 +1,21 @@
 package project;
 
-
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.BufferedOutputStream;
-
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 
+import project.Chat.ClientInfo;
 import project.Chat.ServerInfo;
 import project.Chat.Database;
 
-
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.InetSocketAddress;
-import java.util.List;
-import project.Chat.ClientInfo;
 
 public class LoadBalancer {
     private static final int MAX_CLIENTS = 2;
@@ -54,22 +47,18 @@ public class LoadBalancer {
     
     private static void handleClient(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter out = new PrintWriter(socket.getOutputStream());
-                BufferedOutputStream dataOut = new BufferedOutputStream(socket.getOutputStream())) {
+
+            PrintWriter out = new PrintWriter(socket.getOutputStream());
+            BufferedOutputStream dataOut = new BufferedOutputStream(socket.getOutputStream())) {
 
             String inputLine = in.readLine();
-            if (inputLine == null || inputLine.isEmpty())
-                return;
-
+            if (inputLine == null || inputLine.isEmpty()) return;
+        
             String[] requestParts = inputLine.split(" ");
             String method = requestParts[0];
             String fileRequested = requestParts[1];
 
             System.out.println("Request: " + method + " " + fileRequested);
-
-            // Skip headers
-            // while (in.readLine().length() != 0) {
-            // }
 
             switch (method) {
                 case "POST" -> {
@@ -96,10 +85,9 @@ public class LoadBalancer {
         }
     }
     
-    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut)
-            throws IOException {
+    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         System.out.println("Received connection request");
-
+        
         // Find a suitable server and prepare the response
         ServerInfo serverEmpty = Database.serverList.stream()
                 .filter(server -> server.getActiveClients() < MAX_CLIENTS)
@@ -125,8 +113,7 @@ public class LoadBalancer {
     }
 
 
-    private static void handleLogin(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
-            throws IOException {
+    private static void handleLogin(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         System.out.println("Received login request");
         int contentLength = 0;
         String line;
@@ -171,7 +158,6 @@ public class LoadBalancer {
 
         dataOut.write(responseData, 0, responseLength);
         dataOut.flush();
-
     }
     
     private static void handleDisconnect(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
@@ -180,7 +166,6 @@ public class LoadBalancer {
         int contentLength = 0;
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
-            // System.out.println("Header: " + line);
             if (line.startsWith("Content-Length: ")) {
                 contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
             }
@@ -231,7 +216,6 @@ public class LoadBalancer {
         int contentLength = 0;
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
-            // System.out.println("Header: " + line);
             if (line.startsWith("Content-Length: ")) {
                 contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
             }
@@ -242,7 +226,6 @@ public class LoadBalancer {
         in.read(body, 0, contentLength);
         String requestBody = new String(body);
         System.out.println("Request body: " + requestBody);
-
 
         String[] nameAndServer = requestBody.split("&&");
         String name = nameAndServer[0];
@@ -272,7 +255,6 @@ public class LoadBalancer {
 
         dataOut.write(responseData, 0, responseLength);
         dataOut.flush();
-
     }
 
     private static void handleGetClients(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
@@ -296,11 +278,6 @@ public class LoadBalancer {
         out.println();
         out.flush();
 
-        dataOut.write(responseData, 0, responseLength);
-        dataOut.flush();
-
-    }
-
 
     private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         String errorMessage = "HTTP/1.1 404 File Not Found\r\n" +
@@ -322,10 +299,9 @@ public class LoadBalancer {
                 "\r\n" +
                 "<h1>501 Not Implemented</h1>";
 
-        out.println(errorMessage);
-        out.flush();
-        dataOut.write(errorMessage.getBytes());
+
+        dataOut.write(responseData, 0, responseLength);
         dataOut.flush();
+
     }
-    
 }

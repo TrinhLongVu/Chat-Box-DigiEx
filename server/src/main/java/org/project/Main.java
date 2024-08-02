@@ -3,9 +3,7 @@ package org.project;
 import javax.swing.*;
 
 public class Main extends JFrame {
-
-    private int SERVER_PORT = 1235;
-
+    private int SERVER_PORT = 1234;
     private JTextField portTextField;
     private JButton startButton;
     private JButton stopButton;
