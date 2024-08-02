@@ -1,22 +1,26 @@
 package project;
 
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
+import project.Chat.ClientInfo;
 import project.Chat.ServerInfo;
 import project.Chat.Database;
 
-import java.io.PrintWriter;
-import project.Chat.ClientInfo;
 
 public class LoadBalancer {
     private static final int MAX_CLIENTS = 2;
     private static final int PORT = 8080;
+
     public LoadBalancer() {
         Database.serverList = new ArrayList<>();
         Database.serverList.add(new ServerInfo("localhost", 1234, null));
@@ -38,16 +42,18 @@ public class LoadBalancer {
         } catch (IOException e) {
             System.err.println("Server error: " + e.getMessage());
         }
+
     }
     
     private static void handleClient(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
             PrintWriter out = new PrintWriter(socket.getOutputStream());
             BufferedOutputStream dataOut = new BufferedOutputStream(socket.getOutputStream())) {
 
             String inputLine = in.readLine();
             if (inputLine == null || inputLine.isEmpty()) return;
-
+        
             String[] requestParts = inputLine.split(" ");
             String method = requestParts[0];
             String fileRequested = requestParts[1];
@@ -272,10 +278,6 @@ public class LoadBalancer {
         out.println();
         out.flush();
 
-        dataOut.write(responseData, 0, responseLength);
-        dataOut.flush();
-    }
-
 
     private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         String errorMessage = "HTTP/1.1 404 File Not Found\r\n" +
@@ -297,9 +299,9 @@ public class LoadBalancer {
                 "\r\n" +
                 "<h1>501 Not Implemented</h1>";
 
-        out.println(errorMessage);
-        out.flush();
-        dataOut.write(errorMessage.getBytes());
+
+        dataOut.write(responseData, 0, responseLength);
         dataOut.flush();
+
     }
 }

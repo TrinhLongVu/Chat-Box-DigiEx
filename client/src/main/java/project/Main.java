@@ -16,6 +16,8 @@ public class Main {
         try {
             // URL of the LoadBalancer
             URL url = new URL("http://localhost:8080/connect");
+
+            // Open connection
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(true);

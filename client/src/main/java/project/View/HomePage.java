@@ -3,14 +3,24 @@ package project.View;
 import src.lib.Send;
 import src.lib.DataSave;
 import src.lib.LogHandler;
+import src.lib.Helper;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
+
+import project.Main;
+import project.Chat.Receive;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.SocketException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -170,12 +180,75 @@ public class HomePage extends JFrame {
             history.add("You: " + message);
             tfInput.setText("");
             try {
-                new Send(socket).sendData("type:chat&&send:" + myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
-                logger.info("Message sent: " + message);
+                if (socket != null && !socket.isClosed()) {
+                    new Send(socket).sendData("type:chat&&send:" + myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
+                    logger.info("Message sent: " + message);
+                } else {
+                    reconnectServer();
+                    System.out.println("Current socket: " + socket);
+                }
+            } catch (SocketException se) {
+                reconnectServer();
+                System.out.println("Current socket: " + socket);
             } catch (IOException e) {
                 logger.error("Failed to send message: " + e.getMessage());
-                JOptionPane.showMessageDialog(this, "An error occurred while sending message: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "An error occurred while sending message, trying to reconnect to new server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    private void reconnectServer() {
+        StringBuilder content = new StringBuilder();
+    
+        try {
+            // URL of the LoadBalancer
+            URL url = new URL("http://localhost:8080/reconnect");
+    
+            // Open connection
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+    
+            // Read the response
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+            }
+    
+            String data = Helper.FormatData(content).getData();
+            // Parse the new server details from the response
+            String[] hostAndPort = data.toString().split("@");
+            String host = "localhost";
+            int port = Integer.parseInt(hostAndPort[1]);
+
+            System.out.print("New Host: " + host);
+            System.out.println("...New Port: " + port);
+    
+            // Close the existing socket
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+
+            System.out.println("New Server: " + content);
+            
+            Socket s = null;
+            try {
+                s = new Socket(host, port);
+            } catch (IOException ie) {
+                System.out.println("Cannot connect to new server: " + ie.getMessage());
+            }
+            // Create a new socket with the new server details
+            socket = s;
+            System.out.println("New Socket is crated: " + socket);
+            System.out.println("New Socket is crated in port: " + port);
+            logger.info("Reconnected to new server: " + host + ":" + port);
+    
+            JOptionPane.showMessageDialog(this, "Reconnected to new server: " + host + ":" + port, "Reconnected", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            logger.error("Failed to reconnect to server: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
