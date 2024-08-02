@@ -6,10 +6,12 @@ target/
 client/target/
 client/lib/
 LoadBalance/lib/
+Broker/lib/
 server/lib/
 server/target/
 client/Logger/
 support/target/
+
 
 ### IntelliJ IDEA ###
 server/.idea/modules.xml
