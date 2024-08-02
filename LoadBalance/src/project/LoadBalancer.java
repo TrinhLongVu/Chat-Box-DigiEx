@@ -1,8 +1,7 @@
 package project;
 
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpExchange;
+
+import java.io.BufferedOutputStream;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,13 +28,14 @@ import project.Chat.Receive;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.util.List;
 import project.Chat.ClientInfo;
 
 public class LoadBalancer {
     private static final int MAX_CLIENTS = 1;
-
+    private static final int PORT = 8080;
     public LoadBalancer() {
         Database.serverList = new ArrayList<>();
         Database.serverList.add(new ServerInfo("localhost", 1234, null));
@@ -44,214 +44,296 @@ public class LoadBalancer {
 
     public static void main(String[] args) {
         LoadBalancer loadBalancer = new LoadBalancer();
-        try{
-            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Server is listening on port " + PORT);
 
-            // Define a context that listens for requests
-            server.createContext("/", new HandlerConnection());
-            server.createContext("/login", new HandlerLogin());
-            server.createContext("/get-clients", new HandlerGetClients());
-            server.createContext("/disconnect", new HandlerDisconnect());
-            server.createContext("/create-group", new HandlerCreateGroup());
-
-            // Start the server
-            server.setExecutor(null);
-            server.start();
-            System.out.println("LoadBalancer is running on http://localhost:8080");
-        } catch (IOException e) {
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-        }
-    }
-    
-    // Handler that processes incoming requests
-    static class HandlerConnection implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            // Read the request from the client
-            ServerInfo serverEmpty = Database.serverList.stream()
-                    .filter(server -> server.getActiveClients() < MAX_CLIENTS)
-                    .findFirst()
-                    .orElse(null);
-
-            InputStream is = exchange.getRequestBody();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println("Received from client: " + line);
-            }
-            reader.close(); // Close the input stream after reading
-            String response = "type:server&&data:" + serverEmpty.toString();
-
-            // Set the response headers and status code
-            exchange.sendResponseHeaders(200, response.length());
-
-            try ( // Write the response body
-                OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            } catch (IOException e) {
-                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                        e.getMessage());
-            }
-        }
-    }
-    
-    static class HandlerLogin implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            System.out.println("Received login request");
-            InputStream is = exchange.getRequestBody();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println("Received from client: " + line);
-                String[] nameAndServer = line.split("&&");
-                String name = nameAndServer[0];
-                ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-                Database.clients.add(client);
-                String[] hostAndPort = nameAndServer[1].split("@");
-                String host = hostAndPort[0];
-                int port = Integer.parseInt(hostAndPort[1]);
-                Database.serverList.forEach(server -> {
-                    if (server.getHost().equals(host) && server.getPort() == port) {
-                        server.incrementClients();
-                        System.out.println("Incremented clients for server: " + server.toString());
-                        System.out.println("Number: " + server.getActiveClients());
-                    }
-                });
-
-            }
-
-            reader.close(); // Close the input stream after reading
-            String response = "Receieved Message";
-
-            // Set the response headers and status code
-            exchange.sendResponseHeaders(200, response.length());
-
-            try ( // Write the response body
-                    OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            } catch (IOException e) {
-                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                        e.getMessage());
-            }
-
-        }
-    }
-
-    static class HandlerGetClients implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            System.out.println("Received get-clients request");
-            String response = "";
-            for (ClientInfo client : Database.clients) {
-                if (client == Database.clients.get(Database.clients.size() - 1)) {
-                    response += client.getName();
-                } else {
-                    response += client.getName() + ",";
+            while (true) {
+                try (Socket socket = serverSocket.accept()) {
+                    handleClient(socket);
+                } catch (IOException e) {
+                    System.err.println("Client connection error: " + e.getMessage());
                 }
             }
+        } catch (IOException e) {
+            System.err.println("Server error: " + e.getMessage());
+        }
 
-            // Set the response headers and status code
-            exchange.sendResponseHeaders(200, response.length());
+    }
+    
+    private static void handleClient(Socket socket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream());
+                BufferedOutputStream dataOut = new BufferedOutputStream(socket.getOutputStream())) {
 
-            try ( // Write the response body
-                    OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            } catch (IOException e) {
-                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                        e.getMessage());
+            String inputLine = in.readLine();
+            if (inputLine == null || inputLine.isEmpty())
+                return;
+
+            String[] requestParts = inputLine.split(" ");
+            String method = requestParts[0];
+            String fileRequested = requestParts[1];
+
+            System.out.println("Request: " + method + " " + fileRequested);
+
+            // Skip headers
+            // while (in.readLine().length() != 0) {
+            // }
+
+            switch (method) {
+                case "POST" -> {
+                    switch (fileRequested) {
+                        case "/login" -> handleLogin(in, out, dataOut);
+                        case "/disconnect" -> handleDisconnect(in, out, dataOut);
+                        case "/create-group" -> handleCreateGroup(in, out, dataOut);
+                        default -> sendNotFound(out, dataOut);
+                    }
+                }
+
+                case "GET" -> {
+                    switch (fileRequested) {
+                        case "/connect" -> handleGetConnection(out, dataOut);
+                        case "/get-clients" -> handleGetClients(out, dataOut);
+                        default -> sendNotFound(out, dataOut);
+                    }
+                }
+                default -> sendNotImplemented(out, dataOut);
             }
+
+        } catch (IOException e) {
+            System.err.println("Client error: " + e.getMessage());
         }
     }
     
-    static class HandlerDisconnect implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            System.out.println("Received disconnect request");
-            InputStream is = exchange.getRequestBody();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                //Tien&&localhost@1234
-                System.out.println("Received from client: " + line);
-                String[] nameAndPort = line.split("&&");
-                String[] hostAndPortArray = nameAndPort[1].split("@");
-                String name = nameAndPort[0];
-                String host = hostAndPortArray[0];
-                int port = Integer.parseInt(hostAndPortArray[1]);
+    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut)
+            throws IOException {
+        System.out.println("Received connection request");
 
-                Database.clients.removeIf(client -> client.getName().equals(name));
-                Database.serverList.forEach(server -> {
-                    if (server.getHost().equals(host) && server.getPort() == port) {
-                        if (server.getActiveClients() > 0) {
-                            server.decrementClients();
-                            System.out.println("Decremented clients for server: " + server.toString());
-                            System.out.println("Number: " + server.getActiveClients());
-                        } else {
-                            System.out.println("No clients to decrement");
-                        }
-                    }
-                });
-            }
+        // Find a suitable server and prepare the response
+        ServerInfo serverEmpty = Database.serverList.stream()
+                .filter(server -> server.getActiveClients() < MAX_CLIENTS)
+                .findFirst()
+                .orElse(null);
 
-            reader.close(); // Close the input stream after reading
-            String response = "Receieved Message";
+        String responseMessage = "type:server&&data:" + serverEmpty;
+        System.out.println("Response message: " + responseMessage);
+        byte[] responseData = responseMessage.getBytes();
+        int responseLength = responseData.length;
 
-            // Set the response headers and status code
-            exchange.sendResponseHeaders(200, response.length());
+        // Send the response headers
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: SimpleJavaHttpServer");
+        out.println("Content-Type: text/plain");
+        out.println("Content-Length: " + responseLength);
+        out.println(); // End headers with an empty line
+        out.flush();
 
-            try ( // Write the response body
-                    OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            } catch (IOException e) {
-                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                        e.getMessage());
-            }
-        }
+        // Send the response body
+        dataOut.write(responseData);
+        dataOut.flush();
     }
 
-    static class HandlerCreateGroup implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            System.out.println("Received create-group request");
-            InputStream is = exchange.getRequestBody();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                //GroupA&&localhost@1234
-                System.out.println("Received from client: " + line);
-                String[] nameAndServer = line.split("&&");
-                String name = nameAndServer[0];
-                ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-                Database.clients.add(client);
-                String[] hostAndPort = nameAndServer[1].split("@");
-                String host = hostAndPort[0];
-                int port = Integer.parseInt(hostAndPort[1]);
-                Database.serverList.forEach(server -> {
-                    if (server.getHost().equals(host) && server.getPort() == port) {
-                        server.incrementClients();
-                        System.out.println("Incremented clients for server: " + server.toString());
-                        System.out.println("Number: " + server.getActiveClients());
-                    }
-                });
 
+    private static void handleLogin(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
+            throws IOException {
+        System.out.println("Received login request");
+        int contentLength = 0;
+        String line;
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            // System.out.println("Header: " + line);
+            if (line.startsWith("Content-Length: ")) {
+                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
             }
-
-            reader.close(); // Close the input stream after reading
-            String response = "Receieved Message";
-
-            // Set the response headers and status code
-            exchange.sendResponseHeaders(200, response.length());
-
-            try ( // Write the response body
-                    OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            } catch (IOException e) {
-                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                        e.getMessage());
-            }
-
         }
+
+        // Read the request body based on Content-Length
+        char[] body = new char[contentLength];
+        in.read(body, 0, contentLength);
+        String requestBody = new String(body);
+        System.out.println("Request body: " + requestBody);
+
+        String[] nameAndServer = requestBody.split("&&");
+        String name = nameAndServer[0];
+        ClientInfo client = new ClientInfo(name, nameAndServer[1]);
+        Database.clients.add(client);
+        String[] hostAndPort = nameAndServer[1].split("@");
+        String host = hostAndPort[0];
+        int port = Integer.parseInt(hostAndPort[1]);
+        Database.serverList.forEach(server -> {
+            if (server.getHost().equals(host) && server.getPort() == port) {
+                server.incrementClients();
+                System.out.println("Incremented clients for server: " + server.toString());
+                System.out.println("Number: " + server.getActiveClients());
+            }
+        });
+
+        String responseMessage = "Receieved Message";
+        byte[] responseData = responseMessage.getBytes();
+        int responseLength = responseData.length;
+
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: SimpleJavaHttpServer");
+        out.println("Content-Type: text/plain");
+        out.println("Content-Length: " + responseLength);
+        out.println();
+        out.flush();
+
+        dataOut.write(responseData, 0, responseLength);
+        dataOut.flush();
+
     }
+    
+    private static void handleDisconnect(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
+            throws IOException {
+        System.out.println("Received disconnect request");
+        int contentLength = 0;
+        String line;
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            // System.out.println("Header: " + line);
+            if (line.startsWith("Content-Length: ")) {
+                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
+            }
+        }
+
+        // Read the request body based on Content-Length
+        char[] body = new char[contentLength];
+        in.read(body, 0, contentLength);
+        String requestBody = new String(body);
+        System.out.println("Request body: " + requestBody);
+        String[] nameAndPort = requestBody.split("&&");
+        String[] hostAndPortArray = nameAndPort[1].split("@");
+        String name = nameAndPort[0];
+        String host = hostAndPortArray[0];
+        int port = Integer.parseInt(hostAndPortArray[1]);
+
+        Database.clients.removeIf(client -> client.getName().equals(name));
+        Database.serverList.forEach(server -> {
+            if (server.getHost().equals(host) && server.getPort() == port) {
+                if (server.getActiveClients() > 0) {
+                    server.decrementClients();
+                    System.out.println("Decremented clients for server: " + server.toString());
+                    System.out.println("Number: " + server.getActiveClients());
+                } else {
+                    System.out.println("No clients to decrement");
+                }
+            }
+        });
+
+        String responseMessage = "Receieved Message";
+        byte[] responseData = responseMessage.getBytes();
+        int responseLength = responseData.length;
+
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: SimpleJavaHttpServer");
+        out.println("Content-Type: text/plain");
+        out.println("Content-Length: " + responseLength);
+        out.println();
+        out.flush();
+
+        dataOut.write(responseData, 0, responseLength);
+        dataOut.flush();
+    }
+
+    private static void handleCreateGroup(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
+            throws IOException {
+        System.out.println("Received create-group request");
+        int contentLength = 0;
+        String line;
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            // System.out.println("Header: " + line);
+            if (line.startsWith("Content-Length: ")) {
+                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
+            }
+        }
+
+        // Read the request body based on Content-Length
+        char[] body = new char[contentLength];
+        in.read(body, 0, contentLength);
+        String requestBody = new String(body);
+        System.out.println("Request body: " + requestBody);
+
+
+        String[] nameAndServer = requestBody.split("&&");
+        String name = nameAndServer[0];
+        ClientInfo client = new ClientInfo(name, nameAndServer[1]);
+        Database.clients.add(client);
+        String[] hostAndPort = nameAndServer[1].split("@");
+        String host = hostAndPort[0];
+        int port = Integer.parseInt(hostAndPort[1]);
+        Database.serverList.forEach(server -> {
+            if (server.getHost().equals(host) && server.getPort() == port) {
+                server.incrementClients();
+                System.out.println("Incremented clients for server: " + server.toString());
+                System.out.println("Number: " + server.getActiveClients());
+            }
+        });
+
+        String responseMessage = "Receieved Message";
+        byte[] responseData = responseMessage.getBytes();
+        int responseLength = responseData.length;
+
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: SimpleJavaHttpServer");
+        out.println("Content-Type: text/plain");
+        out.println("Content-Length: " + responseLength);
+        out.println();
+        out.flush();
+
+        dataOut.write(responseData, 0, responseLength);
+        dataOut.flush();
+
+    }
+
+    private static void handleGetClients(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
+        System.out.println("Received get-clients request");
+        String response = "";
+        for (ClientInfo client : Database.clients) {
+            if (client == Database.clients.get(Database.clients.size() - 1)) {
+                response += client.getName();
+            } else {
+                response += client.getName() + ",";
+            }
+        }
+
+        byte[] responseData = response.getBytes();
+        int responseLength = responseData.length;
+
+        out.println("HTTP/1.1 200 OK");
+        out.println("Server: SimpleJavaHttpServer");
+        out.println("Content-Type: text/plain");
+        out.println("Content-Length: " + responseLength);
+        out.println();
+        out.flush();
+
+        dataOut.write(responseData, 0, responseLength);
+        dataOut.flush();
+
+    }
+
+
+    private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
+        String errorMessage = "HTTP/1.1 404 File Not Found\r\n" +
+                "Content-Type: text/html\r\n" +
+                "Content-Length: 23\r\n" +
+                "\r\n" +
+                "<h1>404 Not Found</h1>";
+
+        out.println(errorMessage);
+        out.flush();
+        dataOut.write(errorMessage.getBytes());
+        dataOut.flush();
+    }
+
+    private static void sendNotImplemented(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
+        String errorMessage = "HTTP/1.1 501 Not Implemented\r\n" +
+                "Content-Type: text/html\r\n" +
+                "Content-Length: 25\r\n" +
+                "\r\n" +
+                "<h1>501 Not Implemented</h1>";
+
+        out.println(errorMessage);
+        out.flush();
+        dataOut.write(errorMessage.getBytes());
+        dataOut.flush();
+    }
+    
 }
-
