@@ -200,9 +200,13 @@ public class LoadBalancer {
         Database.clients.removeIf(client -> client.getName().equals(name));
         Database.serverList.forEach(server -> {
             if (server.getHost().equals(host) && server.getPort() == port) {
-                server.incrementClients();
-                System.out.println("Incremented clients for server: " + server.toString());
-                System.out.println("Number: " + server.getActiveClients());
+                if (server.getActiveClients() > 0) {
+                    server.decrementClients();
+                    System.out.println("Decremented clients for server: " + server.toString());
+                    System.out.println("Number: " + server.getActiveClients());
+                } else {
+                    System.out.println("No clients to decrement");
+                }
             }
         });
 
