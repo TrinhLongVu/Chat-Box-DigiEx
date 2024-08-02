@@ -16,24 +16,18 @@ public class Main {
 
         try {
             // URL of the LoadBalancer
-            URL url = new URL("http://localhost:8080");
+            URL url = new URL("http://localhost:8080/connect");
 
             // Open connection
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
+            conn.setRequestMethod("GET");
             conn.setDoOutput(true);
-           
-            // Write Response
-            // String confirmationMessage = "type:connection-confirmation&&status=connected&&server=";
-            // try (OutputStream os = conn.getOutputStream()) {
-            //     os.write(confirmationMessage.getBytes());
-            //     os.flush();
-            // }
+
 
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
-            
+
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
@@ -41,7 +35,7 @@ public class Main {
             // Close connections
             in.close();
             conn.disconnect();
-
+            System.out.println("Response: " + content.toString());
 
         } catch (IOException e) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error Test: {0}", e.getMessage());
