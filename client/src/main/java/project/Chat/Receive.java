@@ -28,7 +28,6 @@ public class Receive extends Thread {
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0} ", e.getMessage());
-
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -40,7 +39,7 @@ public class Receive extends Thread {
             while (true) {
                 this.receiveMsg = this.br.readLine();
                 if (receiveMsg != null) {
-                    System.out.println("Received: " + receiveMsg);
+                    System.out.println("Receive of client: " + receiveMsg);
                     TypeReceive data = Helper.FormatData(receiveMsg);
                     if (data.getType().equals("server")) {
                         handleServer(data.getData());
@@ -49,14 +48,11 @@ public class Receive extends Thread {
                     MessageHandlerFactory factory = FactoryClientReceive.getFactory(data.getType());
                     if (factory != null) {
                         factory.handle(data, this.socket, receiveMsg);
-                    } else {
-
                     }
                 }
             }
         } catch (IOException e) {
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -64,7 +60,7 @@ public class Receive extends Thread {
 
     private void handleServer(String data) {
         String[] hostAndPort = data.split("@");
-        System.out.println(hostAndPort[0] + "...." + hostAndPort[1]);
+        System.out.println("connect host: " + hostAndPort[0] + "@" + hostAndPort[1]);
         int port;
         String host = hostAndPort[0];
 
@@ -72,7 +68,6 @@ public class Receive extends Thread {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}", e.getMessage());
-
             System.out.println("Invalid port number format");
             return;
         }

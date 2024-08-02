@@ -62,9 +62,7 @@ public class ServerManager {
                             Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING, "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
                         }
                         ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
-                        System.out.println("Thread pool active count: " + tpe.getActiveCount());
-                        System.out.println("Thread pool queued task count: " + tpe.getQueue().size());
-                        System.out.println("Thread pool completed task count: " + tpe.getCompletedTaskCount());
+
                         if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
                                 .sendData("type:error&&data: server is full, please try again later.");
@@ -95,7 +93,6 @@ public class ServerManager {
             } catch (IOException e) {
                 System.out.println("Error closing server socket: " + e.getMessage());
                 Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}", e.getMessage());
-
             }
         }
         if (threadPool != null && !threadPool.isShutdown()) {
@@ -119,9 +116,5 @@ public class ServerManager {
 
     public boolean isRunning() {
         return running;
-    }
-
-    public int threadFree() {
-        return THREAD_POOL_SIZE - ((ThreadPoolExecutor) threadPool).getActiveCount();
     }
 }

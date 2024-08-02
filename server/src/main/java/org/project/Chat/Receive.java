@@ -72,7 +72,6 @@ public class Receive implements Runnable {
                 socket.close();
             }
             if (currentClient != null) {
-                // handle later
                 DataSave.clients.remove(currentClient);
                 String dataSend = currentClient.getName() + "&&localhost@" + ServerManager.PORT;  
                 CallAPI.PostData("http://localhost:8080/disconnect", dataSend);

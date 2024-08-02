@@ -1,18 +1,12 @@
 package org.project.Chat;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 import org.project.Services.CallAPI;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import src.lib.Client;
 import src.lib.DataSave;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import src.lib.Send;
 
 
