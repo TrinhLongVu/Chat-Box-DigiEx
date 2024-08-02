@@ -1,13 +1,24 @@
 package project;
 
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpExchange;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import src.lib.Helper;
 import src.lib.Send;
+import src.lib.TypeReceive;
+
 import org.project.ServerManager;
 
 import project.Chat.ServerInfo;
@@ -15,150 +26,140 @@ import project.Chat.ServerManagerInfo;
 import project.Chat.Database;
 import project.Chat.Receive;
 
-public class LoadBalancer extends Thread {
-    private static int LOAD_BALANCER_PORT;
-    private static final int MAX_CLIENTS = 2;
-    private static final int INITIAL_PORT = 1234;
-    private int portDefault = INITIAL_PORT;
 
-    public LoadBalancer(int port) {
-        LOAD_BALANCER_PORT = port;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.util.List;
+import project.Chat.ClientInfo;
+
+public class LoadBalancer {
+    private static final int MAX_CLIENTS = 1;
+
+    public LoadBalancer() {
         Database.serverList = new ArrayList<>();
-
-        try {
-            initializeServerManager();
-        } catch (IOException e) {
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-
-        }
-    }
-
-    private void initializeServerManager() throws IOException {
-        ServerManager serverManager = new ServerManager();
-        serverManager.startServer(portDefault);
-
-        ServerManagerInfo serverManagerInfo = new ServerManagerInfo(serverManager, portDefault);
-        Database.oldServerManager.add(serverManagerInfo);
-
-        Socket serverSocket = new Socket("localhost", portDefault);
-        Database.serverList.add(new ServerInfo("localhost", portDefault, serverSocket));
-        new Thread(new Receive(serverSocket, getAvailableServer())).start();
-        new Send(serverSocket).sendData("type:load-balancer");
-    }
-
-    @Override
-    public void run() {
-        try (ServerSocket serverSocket = new ServerSocket(LOAD_BALANCER_PORT)) {
-            System.out.println("Load balancer started on port " + LOAD_BALANCER_PORT);
-
-            while (true) {
-                handleClientLoad(serverSocket);
-            }
-        } catch (IOException e) {
-            System.out.println("Error: " + e.getMessage());
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-
-        }
-    }
-
-    private ServerInfo getAvailableServer() {
-        return Database.serverList.stream()
-                .filter(server -> server.getActiveClients() < MAX_CLIENTS)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private void handleClientLoad(ServerSocket serverSocket) throws IOException {
-        try (Socket clientSocket = serverSocket.accept()) {
-            System.out.println("Client connected to load balancer....");
-            Thread.sleep(2000);
-            ServerInfo availableServer = getAvailableServer();
-
-            if (availableServer != null) {
-                availableServer.incrementClients();
-                handleClientConnection(clientSocket, availableServer);
-            } else {
-                handleFullServers(clientSocket);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-        }
-    }
-
-    private void handleClientConnection(Socket clientSocket, ServerInfo server) {
-        new Receive(clientSocket, server).receiveData();
-        try {
-            new Send(clientSocket).sendData("type:server&&data:" + server.toString());
-        } catch (IOException e) {
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-        }
-    }
-
-    private void handleFullServers(Socket clientSocket) {
-        System.out.println("All servers are full. Please try again later.");
-
-        for (ServerManagerInfo serverManagerInfo : Database.oldServerManager) {
-            if (!serverManagerInfo.getOpenning()) {
-                serverManagerInfo.setOpenning(true);
-                ServerManager serverManager = new ServerManager();
-                serverManager.startServer(serverManagerInfo.getPort());
-                serverManagerInfo.setServerManager(serverManager);
-
-                try {
-                    connectToNewServer(serverManagerInfo.getPort(), clientSocket);
-                } catch (IOException e) {
-                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-
-                }
-                return;
-            }
-        }
-
-        startNewServer(clientSocket);
-    }
-
-    private void connectToNewServer(int port, Socket clientSocket) throws IOException {
-        Socket newServerSocket = new Socket("localhost", port);
-        ServerInfo newServer = new ServerInfo("localhost", port, newServerSocket);
-        Database.serverList.add(newServer);
-
-        new Thread(new Receive(newServerSocket, newServer)).start();
-        new Send(newServerSocket).sendData("type:load-balancer");
-
-        ServerInfo availableServer = getAvailableServer();
-        if (availableServer != null) {
-            availableServer.incrementClients();
-            handleClientConnection(clientSocket, availableServer);
-        } else {
-            System.out.println("Unexpected error: No available server after creating a new one.");
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.WARNING, "Unexpected error: No available server after creating a new one.");
-        }
-    }
-
-    private void startNewServer(Socket clientSocket) {
-        portDefault++;
-
-        ServerManager serverManager = new ServerManager();
-        serverManager.startServer(portDefault);
-
-        ServerManagerInfo serverManagerInfo = new ServerManagerInfo(serverManager, portDefault);
-        Database.oldServerManager.add(serverManagerInfo);
-
-        try {
-            connectToNewServer(portDefault, clientSocket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Failed to connect to the new server.");
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE,
-                    "Failed to start and connect to the new server: {0}", e.getMessage());
-
-        }
+        Database.serverList.add(new ServerInfo("localhost", 1234, null));
+        Database.serverList.add(new ServerInfo("localhost", 1235, null));
     }
 
     public static void main(String[] args) {
-        int clientPort = 3005;
-        LoadBalancer loadBalancerClient = new LoadBalancer(clientPort);
-        loadBalancerClient.start();
+        LoadBalancer loadBalancer = new LoadBalancer();
+        try{
+            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+
+            // Define a context that listens for requests
+            server.createContext("/", new MyHandler());
+            server.createContext("/login", new HandlerLogin());
+            server.createContext("/get-clients", new HandlerGetClients());
+
+            // Start the server
+            server.setExecutor(null);
+            server.start();
+            System.out.println("LoadBalancer is running on http://localhost:8080");
+        } catch (IOException e) {
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
+        }
+    }
+    
+    // Handler that processes incoming requests
+    static class MyHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            // Read the request from the client
+            ServerInfo serverEmpty = Database.serverList.stream()
+                    .filter(server -> server.getActiveClients() < MAX_CLIENTS)
+                    .findFirst()
+                    .orElse(null);
+
+            InputStream is = exchange.getRequestBody();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("Received from client: " + line);
+            }
+            reader.close(); // Close the input stream after reading
+            String response = "type:server&&data:" + serverEmpty.toString();
+
+            // Set the response headers and status code
+            exchange.sendResponseHeaders(200, response.length());
+
+            try ( // Write the response body
+                OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            } catch (IOException e) {
+                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                        e.getMessage());
+            }
+        }
+    }
+    
+    static class HandlerLogin implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            System.out.println("Received login request");
+            InputStream is = exchange.getRequestBody();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("Received from client: " + line);
+                String[] nameAndServer = line.split("&&");
+                String name = nameAndServer[0];
+                ClientInfo client = new ClientInfo(name, nameAndServer[1]);
+                Database.clients.add(client);
+                String[] hostAndPort = nameAndServer[1].split("@");
+                String host = hostAndPort[0];
+                int port = Integer.parseInt(hostAndPort[1]);
+                Database.serverList.forEach(server -> {
+                    if (server.getHost().equals(host) && server.getPort() == port) {
+                        server.incrementClients();
+                        System.out.println("Incremented clients for server: " + server.toString());
+                        System.out.println("Number: " + server.getActiveClients());
+                    }
+                });
+
+            }
+
+            reader.close(); // Close the input stream after reading
+            String response = "Receieved Message";
+
+            // Set the response headers and status code
+            exchange.sendResponseHeaders(200, response.length());
+
+            try ( // Write the response body
+                    OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            } catch (IOException e) {
+                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                        e.getMessage());
+            }
+
+        }
+    }
+    static class HandlerGetClients implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            System.out.println("Received get-clients request");
+            String response = "";
+            for (ClientInfo client : Database.clients) {
+                if (client == Database.clients.get(Database.clients.size() - 1)) {
+                    response += client.getName();
+                }
+                else {
+                    response += client.getName() + ",";
+                }
+            }
+
+            // Set the response headers and status code
+            exchange.sendResponseHeaders(200, response.length());
+
+            try ( // Write the response body
+                    OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            } catch (IOException e) {
+                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                        e.getMessage());
+            }
+        }
     }
 }
+

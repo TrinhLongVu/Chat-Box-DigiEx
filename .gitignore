@@ -2,6 +2,14 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+client/target/
+client/lib/
+LoadBalance/lib/
+server/lib/
+server/target/
+client/Logger/
+support/target/
+
 
 client/target/
 client/lib/

@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import project.View.HomePage;
+import project.View.LoginForm;
 import src.lib.DataSave;
 import src.lib.TypeReceive;
 
@@ -35,11 +36,12 @@ interface MessageHandlerFactory {
 class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
-        String content = data.getData();
-
-         String[] namesArray = content.substring(content.indexOf("[") + 1, content.indexOf("]")).split("\\s*,\\s*");
-        List<String> namesList = Arrays.asList(namesArray);
-        DataSave.userOnline = namesList;
+        String dataReceive = data.getData();
+        String[] userOnlines = dataReceive.split(",");
+        for (String userOnline : userOnlines) {
+            if(!userOnline.equals(LoginForm.username))
+                DataSave.userOnline.add(userOnline);
+        }
 
         SwingUtilities.invokeLater(() -> {
             HomePage.listModelUsers.clear();
@@ -47,7 +49,6 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
                 HomePage.listModelUsers.addElement(user);
             }
         });
-
     }
 }
 

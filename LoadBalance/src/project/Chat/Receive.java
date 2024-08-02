@@ -26,7 +26,7 @@ public class Receive implements Runnable{
         this.socket = ss;
         InputStream is;
         try {
-            is = ss.getInputStream();
+            is = this.socket.getInputStream();
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
             throw new RuntimeException(e);

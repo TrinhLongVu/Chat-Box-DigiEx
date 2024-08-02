@@ -11,15 +11,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.project.Chat.BrokerInfo;
 import org.project.Chat.Receive;
 import src.lib.Send;
 
 public class ServerManager {
     private ServerSocket serverSocket;
-    // 1 for thread pool and 1 for client
-    private static final int THREAD_POOL_SIZE = 2;
+
+    private static final int THREAD_POOL_SIZE = 1;
     private static final int LIMIT_QUEUE_SIZE = 1;
     public static int PORT;
+    private final int PORT_BROKER = 4000;
 
     private volatile boolean running;
     private ExecutorService threadPool;
@@ -41,20 +43,17 @@ public class ServerManager {
                 serverSocket = new ServerSocket(port);
                 System.out.println("Server listening on port " + port);
 
+                // connect with broker
+                Socket brokerSocket = new Socket("localhost", PORT_BROKER);
+                System.out.println("Connected to message broker with port " + PORT_BROKER);
+                
+                BrokerInfo.brokerSocket = brokerSocket;
+                new Thread(new Receive(brokerSocket)).start();
+
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
                         System.out.println("New client connected: " + clientSocket);
-
-                        try {
-                            Socket brokerSocket = new Socket("localhost", 4000);
-                            System.out.println("Connected to message broker");
-                
-                            new Thread(new Receive(brokerSocket)).start();
-                            new Send(brokerSocket).sendData("Hello from server");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
 
                         try {
                             threadPool.submit(new Receive(clientSocket));
@@ -73,7 +72,6 @@ public class ServerManager {
                     } catch (IOException e) {
                         if (running) {
                             System.out.println("Error accepting connection: " + e.getMessage());
-
                         }
                         Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error accepting connection: {0}", e.getMessage());
                     }
