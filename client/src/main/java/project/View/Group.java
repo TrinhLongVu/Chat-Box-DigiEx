@@ -9,6 +9,8 @@ import java.awt.*;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.UUID;
+
 
 public class Group extends JDialog {
 
@@ -40,9 +42,9 @@ public class Group extends JDialog {
                 }
             }
             if (selectedUsers.length() > 0) {
-                System.out.println( selectedUsers.toString() + myName);
                 try {
-                    new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText());
+                    String uniqueID = UUID.randomUUID().toString();
+                    new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);
                 } catch (IOException ex) {
                     Logger.getLogger(Group.class.getName()).log(Level.SEVERE, "Error: {0}", ex.getMessage());
 
