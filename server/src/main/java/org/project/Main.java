@@ -3,7 +3,6 @@ package org.project;
 import javax.swing.*;
 
 public class Main extends JFrame {
-    private int SERVER_PORT = 1234;
     private JTextField portTextField;
     private JButton startButton;
     private JButton stopButton;
@@ -22,24 +21,28 @@ public class Main extends JFrame {
         startButton = new JButton("Start Server");
         stopButton = new JButton("Stop Server");
         statusLabel = new JLabel("Server is stopped.");
-        portTextField = new JTextField("Port: Not running");
-        portTextField.setEditable(false);
+        portTextField = new JTextField("1235"); // Default port value
 
         // Layout setup
         JPanel panel = new JPanel();
+        panel.add(new JLabel("Port:"));
+        panel.add(portTextField);
         panel.add(startButton);
         panel.add(stopButton);
         panel.add(statusLabel);
-        panel.add(portTextField);
 
         add(panel);
 
         // Add action listeners
         startButton.addActionListener(e -> {
             if (!serverManager.isRunning()) {
-                serverManager.startServer(SERVER_PORT);
-                statusLabel.setText("Server is running.");
-                portTextField.setText("Port: " + SERVER_PORT);
+                try {
+                    int port = Integer.parseInt(portTextField.getText());
+                    serverManager.startServer(port);
+                    statusLabel.setText("Server is running on port " + port);
+                } catch (NumberFormatException ex) {
+                    statusLabel.setText("Invalid port number.");
+                }
             } else {
                 statusLabel.setText("Server is already running.");
             }
@@ -49,7 +52,6 @@ public class Main extends JFrame {
             if (serverManager.isRunning()) {
                 serverManager.stopServer();
                 statusLabel.setText("Server is stopped.");
-                portTextField.setText("Port: Not running");
             } else {
                 statusLabel.setText("Server is not running.");
             }

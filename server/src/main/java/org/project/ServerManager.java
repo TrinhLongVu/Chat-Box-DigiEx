@@ -22,17 +22,17 @@ public class ServerManager {
     private static final int LIMIT_QUEUE_SIZE = 1;
     public static int PORT;
     private final int PORT_BROKER = 4000;
+    private static final int HEARTBEAT_INTERVAL = 5000;
 
     private volatile boolean running;
     private ExecutorService threadPool;
 
     public ServerManager() {
         threadPool = new ThreadPoolExecutor(
-            THREAD_POOL_SIZE,
-            THREAD_POOL_SIZE,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
-        );
+                THREAD_POOL_SIZE,
+                THREAD_POOL_SIZE,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE));
     }
 
     public void startServer(int port) {
@@ -46,10 +46,11 @@ public class ServerManager {
                 // connect with broker
                 Socket brokerSocket = new Socket("localhost", PORT_BROKER);
                 System.out.println("Connected to message broker with port " + PORT_BROKER);
-                
+
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new Receive(brokerSocket)).start();
 
+                new Thread(new HeartbeatSender(brokerSocket)).start();
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
@@ -59,24 +60,27 @@ public class ServerManager {
                             threadPool.submit(new Receive(clientSocket));
                         } catch (RejectedExecutionException e) {
                             System.out.println("Server is overloaded, client will be informed.");
-                            Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING, "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
+                            Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING,
+                                    "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
                         }
                         ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
 
                         if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
-                                .sendData("type:error&&data: server is full, please try again later.");
+                                    .sendData("type:error&&data: server is full, please try again later.");
                         }
                     } catch (IOException e) {
                         if (running) {
                             System.out.println("Error accepting connection: " + e.getMessage());
                         }
-                        Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error accepting connection: {0}", e.getMessage());
+                        Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE,
+                                "Error accepting connection: {0}", e.getMessage());
                     }
                 }
             } catch (IOException e) {
                 System.out.println("Error starting server: " + e.getMessage());
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error starting server: {0}", e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error starting server: {0}",
+                        e.getMessage());
 
             } finally {
                 shutdown();
@@ -92,7 +96,8 @@ public class ServerManager {
                 serverSocket.close();
             } catch (IOException e) {
                 System.out.println("Error closing server socket: " + e.getMessage());
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}", e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}",
+                        e.getMessage());
             }
         }
         if (threadPool != null && !threadPool.isShutdown()) {
@@ -102,10 +107,37 @@ public class ServerManager {
                     threadPool.shutdownNow();
                 }
             } catch (InterruptedException e) {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}", e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}",
+                        e.getMessage());
 
                 threadPool.shutdownNow();
                 Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private class HeartbeatSender implements Runnable {
+        private Socket brokerSocket;
+        private static final int HEARTBEAT_INTERVAL = 5; // 5 seconds
+
+        public HeartbeatSender(Socket brokerSocket) {
+            this.brokerSocket = brokerSocket;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    new Send(brokerSocket).sendData("type:heartbeat");
+                    TimeUnit.SECONDS.sleep(HEARTBEAT_INTERVAL);
+                } catch (IOException e) {
+                    System.err.println("Error sending heartbeat: " + e.getMessage());
+                    break;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.err.println("Heartbeat sender interrupted: " + e.getMessage());
+                    break;
+                }
             }
         }
     }

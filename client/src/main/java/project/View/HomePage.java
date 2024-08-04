@@ -190,6 +190,7 @@ public class HomePage extends JFrame {
             } catch (SocketException se) {
                 reconnectServer();
                 System.out.println("Current socket: " + socket);
+                se.printStackTrace();
             } catch (IOException e) {
                 logger.error("Failed to send message: " + e.getMessage());
                 JOptionPane.showMessageDialog(this, "An error occurred while sending message, trying to reconnect to new server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -202,7 +203,7 @@ public class HomePage extends JFrame {
     
         try {
             // URL of the LoadBalancer
-            URL url = new URL("http://localhost:8080/reconnect");
+            URL url = new URL("http://localhost:8080/connect");
     
             // Open connection
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -217,7 +218,7 @@ public class HomePage extends JFrame {
                 }
             }
     
-            String data = Helper.FormatData(content).getData();
+            String data = Helper.FormatData(content.toString()).getData();
             // Parse the new server details from the response
             String[] hostAndPort = data.toString().split("@");
             String host = "localhost";
@@ -248,6 +249,7 @@ public class HomePage extends JFrame {
             JOptionPane.showMessageDialog(this, "Reconnected to new server: " + host + ":" + port, "Reconnected", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             logger.error("Failed to reconnect to server: " + e.getMessage());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }

@@ -44,7 +44,7 @@ public class Group extends JDialog {
             if (selectedUsers.length() > 0) {
                 try {
                     String uniqueID = UUID.randomUUID().toString();
-                    new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString() + myName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);
+                    new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString().replace(" ", "") + myName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);
                 } catch (IOException ex) {
                     Logger.getLogger(Group.class.getName()).log(Level.SEVERE, "Error: {0}", ex.getMessage());
 

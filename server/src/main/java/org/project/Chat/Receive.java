@@ -44,7 +44,7 @@ public class Receive implements Runnable {
         String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("message::::" + receiveMsg);
+                System.out.println("Message received: " + receiveMsg);
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
                 if (data != null) {
@@ -54,12 +54,15 @@ public class Receive implements Runnable {
                     } else {
                         System.out.println("Received invalid data: " + data);
                     }
+                } else {
+                    System.out.println("Formatted data is null.");
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Error reading from socket: " + e.getMessage());
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
         } finally {
+            System.out.println("Client disconnected.");
             cleanup();
         }
     }

@@ -7,17 +7,21 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import src.lib.Send;
-import broker.utils.Receive;;
+import broker.utils.Receive;
 
 public class MessageBroker {
     private ServerSocket brokerSocket;
     public static int PORT = 4000;
-    private List<Socket> connectedServers = new ArrayList<>();
+    private ConcurrentHashMap<Socket, Long> connectedServers = new ConcurrentHashMap<>();
+    private static final int HEARTBEAT_TIMEOUT = 15000; // 15 seconds
 
     public static void main(String[] args) {
         new MessageBroker();
@@ -32,15 +36,17 @@ public class MessageBroker {
             brokerSocket = new ServerSocket(port);
             System.out.println("Broker listening on port " + port);
 
+            // Start heartbeat monitoring thread
+            new Thread(new HeartbeatMonitor()).start();
+
             while (true) {
                 try {
                     Socket serverSocket = brokerSocket.accept();
-                    connectedServers.add(serverSocket);
+                    connectedServers.put(serverSocket, System.currentTimeMillis());
                     System.out.println("New server connected: " + serverSocket);
 
                     new Thread(new ServerHandler(serverSocket)).start();
                 } catch (IOException e) {
-                    e.printStackTrace();
                     Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error accepting connection: {0}", e.getMessage());
                 }
             }
@@ -73,23 +79,58 @@ public class MessageBroker {
                 while ((message = br.readLine()) != null) {
                     receive.setReceiveMsg(message);
                     System.out.println("Received message: " + message);
-                    broadcastMessage(message, serverSocket);
+
+                    if (message.equals("type:heartbeat")) {
+                        connectedServers.put(serverSocket, System.currentTimeMillis());
+                    } else {
+                        broadcastMessage(message, serverSocket);
+                    }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error reading from server: {0}", e.getMessage());
             }
         }
     }
 
     private void broadcastMessage(String message, Socket senderSocket) {
-        for (Socket serverSocket : connectedServers) {
+        for (Socket serverSocket : connectedServers.keySet()) {
             try {
-                System.out.println("send server socket::::" + serverSocket);
                 new Send(serverSocket).sendData(message);
             } catch (IOException e) {
-                e.printStackTrace();
                 Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}", e.getMessage());
+            }
+        }
+    }
+
+    private class HeartbeatMonitor implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                long currentTime = System.currentTimeMillis();
+                Iterator<Socket> iterator = connectedServers.keySet().iterator();
+
+                while (iterator.hasNext()) {
+                    Socket serverSocket = iterator.next();
+                    long lastHeartbeat = connectedServers.get(serverSocket);
+
+                    if (currentTime - lastHeartbeat > HEARTBEAT_TIMEOUT) {
+                        iterator.remove();
+                        System.out.println("Server disconnected due to heartbeat timeout: " + serverSocket);
+                        try {
+                            serverSocket.close();
+                        } catch (IOException e) {
+                            Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}", e.getMessage());
+                        }
+                    }
+                }
+
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.err.println("Heartbeat monitor interrupted: " + e.getMessage());
+                    break;
+                }
             }
         }
     }
