@@ -6,10 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
-import javax.swing.border.Border;
-
-import org.project.ServerManager;
+import org.project.Services.CallAPI;
 
 import src.lib.Client;
 import src.lib.DataSave;
@@ -43,15 +42,16 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
                     " broker is not exits");
             return;
         }
+        
         // if data is sent from client without broker
         if (!data.haveFlag()) {
             Client currentClient = new Client(data.getNameSend(), socket);
             DataSave.clients.add(currentClient);
             Receive.receiveClientMap.put(socket, currentClient);
-
+            
             SendMessageSocket(BrokerInfo.brokerSocket, message + "&&flag:true");
         } else {
-            SendUsersOnline.handle(null);
+            SendUsersOnline.handle();
         }
     }
 
@@ -79,9 +79,8 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
         } else {
             Socket receiver = findClientSocketByName(data.getNameReceive());
             if (receiver != null) {
-               SendMessageSocket(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
-            }
-            else{
+                SendMessageSocket(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+            } else {
                 handleChatGroup(data);
             }
         }
@@ -106,32 +105,23 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
     }
     
     public void handleChatGroup(TypeReceive data) {
-
-        System.out.println("handle chat group....." + data.getData() + data.getNameReceive());
-
-        for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
-            if (dataName.getKey().equals(data.getNameReceive())) {
-                String[] usersInGroup = dataName.getValue().split(", ");
-                for (String userInGroup : usersInGroup) {
-                    if (!userInGroup.equals(data.getNameSend())) {
-                        DataSave.clients.stream()
-                                .filter(client -> client.getName().equals(userInGroup))
-                                .forEach(client -> {
-                                    try {
-                                        new Send(client.getSocket()).sendData(
-                                                "type:chat-group&&send:" + data.getNameSend() + ","
-                                                        + data.getNameReceive()
-                                                        + "&&data:" + data.getData());
-                                    } catch (IOException e) {
-                                        Logger.getLogger(ChatMessageHandlerFactory.class.getName()).log(
-                                                Level.SEVERE,
-                                                "An error occurred: {0}", e.getMessage());
-                                    }
-                                });
+        DataSave.groups.entrySet().stream()
+            .filter(entry -> entry.getKey().equals(data.getNameReceive()))
+            .map(Map.Entry::getValue)
+            .flatMap(groupMembers -> Stream.of(groupMembers.split(",")))
+            .filter(userInGroup -> !userInGroup.equals(data.getNameSend()))
+            .forEach(userInGroup -> DataSave.clients.stream()
+                .filter(client -> client.getName().equals(userInGroup))
+                .forEach(client -> {
+                    try {
+                        new Send(client.getSocket()).sendData(
+                            "type:chat-group&&send:" + data.getNameSend() + ","
+                            + data.getNameReceive() + "&&data:" + data.getData());
+                    } catch (IOException e) {
+                        Logger.getLogger(ChatMessageHandlerFactory.class.getName())
+                              .log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
                     }
-                }
-            }
-        }
+                }));
     }
 }
 
@@ -146,9 +136,10 @@ class GroupMessageHandlerFactory implements MessageHandlerFactory {
 
         if (!data.haveFlag()) {
             SendMessageSocket(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
+            CallAPI.PostData("http://localhost:8080/create-group", "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
         } else {
             DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-            SendUsersOnline.handle(data.getNameSend());
+            SendUsersOnline.handle();
         }
     }
     
@@ -167,7 +158,7 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
         for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
             if (dataName.getKey().equals(data.getNameReceive())) {
-                String[] usersInGroup = dataName.getValue().split(", ");
+                String[] usersInGroup = dataName.getValue().split(",");
                 for (String userInGroup : usersInGroup) {
                     DataSave.clients.stream()
                             .filter(client -> client.getName().equals(userInGroup))
@@ -191,6 +182,6 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
 class DisconnectHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
-        SendUsersOnline.handle(null);
+        SendUsersOnline.handle();
     }
 }

@@ -26,7 +26,6 @@ class balancer {
 public class Receive implements Runnable {
     private BufferedReader br;
     private Socket socket;
-    private Client currentClient;
     public static ConcurrentHashMap<Socket, Client> receiveClientMap = new ConcurrentHashMap<>();
 
     public Receive(Socket socket) {
@@ -35,7 +34,7 @@ public class Receive implements Runnable {
             InputStream is = socket.getInputStream();
             this.br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            throw new RuntimeException("Error initializing BufferedReader", e);
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Cannot establish receive socket: {0}", e.getMessage());
         }
     }
     
@@ -44,20 +43,17 @@ public class Receive implements Runnable {
         String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("message::::" + receiveMsg);
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
                 if (data != null) {
                     MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
                     if (factory != null) {
+                        Logger.getLogger(Receive.class.getName()).log(Level.INFO, "Server received: {0}", receiveMsg);
                         factory.handle(data, socket, receiveMsg);
-                    } else {
-                        System.out.println("Received invalid data: " + data);
                     }
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Error reading from socket: " + e.getMessage());
+        } catch (Exception e) {
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
         } finally {
             cleanup();
@@ -65,24 +61,19 @@ public class Receive implements Runnable {
     }
 
     private void cleanup() {
+        Client currentClient;
         try {
             currentClient = receiveClientMap.get(socket);
             if (socket != null && !socket.isClosed()) {
-                System.out.println("Closing connection....");
                 socket.close();
             }
             if (currentClient != null) {
-                // handle later
                 DataSave.clients.remove(currentClient);
                 String dataSend = currentClient.getName() + "&&localhost@" + ServerManager.PORT;  
                 CallAPI.PostData("http://localhost:8080/disconnect", dataSend);
                 new Send(BrokerInfo.brokerSocket).sendData("type:disconnect");
-
-                System.out.println(
-                        "Client " + currentClient.getName() + " disconnected and removed from active clients.");
             }
         } catch (IOException e) {
-            System.out.println("Error closing client socket: " + e.getMessage());
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}", e.getMessage());
         }
     }

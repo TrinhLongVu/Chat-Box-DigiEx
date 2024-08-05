@@ -1,24 +1,27 @@
 # Chat-Box-DigiEx
-# Hướng dẫn sử dụng
+# Guildline
 ## clone git
 ```bash
 git clone https://github.com/TrinhLongVu/Chat-Box-DigiEx.git
 ```
-## nhảy vào thư mục client (tạo file jar cho client)
+## jumb to folder Support
 ```bash
-find src -name "*.java" -print | xargs javac -d target/classes
-jar cvfm target/app.jar META-INF/MANIFEST.MF -C target/classes .
+    ./run.sh
 ```
-## nhảy vào thư mục server (tạo file jar cho server)
+## jumb to folder LoadBalance 
 ```bash
-find src -name "*.java" -print | xargs javac -d target/classes
-jar cvfm target/app.jar META-INF/MANIFEST.MF -C target/classes .
+    ./build_and_run.sh
 ```
-## run server (từ thư mục server)
+## jumb to folder Broker 
 ```bash
-java -jar target/app.jar
+    ./build_and_run.sh
 ```
-## run client (từ thư mục client)
+## jumb to folder server (run 2 port 1234, 1235) 
 ```bash
-java -jar target/app.jar
+    ./build_and_run.sh 
+    ./build_and_run.sh
+```
+## jumb to folder client
+```bash
+    ./build_and_run.sh
 ```

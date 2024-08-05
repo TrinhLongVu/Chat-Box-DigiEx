@@ -17,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.Socket;
@@ -26,7 +27,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HomePage extends JFrame {
-
     private LogHandler logger;
     private JTextArea userArea;
     private JButton btnSend;
@@ -37,13 +37,15 @@ public class HomePage extends JFrame {
     private JList<String> chatList;
     public static JLabel userLabel = new JLabel();
     public static JList<String> JlistUsers;
-    private Socket socket = null;
+    public static Socket socket = null;
     private String myName = "";
     private JButton btnCreateGroup;
+    private int PORT = 0;
 
     public HomePage(JFrame parent, Socket newSocket, String newName) {
         socket = newSocket;
         myName = newName;
+
         setTitle("Home Page");
         setMinimumSize(new Dimension(450, 474));
         setLocationRelativeTo(parent);
@@ -183,13 +185,15 @@ public class HomePage extends JFrame {
                 if (socket != null && !socket.isClosed()) {
                     new Send(socket).sendData("type:chat&&send:" + myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
                     logger.info("Message sent: " + message);
-                } else {
-                    reconnectServer();
-                    System.out.println("Current socket: " + socket);
                 }
             } catch (SocketException se) {
-                reconnectServer();
-                System.out.println("Current socket: " + socket);
+                // Clean up old Receive
+                Receive.cleanup();
+                Receive.isClose = true;
+
+                // Reconnect to new server
+                Socket newSocket = reconnectServer();
+                new Receive(newSocket).start();
             } catch (IOException e) {
                 logger.error("Failed to send message: " + e.getMessage());
                 JOptionPane.showMessageDialog(this, "An error occurred while sending message, trying to reconnect to new server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -197,59 +201,45 @@ public class HomePage extends JFrame {
         }
     }
 
-    private void reconnectServer() {
+
+
+
+    public Socket reconnectServer() {
+        Socket newSocket = Receive.socket;
         StringBuilder content = new StringBuilder();
-    
         try {
-            // URL of the LoadBalancer
-            URL url = new URL("http://localhost:8080/reconnect");
-    
-            // Open connection
+            URL url = new URL("http://localhost:8080/connect");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
+            conn.setRequestMethod("GET");
             conn.setDoOutput(true);
-    
-            // Read the response
+
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
                     content.append(inputLine);
                 }
             }
-    
             String data = Helper.FormatData(content.toString()).getData();
-            // Parse the new server details from the response
             String[] hostAndPort = data.toString().split("@");
             String host = "localhost";
             int port = Integer.parseInt(hostAndPort[1]);
 
-            System.out.print("New Host: " + host);
-            System.out.println("...New Port: " + port);
-    
-            // Close the existing socket
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
 
-            System.out.println("New Server: " + content);
-            
-            Socket s = null;
-            try {
-                s = new Socket(host, port);
-            } catch (IOException ie) {
-                System.out.println("Cannot connect to new server: " + ie.getMessage());
-            }
-            // Create a new socket with the new server details
-            socket = s;
-            System.out.println("New Socket is crated: " + socket);
-            System.out.println("New Socket is crated in port: " + port);
-            logger.info("Reconnected to new server: " + host + ":" + port);
-    
-            JOptionPane.showMessageDialog(this, "Reconnected to new server: " + host + ":" + port, "Reconnected", JOptionPane.INFORMATION_MESSAGE);
+            newSocket = new Socket(host, port);
+            new Send(newSocket).sendData("type:login&&send:" + myName);
+            HomePage.socket = newSocket;
+
+            Logger.getLogger(Receive.class.getName()).log(Level.INFO, "Reconnected to new server: " + host + ":" + port);
+            JOptionPane.showMessageDialog(null, "Reconnected to new server: " + host + ":" + port, "Reconnected", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
-            logger.error("Failed to reconnect to server: " + e.getMessage());
-            JOptionPane.showMessageDialog(this, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Failed to reconnect to server: {0}", e.getMessage());
+            JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+
+        return newSocket;
     }
 
     @Override

@@ -55,9 +55,19 @@ public class LoginForm extends JDialog {
         btnOK.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                username = tfEmail.getText();
-                System.out.println(content);
-                handleServer(content);
+                if (tfEmail.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(parent, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                String data = Helper.FormatData(content).getData();
+                if (data == null) {
+                    JOptionPane.showMessageDialog(parent, "All servers are full rightnow.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                } else {
+                    username = tfEmail.getText();
+                    handleServer(content);
+                }
 
                 dispose();
             }
@@ -76,31 +86,32 @@ public class LoginForm extends JDialog {
     private void handleServer(String receiveMsg) {
         String data = Helper.FormatData(receiveMsg).getData();
 
+        if (data.equals("null")) {
+            JOptionPane.showMessageDialog(null, "All servers are full right now.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         String[] hostAndPort = data.split("@");
-        System.out.println(hostAndPort[0] + "...." + hostAndPort[1]);
         int port;
         String host = hostAndPort[0];
+
 
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
             Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}",
                     e.getMessage());
-
-            System.out.println("Invalid port number format");
             return;
         }
         try {
             Socket s = new Socket(host, port);
             if (s.isConnected()) {
-                System.out.println("Connected to server");
                 notifyConnected(host, port, LoginForm.username);
             }
             new Receive(s).start();
             new Send(s).sendData("type:login&&send:" + LoginForm.username);
             new HomePage(null, s, LoginForm.username);
         } catch (IOException e) {
-            System.out.println("Unable to connect to server: " + e.getMessage());
             Logger.getLogger(LoginForm.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
                     e.getMessage());
         }
@@ -133,8 +144,6 @@ public class LoginForm extends JDialog {
             // Close connections
             in.close();
             loadBalancerConn.disconnect();
-
-            System.out.println("Sent connection confirmation to LoadBalancer");
         } catch (IOException e) {
             Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Error sending confirmation to LoadBalancer: {0}",
                     e.getMessage());

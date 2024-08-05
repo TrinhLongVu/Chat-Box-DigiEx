@@ -1,4 +1,5 @@
 package project.Chat;
+
 public class ClientInfo {
     private String name;
     private String serverinfo;

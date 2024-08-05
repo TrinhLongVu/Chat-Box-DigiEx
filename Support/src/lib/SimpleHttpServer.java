@@ -15,8 +15,6 @@ public class SimpleHttpServer {
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is listening on port " + PORT);
-
             while (true) {
                 try (Socket socket = serverSocket.accept()) {
                     handleClient(socket);
@@ -40,8 +38,6 @@ public class SimpleHttpServer {
             String[] requestParts = inputLine.split(" ");
             String method = requestParts[0];
             String fileRequested = requestParts[1];
-
-            System.out.println("Request: " + method + " " + fileRequested);
 
             // Skip headers
             while (in.readLine().length() != 0) { }
@@ -125,7 +121,7 @@ public class SimpleHttpServer {
         sendResponse(out, dataOut, "501 Not Implemented", "text/html", errorMessage.getBytes());
     }
 
-    private static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType, byte[] content) throws IOException {
+    public static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType, byte[] content) throws IOException {
         out.println("HTTP/1.1 " + status);
         out.println("Server: SimpleJavaHttpServer");
         out.println("Content-Type: " + contentType);

@@ -25,7 +25,6 @@ public class CallAPI {
                     while ((responseLine = br.readLine()) != null) {
                         response.append(responseLine.trim());
                     }
-                    System.out.println("response:::" + response.toString());
                     return response.toString();
                 }
             } catch (IOException e) {
@@ -57,7 +56,6 @@ public class CallAPI {
                 while ((responseLine = br.readLine()) != null) {
                     response.append(responseLine.trim());
                 }
-                System.out.println(response.toString());
             }
         } catch (IOException e) {
             Logger.getLogger(CallAPI.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());

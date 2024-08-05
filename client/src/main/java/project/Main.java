@@ -11,7 +11,6 @@ import project.View.LoginForm;
 
 public class Main {
     public static void main(String[] args) {
-        //******** */
         StringBuilder content = new StringBuilder();
 
         try {
@@ -23,8 +22,6 @@ public class Main {
             conn.setRequestMethod("GET");
             conn.setDoOutput(true);
 
-
-
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
 
@@ -35,32 +32,14 @@ public class Main {
             // Close connections
             in.close();
             conn.disconnect();
-            System.out.println("Response: " + content.toString());
-
         } catch (IOException e) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error Test: {0}", e.getMessage());
         }
 
-        //********** */
-        // Create the main frame to hold the dialog
         JFrame mainFrame = new JFrame();
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         new LoginForm(mainFrame, content.toString());
         mainFrame.setVisible(false);
-        // while (true) {
-        //     try {
-
-        //         break;
-        //     } catch (IOException e) {
-        //         JOptionPane.showMessageDialog(mainFrame,
-        //                 "An error occurred, we are trying to reconnect to the server: " + e.getMessage(), "Error",
-        //                 JOptionPane.ERROR_MESSAGE);
-        //         System.out.println("There're some error");
-        //         Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error: {0}",
-        //                 e.getMessage());
-
-        //     }
-        // }
     }
 }
