@@ -217,21 +217,16 @@ public class HomePage extends JFrame {
                 }
             }
     
-            String data = Helper.FormatData(content).getData();
+            String data = Helper.FormatData(content.toString()).getData();
             // Parse the new server details from the response
             String[] hostAndPort = data.toString().split("@");
             String host = "localhost";
             int port = Integer.parseInt(hostAndPort[1]);
-
-            System.out.print("New Host: " + host);
-            System.out.println("...New Port: " + port);
     
             // Close the existing socket
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
-
-            System.out.println("New Server: " + content);
             
             Socket s = null;
             try {

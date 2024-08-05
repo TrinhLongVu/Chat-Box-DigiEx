@@ -65,8 +65,10 @@ public class Group extends JDialog {
         panel.add(new JLabel("Select users:"));
 
         for (String online : DataSave.userOnline) {
-            JCheckBox checkBox = new JCheckBox(online);
-            panel.add(checkBox);
+            if (!online.contains("?")) {
+                JCheckBox checkBox = new JCheckBox(online);
+                panel.add(checkBox);
+            }
         }
 
         panel.add(submitButton);
