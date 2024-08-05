@@ -34,7 +34,6 @@ public class SendUsersOnline {
 
                         for (String listUserInGroup : listUserInGroups) {
                             for (String userInGroup : listUserInGroup.split(",")) {
-                                System.out.println("user In group...." + userInGroup);
                                 if (client.getName().equals(userInGroup)) {
                                     users += "," + listUserInGroup.split(",")[0];
                                 }

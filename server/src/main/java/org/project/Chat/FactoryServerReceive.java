@@ -42,12 +42,13 @@ class LoginMessageHandlerFactory implements MessageHandlerFactory {
                     " broker is not exits");
             return;
         }
+        
         // if data is sent from client without broker
         if (!data.haveFlag()) {
             Client currentClient = new Client(data.getNameSend(), socket);
             DataSave.clients.add(currentClient);
             Receive.receiveClientMap.put(socket, currentClient);
-
+            
             SendMessageSocket(BrokerInfo.brokerSocket, message + "&&flag:true");
         } else {
             SendUsersOnline.handle();
@@ -78,9 +79,8 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
         } else {
             Socket receiver = findClientSocketByName(data.getNameReceive());
             if (receiver != null) {
-               SendMessageSocket(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
-            }
-            else{
+                SendMessageSocket(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+            } else {
                 handleChatGroup(data);
             }
         }

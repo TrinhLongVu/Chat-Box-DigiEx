@@ -44,25 +44,18 @@ public class Receive implements Runnable {
         String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
-                System.out.println("Message received: " + receiveMsg);
                 TypeReceive data = Helper.FormatData(receiveMsg);
 
                 if (data != null) {
                     MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
                     if (factory != null) {
                         factory.handle(data, socket, receiveMsg);
-                    } else {
-                        System.out.println("Received invalid data: " + data);
                     }
-                } else {
-                    System.out.println("Formatted data is null.");
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error reading from socket: " + e.getMessage());
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
         } finally {
-            System.out.println("Client disconnected.");
             cleanup();
         }
     }
@@ -71,7 +64,6 @@ public class Receive implements Runnable {
         try {
             currentClient = receiveClientMap.get(socket);
             if (socket != null && !socket.isClosed()) {
-                System.out.println("Closing connection....");
                 socket.close();
             }
             if (currentClient != null) {
@@ -79,12 +71,8 @@ public class Receive implements Runnable {
                 String dataSend = currentClient.getName() + "&&localhost@" + ServerManager.PORT;  
                 CallAPI.PostData("http://localhost:8080/disconnect", dataSend);
                 new Send(BrokerInfo.brokerSocket).sendData("type:disconnect");
-
-                System.out.println(
-                        "Client " + currentClient.getName() + " disconnected and removed from active clients.");
             }
         } catch (IOException e) {
-            System.out.println("Error closing client socket: " + e.getMessage());
             Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}", e.getMessage());
         }
     }

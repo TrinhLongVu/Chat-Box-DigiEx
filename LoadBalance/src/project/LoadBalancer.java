@@ -7,8 +7,9 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import project.*;
 import project.Chat.ServerInfo;
 import project.Chat.Database;
 
@@ -25,19 +26,17 @@ public class LoadBalancer {
     }
 
     public static void main(String[] args) {
-        LoadBalancer loadBalancer = new LoadBalancer();
+        new LoadBalancer();
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is listening on port " + PORT);
-
             while (true) {
                 try (Socket socket = serverSocket.accept()) {
                     handleClient(socket);
                 } catch (IOException e) {
-                    System.err.println("Client connection error: " + e.getMessage());
+                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Cannot connect to client: {0}", e.getMessage());
                 }
             }
         } catch (IOException e) {
-            System.err.println("Server error: " + e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Error starting LoadBalance: {0}", e.getMessage());
         }
     }
     
@@ -52,8 +51,6 @@ public class LoadBalancer {
             String[] requestParts = inputLine.split(" ");
             String method = requestParts[0];
             String fileRequested = requestParts[1];
-
-            System.out.println("Request: " + method + " " + fileRequested);
 
             switch (method) {
                 case "POST" -> {
@@ -76,15 +73,13 @@ public class LoadBalancer {
             }
 
         } catch (IOException e) {
-            System.err.println("Client error: " + e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Method not supported: {0}", e.getMessage());
         }
     }
     
     
     
-    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        System.out.println("Received connection request");
-        
+    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException { 
         // Find a suitable server and prepare the response
         ServerInfo serverEmpty = Database.serverList.stream()
                 .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < MAX_CLIENTS)
@@ -92,9 +87,10 @@ public class LoadBalancer {
                 .orElse(null);
 
         String responseMessage = "type:server&&data:" + serverEmpty;
-        System.out.println("Response message: " + responseMessage);
         byte[] responseData = responseMessage.getBytes();
         int responseLength = responseData.length;
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New connection has established: {0}", responseMessage);
 
         // Send the response headers
         out.println("HTTP/1.1 200 OK");
@@ -111,11 +107,9 @@ public class LoadBalancer {
 
 
     private static void handleLogin(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        System.out.println("Received login request");
         int contentLength = 0;
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
-            // System.out.println("Header: " + line);
             if (line.startsWith("Content-Length: ")) {
                 contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
             }
@@ -125,7 +119,6 @@ public class LoadBalancer {
         char[] body = new char[contentLength];
         in.read(body, 0, contentLength);
         String requestBody = new String(body);
-        System.out.println("Request body: " + requestBody);
 
         String[] nameAndServer = requestBody.split("&&");
         String name = nameAndServer[0];
@@ -137,14 +130,14 @@ public class LoadBalancer {
         Database.serverList.forEach(server -> {
             if (server.getHost().equals(host) && server.getPort() == port) {
                 server.incrementClients();
-                System.out.println("Incremented clients for server: " + server.toString());
-                System.out.println("Number: " + server.getActiveClients());
             }
         });
 
         String responseMessage = "Receieved Message";
         byte[] responseData = responseMessage.getBytes();
         int responseLength = responseData.length;
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New user login to server: {0}", name);
 
         out.println("HTTP/1.1 200 OK");
         out.println("Server: SimpleJavaHttpServer");
@@ -159,7 +152,6 @@ public class LoadBalancer {
     
     private static void handleDisconnect(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
             throws IOException {
-        System.out.println("Received disconnect request");
         int contentLength = 0;
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
@@ -172,7 +164,6 @@ public class LoadBalancer {
         char[] body = new char[contentLength];
         in.read(body, 0, contentLength);
         String requestBody = new String(body);
-        System.out.println("Request body: " + requestBody);
         String[] nameAndPort = requestBody.split("&&");
         String[] hostAndPortArray = nameAndPort[1].split("@");
         String name = nameAndPort[0];
@@ -184,10 +175,6 @@ public class LoadBalancer {
             if (server.getHost().equals(host) && server.getPort() == port) {
                 if (server.getActiveClients() > 0) {
                     server.decrementClients();
-                    System.out.println("Decremented clients for server: " + server.toString());
-                    System.out.println("Number: " + server.getActiveClients());
-                } else {
-                    System.out.println("No clients to decrement");
                 }
             }
         });
@@ -195,6 +182,8 @@ public class LoadBalancer {
         String responseMessage = "Receieved Message";
         byte[] responseData = responseMessage.getBytes();
         int responseLength = responseData.length;
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Client has disconnected from server: {0}", name);
 
         out.println("HTTP/1.1 200 OK");
         out.println("Server: SimpleJavaHttpServer");
@@ -208,12 +197,9 @@ public class LoadBalancer {
     }
 
     private static void handleCreateGroup(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        System.out.println("Received create-group request");
-
         int contentLength = 0;
         String line;
         while ((line = in.readLine()) != null && !line.isEmpty()) {
-            // System.out.println("Header: " + line);
             if (line.startsWith("Content-Length: ")) {
                 contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
             }
@@ -233,6 +219,8 @@ public class LoadBalancer {
         byte[] responseData = responseMessage.getBytes();
         int responseLength = responseData.length;
 
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New group was created: {0}", name);
+
         out.println("HTTP/1.1 200 OK");
         out.println("Server: SimpleJavaHttpServer");
         out.println("Content-Type: text/plain");
@@ -245,7 +233,6 @@ public class LoadBalancer {
     }
 
     private static void handleGetClients(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        System.out.println("Received get-clients request");
         String response = "";
         for (ClientInfo client : Database.clients) {
             if (client == Database.clients.get(Database.clients.size() - 1)) {
@@ -257,6 +244,8 @@ public class LoadBalancer {
 
         byte[] responseData = response.getBytes();
         int responseLength = responseData.length;
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Server-clients: {0}", response);
 
         out.println("HTTP/1.1 200 OK");
         out.println("Server: SimpleJavaHttpServer");
@@ -277,6 +266,8 @@ public class LoadBalancer {
                 "\r\n" +
                 "<h1>404 Not Found</h1>";
 
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Method not supported: {0}", errorMessage);
+
         out.println(errorMessage);
         out.flush();
         dataOut.write(errorMessage.getBytes());
@@ -289,6 +280,8 @@ public class LoadBalancer {
                 "Content-Length: 25\r\n" +
                 "\r\n" +
                 "<h1>501 Not Implemented</h1>";
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Method not supported: {0}", errorMessage);
 
         out.println(errorMessage);
         out.flush();

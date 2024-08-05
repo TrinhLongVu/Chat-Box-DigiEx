@@ -34,7 +34,6 @@ public class MessageBroker {
     public void startMessageBroker(int port) {
         try {
             brokerSocket = new ServerSocket(port);
-            System.out.println("Broker listening on port " + port);
 
             // Start heartbeat monitoring thread
             new Thread(new HeartbeatMonitor()).start();
@@ -43,7 +42,6 @@ public class MessageBroker {
                 try {
                     Socket serverSocket = brokerSocket.accept();
                     connectedServers.put(serverSocket, System.currentTimeMillis());
-                    System.out.println("New server connected: " + serverSocket);
 
                     new Thread(new ServerHandler(serverSocket)).start();
                 } catch (IOException e) {
@@ -51,7 +49,6 @@ public class MessageBroker {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Error starting server: " + e.getMessage());
             Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error starting server: {0}", e.getMessage());
         }
     }
@@ -78,7 +75,6 @@ public class MessageBroker {
                 String message;
                 while ((message = br.readLine()) != null) {
                     receive.setReceiveMsg(message);
-                    System.out.println("Received message: " + message);
 
                     if (message.equals("type:heartbeat")) {
                         connectedServers.put(serverSocket, System.currentTimeMillis());
@@ -115,7 +111,6 @@ public class MessageBroker {
 
                     if (currentTime - lastHeartbeat > HEARTBEAT_TIMEOUT) {
                         iterator.remove();
-                        System.out.println("Server disconnected due to heartbeat timeout: " + serverSocket);
                         try {
                             serverSocket.close();
                         } catch (IOException e) {
@@ -128,7 +123,6 @@ public class MessageBroker {
                     TimeUnit.SECONDS.sleep(5);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    System.err.println("Heartbeat monitor interrupted: " + e.getMessage());
                     break;
                 }
             }

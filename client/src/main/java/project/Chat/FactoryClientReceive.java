@@ -103,7 +103,6 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
 class ErrorMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
-        System.out.println("error: " + data.getData());
-        JOptionPane.showMessageDialog(null, "error: " + data.getData());
+        JOptionPane.showMessageDialog(null, "Error: " + data.getData());
     }
 }

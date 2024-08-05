@@ -22,7 +22,6 @@ public class ServerManager {
     private static final int LIMIT_QUEUE_SIZE = 1;
     public static int PORT;
     private final int PORT_BROKER = 4000;
-    private static final int HEARTBEAT_INTERVAL = 5000;
 
     private volatile boolean running;
     private ExecutorService threadPool;
@@ -40,12 +39,11 @@ public class ServerManager {
         running = true;
         new Thread(() -> {
             try {
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Starting new ServerManager: {0}", String.valueOf(port));
                 serverSocket = new ServerSocket(port);
-                System.out.println("Server listening on port " + port);
 
                 // connect with broker
                 Socket brokerSocket = new Socket("localhost", PORT_BROKER);
-                System.out.println("Connected to message broker with port " + PORT_BROKER);
 
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new Receive(brokerSocket)).start();
@@ -54,31 +52,25 @@ public class ServerManager {
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
-                        System.out.println("New client connected: " + clientSocket);
 
-                        try {
-                            threadPool.submit(new Receive(clientSocket));
-                        } catch (RejectedExecutionException e) {
-                            System.out.println("Server is overloaded, client will be informed.");
-                            Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING,
-                                    "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
-                        }
                         ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
-
                         if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
                                     .sendData("type:error&&data: server is full, please try again later.");
+                        } else {
+                            try {
+                                threadPool.submit(new Receive(clientSocket));
+                            } catch (RejectedExecutionException e) {
+                                Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING,
+                                        "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
+                            }
                         }
                     } catch (IOException e) {
-                        if (running) {
-                            System.out.println("Error accepting connection: " + e.getMessage());
-                        }
                         Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE,
                                 "Error accepting connection: {0}", e.getMessage());
                     }
                 }
             } catch (IOException e) {
-                System.out.println("Error starting server: " + e.getMessage());
                 Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error starting server: {0}",
                         e.getMessage());
 
@@ -90,12 +82,10 @@ public class ServerManager {
 
     public void shutdown() {
         running = false;
-        System.out.println("Shutting down server...");
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close();
             } catch (IOException e) {
-                System.out.println("Error closing server socket: " + e.getMessage());
                 Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}",
                         e.getMessage());
             }
@@ -118,7 +108,7 @@ public class ServerManager {
 
     private class HeartbeatSender implements Runnable {
         private Socket brokerSocket;
-        private static final int HEARTBEAT_INTERVAL = 5; // 5 seconds
+        private static final int HEARTBEAT_INTERVAL = 3;
 
         public HeartbeatSender(Socket brokerSocket) {
             this.brokerSocket = brokerSocket;

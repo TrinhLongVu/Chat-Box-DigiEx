@@ -15,8 +15,6 @@ public class SimpleHttpServer {
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server is listening on port " + PORT);
-
             while (true) {
                 try (Socket socket = serverSocket.accept()) {
                     handleClient(socket);
@@ -40,8 +38,6 @@ public class SimpleHttpServer {
             String[] requestParts = inputLine.split(" ");
             String method = requestParts[0];
             String fileRequested = requestParts[1];
-
-            System.out.println("Request: " + method + " " + fileRequested);
 
             // Skip headers
             while (in.readLine().length() != 0) { }
