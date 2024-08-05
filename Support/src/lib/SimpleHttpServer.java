@@ -121,7 +121,7 @@ public class SimpleHttpServer {
         sendResponse(out, dataOut, "501 Not Implemented", "text/html", errorMessage.getBytes());
     }
 
-    private static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType, byte[] content) throws IOException {
+    public static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType, byte[] content) throws IOException {
         out.println("HTTP/1.1 " + status);
         out.println("Server: SimpleJavaHttpServer");
         out.println("Content-Type: " + contentType);

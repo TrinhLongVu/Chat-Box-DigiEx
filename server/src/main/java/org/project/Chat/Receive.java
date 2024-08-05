@@ -26,7 +26,6 @@ class balancer {
 public class Receive implements Runnable {
     private BufferedReader br;
     private Socket socket;
-    private Client currentClient;
     public static ConcurrentHashMap<Socket, Client> receiveClientMap = new ConcurrentHashMap<>();
 
     public Receive(Socket socket) {
@@ -35,7 +34,7 @@ public class Receive implements Runnable {
             InputStream is = socket.getInputStream();
             this.br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            throw new RuntimeException("Error initializing BufferedReader", e);
+            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Cannot establish receive socket: {0}", e.getMessage());
         }
     }
     
@@ -49,6 +48,7 @@ public class Receive implements Runnable {
                 if (data != null) {
                     MessageHandlerFactory factory = FactoryServerReceive.getFactory(data.getType());
                     if (factory != null) {
+                        Logger.getLogger(Receive.class.getName()).log(Level.INFO, "Server received: {0}", receiveMsg);
                         factory.handle(data, socket, receiveMsg);
                     }
                 }
@@ -61,6 +61,7 @@ public class Receive implements Runnable {
     }
 
     private void cleanup() {
+        Client currentClient;
         try {
             currentClient = receiveClientMap.get(socket);
             if (socket != null && !socket.isClosed()) {

@@ -32,13 +32,12 @@ public class Main {
             // Close connections
             in.close();
             conn.disconnect();
-
         } catch (IOException e) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error Test: {0}", e.getMessage());
         }
 
         JFrame mainFrame = new JFrame();
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         new LoginForm(mainFrame, content.toString());
         mainFrame.setVisible(false);

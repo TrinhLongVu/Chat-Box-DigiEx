@@ -86,9 +86,15 @@ public class LoginForm extends JDialog {
     private void handleServer(String receiveMsg) {
         String data = Helper.FormatData(receiveMsg).getData();
 
+        if (data.equals("null")) {
+            JOptionPane.showMessageDialog(null, "All servers are full right now.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         String[] hostAndPort = data.split("@");
         int port;
         String host = hostAndPort[0];
+
 
         try {
             port = Integer.parseInt(hostAndPort[1]);

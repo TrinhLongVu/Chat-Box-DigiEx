@@ -18,10 +18,9 @@ import src.lib.Send;
 import broker.utils.Receive;
 
 public class MessageBroker {
-    private ServerSocket brokerSocket;
-    public static int PORT = 4000;
+    public static final int PORT = 4000;
     private ConcurrentHashMap<Socket, Long> connectedServers = new ConcurrentHashMap<>();
-    private static final int HEARTBEAT_TIMEOUT = 15000; // 15 seconds
+    private static final int HEARTBEAT_TIMEOUT = 15000;
 
     public static void main(String[] args) {
         new MessageBroker();
@@ -32,6 +31,7 @@ public class MessageBroker {
     }
 
     public void startMessageBroker(int port) {
+        ServerSocket brokerSocket;
         try {
             brokerSocket = new ServerSocket(port);
 
@@ -64,7 +64,18 @@ public class MessageBroker {
                 is = this.serverSocket.getInputStream();
                 br = new BufferedReader(new InputStreamReader(is));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Problem with handling new server: {0}", e.getMessage());
+            }
+        }
+
+        private void broadcastMessage(String message, Socket senderSocket) {
+            for (Socket serverDestination : connectedServers.keySet()) {
+                try {
+                    Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Message broadcasted: {0}", message);
+                    new Send(serverDestination).sendData(message);
+                } catch (IOException e) {
+                    Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}", e.getMessage());
+                }
             }
         }
 
@@ -88,15 +99,7 @@ public class MessageBroker {
         }
     }
 
-    private void broadcastMessage(String message, Socket senderSocket) {
-        for (Socket serverSocket : connectedServers.keySet()) {
-            try {
-                new Send(serverSocket).sendData(message);
-            } catch (IOException e) {
-                Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}", e.getMessage());
-            }
-        }
-    }
+    
 
     private class HeartbeatMonitor implements Runnable {
         @Override
