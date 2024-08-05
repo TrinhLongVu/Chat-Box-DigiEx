@@ -1,5 +1,5 @@
 # Chat-Box-DigiEx
-# Guildline
+# Guideline
 ## clone git
 ```bash
 git clone https://github.com/TrinhLongVu/Chat-Box-DigiEx.git
