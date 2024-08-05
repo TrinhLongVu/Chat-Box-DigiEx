@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import project.*;
 import project.Chat.ServerInfo;
 import project.Chat.Database;
 
@@ -79,12 +80,14 @@ public class LoadBalancer {
         }
     }
     
+    
+    
     private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         System.out.println("Received connection request");
         
         // Find a suitable server and prepare the response
         ServerInfo serverEmpty = Database.serverList.stream()
-                .filter(server -> server.getActiveClients() < MAX_CLIENTS)
+                .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < MAX_CLIENTS)
                 .findFirst()
                 .orElse(null);
 
