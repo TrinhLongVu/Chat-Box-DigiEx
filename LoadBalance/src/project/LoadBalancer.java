@@ -2,40 +2,25 @@ package project;
 
 
 import java.io.BufferedOutputStream;
-
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import project.Chat.ServerInfo;
-import project.Chat.Database;
-
-
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.InetSocketAddress;
-import java.util.List;
 import project.Chat.ClientInfo;
+import project.Chat.Database;
+import project.Chat.ServerInfo;
 
 public class LoadBalancer {
     private static final int MAX_CLIENTS = 2;
     private static final int PORT = 8080;
 
-    public LoadBalancer() {
-        Database.serverList = new ArrayList<>();
-        Database.serverList.add(new ServerInfo("localhost", 1234, null));
-        Database.serverList.add(new ServerInfo("localhost", 1235, null));
-    }
-
     public static void main(String[] args) {
-        LoadBalancer loadBalancer = new LoadBalancer();
+        Database.serverList = new ArrayList<>();
+        Database.serverList.add(new ServerInfo("localhost", 1235, null));
+        Database.serverList.add(new ServerInfo("localhost", 1234, null));
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Server is listening on port " + PORT);
 
@@ -67,10 +52,6 @@ public class LoadBalancer {
 
             System.out.println("Request: " + method + " " + fileRequested);
 
-            // Skip headers
-            // while (in.readLine().length() != 0) {
-            // }
-
             switch (method) {
                 case "POST" -> {
                     switch (fileRequested) {
@@ -83,7 +64,7 @@ public class LoadBalancer {
 
                 case "GET" -> {
                     switch (fileRequested) {
-                        case "/connect" -> handleGetConnection(out, dataOut);
+                        case "/connect" -> handleGetAvailableConnection(out, dataOut);
                         case "/get-clients" -> handleGetClients(out, dataOut);
                         default -> sendNotFound(out, dataOut);
                     }
@@ -96,7 +77,7 @@ public class LoadBalancer {
         }
     }
     
-    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut)
+    private static void handleGetAvailableConnection(PrintWriter out, BufferedOutputStream dataOut)
             throws IOException {
         System.out.println("Received connection request");
 
@@ -107,7 +88,6 @@ public class LoadBalancer {
                 .orElse(null);
 
         String responseMessage = "type:server&&data:" + serverEmpty;
-        System.out.println("Response message: " + responseMessage);
         byte[] responseData = responseMessage.getBytes();
         int responseLength = responseData.length;
 
@@ -120,7 +100,7 @@ public class LoadBalancer {
         out.flush();
 
         // Send the response body
-        dataOut.write(responseData);
+        dataOut.write(responseData, 0, responseLength);
         dataOut.flush();
     }
 
@@ -154,7 +134,7 @@ public class LoadBalancer {
             if (server.getHost().equals(host) && server.getPort() == port) {
                 server.incrementClients();
                 System.out.println("Incremented clients for server: " + server.toString());
-                System.out.println("Number: " + server.getActiveClients());
+                System.out.println("Number clients in server: " + server.getActiveClients());
             }
         });
 
@@ -303,11 +283,12 @@ public class LoadBalancer {
 
 
     private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        String errorMessage = "HTTP/1.1 404 File Not Found\r\n" +
-                "Content-Type: text/html\r\n" +
-                "Content-Length: 23\r\n" +
-                "\r\n" +
-                "<h1>404 Not Found</h1>";
+        String errorMessage = """
+                              HTTP/1.1 404 File Not Found\r
+                              Content-Type: text/html\r
+                              Content-Length: 23\r
+                              \r
+                              <h1>404 Not Found</h1>""";
 
         out.println(errorMessage);
         out.flush();
@@ -316,11 +297,12 @@ public class LoadBalancer {
     }
 
     private static void sendNotImplemented(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        String errorMessage = "HTTP/1.1 501 Not Implemented\r\n" +
-                "Content-Type: text/html\r\n" +
-                "Content-Length: 25\r\n" +
-                "\r\n" +
-                "<h1>501 Not Implemented</h1>";
+        String errorMessage = """
+                              HTTP/1.1 501 Not Implemented\r
+                              Content-Type: text/html\r
+                              Content-Length: 25\r
+                              \r
+                              <h1>501 Not Implemented</h1>""";
 
         out.println(errorMessage);
         out.flush();

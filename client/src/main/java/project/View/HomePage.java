@@ -217,7 +217,7 @@ public class HomePage extends JFrame {
                 }
             }
     
-            String data = Helper.FormatData(content).getData();
+            String data = Helper.FormatData(content.toString()).getData();
             // Parse the new server details from the response
             String[] hostAndPort = data.toString().split("@");
             String host = "localhost";
