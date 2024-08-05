@@ -15,7 +15,7 @@ import src.lib.Send;
 
 public class SendUsersOnline {
     public static void handle() {
-        CallAPI.GetData("http://localhost:8080/get-clients").thenAccept(userOnline -> {
+        CallAPI.GetData("/get-clients").thenAccept(userOnline -> {
             if (!userOnline.equals("error")) {
                 for (Client client : DataSave.clients) {
                     try {

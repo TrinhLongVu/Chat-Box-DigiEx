@@ -161,9 +161,9 @@ public class HomePage extends JFrame {
         btnCreateGroup.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false); // Hide the HomePage
-                Group groupDialog = new Group(HomePage.this, socket, myName);  // Pass HomePage instance
-                groupDialog.setVisible(true); // Show the GroupDialog
+                setVisible(false); 
+                Group groupDialog = new Group(HomePage.this, socket, myName);  
+                groupDialog.setVisible(true);
                 setVisible(true);
             }
         });

@@ -11,8 +11,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
+
 public class CallAPI {
-    public static CompletableFuture<String> GetData(String string_url) {
+    private static String loadbalancerHost = System.getenv("LOADBALANCER_HOST");
+    private static int loadbalancerPort = Integer.parseInt(System.getenv("LOADBALANCER_PORT"));
+    
+
+    public static CompletableFuture<String> GetData(String params) {
+        String string_url = String.format("http://%s:%d/get-clients", loadbalancerHost, loadbalancerPort) + params;
+
         return CompletableFuture.supplyAsync(() -> {
             try {
                 URL url = new URL(string_url);
@@ -35,7 +43,9 @@ public class CallAPI {
         });
     }
 
-    public static void PostData(String string_url, String data) {
+    public static void PostData(String params, String data) {
+        String string_url = String.format("http://%s:%d/get-clients", loadbalancerHost, loadbalancerPort) + params;
+        
         try {
             URL url = new URL(string_url);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();

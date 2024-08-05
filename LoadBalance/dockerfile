@@ -1,0 +1,8 @@
+FROM openjdk:22
+
+WORKDIR /usr/src/app
+
+COPY target/lib/server.jar target/lib/support.jar .target/lib/
+COPY target/load.jar .
+
+CMD ["java", "-jar", "load.jar"]

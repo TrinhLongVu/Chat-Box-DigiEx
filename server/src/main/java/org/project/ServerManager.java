@@ -23,6 +23,9 @@ public class ServerManager {
     public static int PORT;
     private final int PORT_BROKER = 4000;
 
+    private String brokerHost = System.getenv("BROKER_HOST");
+    private int brokerPort = Integer.parseInt(System.getenv("BROKER_PORT"));
+
     private volatile boolean running;
     private ExecutorService threadPool;
 
@@ -44,8 +47,8 @@ public class ServerManager {
                 System.out.println("Server listening on port " + port);
 
                 // connect with broker
-                Socket brokerSocket = new Socket("localhost", PORT_BROKER);
-                System.out.println("Connected to message broker with port " + PORT_BROKER);
+                Socket brokerSocket = new Socket(brokerHost, brokerPort);
+                System.out.println("Connected to message broker with port " + brokerPort);
                 
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new Receive(brokerSocket)).start();

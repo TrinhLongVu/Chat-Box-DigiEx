@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  loadbalancer:
+    build:
+      context: ./LoadBalance
+      dockerfile: dockerfile
+    container_name: loadbalancer-service
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  broker:
+    build:
+      context: ./Broker
+      dockerfile: dockerfile
+    container_name: Broker-service
+    networks:
+      - app-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: dockerfile
+    container_name: server-service
+    environment:
+      - PORT=1234
+      - BROKER_HOST=broker
+      - BROKER_PORT=4000
+      - LOADBALANCER_HOST=loadbalancer
+      - LOADBALANCER_PORT=8080
+    depends_on:
+      - loadbalancer
+      - broker
+    ports:
+      - "1234:1234"
+    networks:
+      - app-network
+
+  networks:
+    app-network:
+      driver: bridge

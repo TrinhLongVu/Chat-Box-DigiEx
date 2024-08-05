@@ -1,0 +1,8 @@
+FROM openjdk:22
+
+WORKDIR /usr/src/app
+
+COPY target/lib/support.jar target/lib/
+COPY target/server.jar .
+
+CMD ["sh", "-c", "java -jar server.jar $PORT"]

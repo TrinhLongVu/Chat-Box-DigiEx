@@ -136,7 +136,7 @@ class GroupMessageHandlerFactory implements MessageHandlerFactory {
 
         if (!data.haveFlag()) {
             SendMessageSocket(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
-            CallAPI.PostData("http://localhost:8080/create-group", "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
+            CallAPI.PostData("/create-group", "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
         } else {
             DataSave.groups.put(data.getNameSend(), data.getNameReceive());
             SendUsersOnline.handle();
