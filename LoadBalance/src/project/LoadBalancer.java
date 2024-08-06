@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import src.lib.Helper;
-import src.lib.SimpleHttpServer;
 import src.lib.TypeReceive;
 
 public class LoadBalancer {
@@ -24,13 +23,11 @@ public class LoadBalancer {
     private static final int MAX_CLIENTS = 2;
     private static final int PORT = 8080;
 
-    public LoadBalancer() {
+
+    public static void main(String[] args) {
         Database.serverList = new ArrayList<>();
         Database.serverList.add(new ServerInfo("localhost", 1235, null));
         Database.serverList.add(new ServerInfo("localhost", 1234, null));
-    }
-    public static void main(String[] args) {
-        new LoadBalancer();
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
                 try (Socket socket = serverSocket.accept()) {
@@ -95,9 +92,9 @@ public class LoadBalancer {
 
         TypeReceive data = Helper.FormatData(responseMessage);
         if (data.getData() == null) {
-            SimpleHttpServer.sendResponse(out, dataOut, "200", responseMessage, null);
+            sendResponse(out, dataOut, "200", responseMessage, null);
         } else {
-            SimpleHttpServer.sendResponse(out, dataOut, "200", responseMessage, responseData);
+            sendResponse(out, dataOut, "200", responseMessage, responseData);
         }
     }
 
@@ -134,7 +131,7 @@ public class LoadBalancer {
 
         Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New user login to server: {0}", name);
 
-        SimpleHttpServer.sendResponse(out, dataOut, "200", responseMessage, responseData);
+        sendResponse(out, dataOut, "200", responseMessage, responseData);
     }
     
     private static void handleDisconnect(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
@@ -171,7 +168,7 @@ public class LoadBalancer {
 
         Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Client has disconnected from server: {0}", name);
 
-        SimpleHttpServer.sendResponse(out, dataOut, "200", responseMessage, responseData);
+        sendResponse(out, dataOut, "200", responseMessage, responseData);
     }
 
     private static void handleCreateGroup(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
@@ -198,7 +195,7 @@ public class LoadBalancer {
 
         Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New group was created: {0}", name);
 
-        SimpleHttpServer.sendResponse(out, dataOut, "200", responseMessage, responseData);
+        sendResponse(out, dataOut, "200", responseMessage, responseData);
     }
 
     private static void handleGetClients(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
@@ -216,7 +213,7 @@ public class LoadBalancer {
 
         Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Server-clients: {0}", response);
 
-        SimpleHttpServer.sendResponse(out, dataOut, "200", response, responseData);
+        sendResponse(out, dataOut, "200", response, responseData);
     }
 
 
@@ -249,6 +246,18 @@ public class LoadBalancer {
         out.println(errorMessage);
         out.flush();
         dataOut.write(errorMessage.getBytes());
+        dataOut.flush();
+    }
+
+    private static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType, byte[] content) throws IOException {
+        out.println("HTTP/1.1 " + status);
+        out.println("Server: SimpleJavaHttpServer");
+        out.println("Content-Type: " + contentType);
+        out.println("Content-Length: " + content.length);
+        out.println();
+        out.flush();
+
+        dataOut.write(content, 0, content.length);
         dataOut.flush();
     }
 }

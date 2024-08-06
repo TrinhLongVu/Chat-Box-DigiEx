@@ -39,7 +39,7 @@ public class ServerManager {
         running = true;
         new Thread(() -> {
             try {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Starting new ServerManager: {0}", String.valueOf(port));
+                Logger.getLogger(ServerManager.class.getName()).log(Level.INFO, "Starting new ServerManager: {0}", String.valueOf(port));
                 serverSocket = new ServerSocket(port);
 
                 // connect with broker

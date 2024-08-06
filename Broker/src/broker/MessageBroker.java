@@ -71,7 +71,7 @@ public class MessageBroker {
         private void broadcastMessage(String message, Socket senderSocket) {
             for (Socket serverDestination : connectedServers.keySet()) {
                 try {
-                    Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Message broadcasted: {0}", message);
+                    Logger.getLogger(MessageBroker.class.getName()).log(Level.INFO, "Message broadcasted: {0}", message);
                     new Send(serverDestination).sendData(message);
                 } catch (IOException e) {
                     Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}", e.getMessage());
