@@ -220,6 +220,14 @@ public class HomePage extends JFrame {
                 }
             }
             String data = Helper.FormatData(content.toString()).getData();
+            
+            if (data.equals("null")) {
+                Logger.getLogger(Receive.class.getName()).log(Level.INFO, "No server available");
+                JOptionPane.showMessageDialog(null, "No server available", "Error", JOptionPane.ERROR_MESSAGE);
+                System.exit(0);
+                return null;
+            }
+
             String[] hostAndPort = data.toString().split("@");
             String host = "localhost";
             int port = Integer.parseInt(hostAndPort[1]);
