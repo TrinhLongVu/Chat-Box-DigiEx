@@ -8,6 +8,8 @@ CLIENT_LIB_DIR="../Client/lib"
 SERVER_LIB_DIR="../Server/lib"
 BROKER_LIB_DIR="../Broker/lib"
 
+mvn clean package
+
 mkdir -p $LB_LIB_DIR
 cp $JAR_FILE $LB_LIB_DIR
 
