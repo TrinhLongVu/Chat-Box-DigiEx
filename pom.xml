@@ -12,15 +12,7 @@
 
 	<properties>
     	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    	<junit.version>3.8.1</junit.version>
+    	<junit.version>4.13.2</junit.version>
+		<mockito.version>3.9.0</mockito.version>
   	</properties>
-		
-  	<dependencies>
-		<dependency>
-      		<groupId>junit</groupId>
-      		<artifactId>junit</artifactId>
-      		<version>${junit.version}</version>
-      		<scope>test</scope>
-    	</dependency>
-	</dependencies>
 </project>

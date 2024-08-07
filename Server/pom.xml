@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.digiex</groupId>
         <artifactId>Chat-Box-DigiEx</artifactId>
@@ -9,19 +7,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>Broker</artifactId>
+    <artifactId>Server</artifactId>
     <packaging>jar</packaging>
     <properties>
         <java.version>22</java.version>
     </properties>
-
+    
     <dependencies>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -29,7 +21,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>lib</groupId>
+            <groupId>src.lib</groupId>
             <artifactId>Support</artifactId>
             <version>1.0</version>
             <scope>system</scope>
@@ -58,7 +50,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>MessageBroker</mainClass>
+                            <mainClass>Server</mainClass>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
