@@ -3,7 +3,7 @@ package project;
 import java.io.IOException;
 import java.net.Socket;
 
-import project.Chat.ServerInfo;
+import project.Payloads.ServerInfo;
 
 public class Utils {
     private Utils() {
