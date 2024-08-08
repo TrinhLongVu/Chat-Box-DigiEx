@@ -62,7 +62,7 @@ public class LoginForm extends JDialog {
                 
                 String data = Helper.FormatData(content).getData();
                 if (data == null) {
-                    JOptionPane.showMessageDialog(parent, "All servers are full rightnow.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 } else {
                     username = tfEmail.getText();

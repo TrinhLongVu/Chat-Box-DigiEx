@@ -20,7 +20,7 @@ public class Main {
             // Open connection
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setDoOutput(true);
+            conn.setDoOutput(false);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;

@@ -1,8 +1,13 @@
 package org.project;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -13,6 +18,7 @@ import java.util.logging.Logger;
 
 import org.project.Chat.BrokerInfo;
 import org.project.Chat.Receive;
+
 import src.lib.Send;
 
 public class ServerManager {
@@ -47,12 +53,9 @@ public class ServerManager {
 
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new Receive(brokerSocket)).start();
-                
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
-
-                        ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                         if (tpe.getQueue().remainingCapacity() == 0) {
                             new Send(clientSocket)
                                     .sendData("type:error&&data: server is full, please try again later.");
@@ -103,6 +106,39 @@ public class ServerManager {
                 Thread.currentThread().interrupt();
             }
         }
+        notifyDisconnection("localhost", PORT);
+    }
+    
+    private void notifyDisconnection(String host, int port) {
+        try {
+            URL loadBalancerUrl = new URL("http://localhost:8080/server-disconnected");
+
+            HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
+            loadBalancerConn.setRequestMethod("POST");
+            loadBalancerConn.setDoOutput(true);
+
+            String confirmationMessage = host + "@" + port;
+            try (OutputStream os = loadBalancerConn.getOutputStream()) {
+                os.write(confirmationMessage.getBytes());
+                os.flush();
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
+            StringBuilder newContent = new StringBuilder();
+
+            String inputLine;
+            
+            while ((inputLine = in.readLine()) != null) {
+                newContent.append(inputLine);
+            }
+
+            // Close connections
+            in.close();
+            loadBalancerConn.disconnect();
+        } catch (IOException e) {
+            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
+                    e.getMessage());
+        }
     }
 
     public void stopServer() {
@@ -111,5 +147,37 @@ public class ServerManager {
 
     public boolean isRunning() {
         return running;
+    }
+
+    private void sendServerInfo(String host, int port, int threadSize) {
+        try {
+            URL loadBalancerUrl = new URL("http://localhost:8080/server-available");
+
+            HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
+            loadBalancerConn.setRequestMethod("POST");
+            loadBalancerConn.setDoOutput(true);
+
+            String confirmationMessage = host + "@"+ port + "&&" + threadSize;
+            try (OutputStream os = loadBalancerConn.getOutputStream()) {
+                os.write(confirmationMessage.getBytes());
+                os.flush();
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
+            StringBuilder newContent = new StringBuilder();
+
+            String inputLine;
+            
+            while ((inputLine = in.readLine()) != null) {
+                newContent.append(inputLine);
+            }
+
+            // Close connections
+            in.close();
+            loadBalancerConn.disconnect();
+        } catch (IOException e) {
+            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
+                    e.getMessage());
+        }
     }
 }
