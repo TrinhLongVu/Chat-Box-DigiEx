@@ -1,29 +1,21 @@
 package project;
 
-import java.io.PrintWriter;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import project.Database.Database;
-import project.Payloads.ClientInfo;
-import project.Payloads.ServerInfo;
-import project.Services.ApiService;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import src.lib.Helper;
-import src.lib.TypeReceive;
+import project.Database.Database;
+import project.Services.ApiService;
 
 public class LoadBalancer {
-    // MAX_CLIENTS is the maximum number of clients that can connect to a server (MUST BE LARGER 1 CLIENTS THAN REAL SERVER)
     private static final int PORT = 8080;
     private static final  Map<String, Socket> activeConnections = new ConcurrentHashMap<>();
 

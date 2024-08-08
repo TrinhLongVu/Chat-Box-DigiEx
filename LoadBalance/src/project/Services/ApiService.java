@@ -4,22 +4,21 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import project.Utils;
 import project.Database.Database;
 import project.Payloads.ClientInfo;
 import project.Payloads.ServerInfo;
-import src.lib.Helper;
-import src.lib.TypeReceive;
+
 
 public class ApiService {
 
     public static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         // Find a suitable server and prepare the response
         ServerInfo serverEmpty = Database.serverList.stream()
-                .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < server.getServerSize())
+                .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize())
                 .findFirst()
                 .orElse(null);
 
@@ -156,9 +155,9 @@ public class ApiService {
 
     private static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType,
             String notification) throws IOException {
-        
+
         byte[] content = contentType.getBytes();
-        
+
         if (status.equals("200")) {
             Logger.getLogger(ApiService.class.getName()).log(Level.INFO, notification);
         } else {
@@ -175,4 +174,14 @@ public class ApiService {
         dataOut.write(content, 0, content.length);
         dataOut.flush();
     }
+
+    private static boolean isServerRunning(ServerInfo server) {
+        try (Socket socket = new Socket(server.getHost(), server.getPort())) {
+            socket.close();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
 }
