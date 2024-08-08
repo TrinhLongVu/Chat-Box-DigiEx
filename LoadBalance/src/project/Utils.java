@@ -6,6 +6,9 @@ import java.net.Socket;
 import project.Chat.ServerInfo;
 
 public class Utils {
+    private Utils() {
+    }
+
     public static boolean isServerRunning(ServerInfo server) {
         try (Socket socket = new Socket(server.getHost(), server.getPort())) {
             return true;
