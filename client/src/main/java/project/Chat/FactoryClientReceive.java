@@ -38,7 +38,7 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
         String[] userOnlines = dataReceive.split(",");
         DataSave.userOnline.clear();
         for (String userOnline : userOnlines) {
-            if (!userOnline.equals(LoginForm.username)) {
+            if (!userOnline.equals(LoginForm.userName)) {
                 DataSave.userOnline.add(userOnline);
             }
         }

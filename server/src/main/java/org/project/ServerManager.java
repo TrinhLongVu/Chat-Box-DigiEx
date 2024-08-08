@@ -53,8 +53,7 @@ public class ServerManager {
 
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new ReceiveController(brokerSocket)).start();
-                new Thread(new HeartbeatSender(brokerSocket)).start();
-                
+
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                 sendServerInfo("localhost", port, tpe.getCorePoolSize());
                 
