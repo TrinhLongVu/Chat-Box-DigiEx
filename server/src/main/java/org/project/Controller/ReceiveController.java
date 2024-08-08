@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,7 +25,7 @@ import org.project.Utils.CallAPI;
 public class ReceiveController implements Runnable {
     private BufferedReader br;
     private Socket socket;
-    public static ConcurrentHashMap<Socket, Client> receiveClientMap = new ConcurrentHashMap<>();
+    public static Map<Socket, Client> receiveClientMap = new HashMap();
 
     public ReceiveController(Socket socket) {
         this.socket = socket;

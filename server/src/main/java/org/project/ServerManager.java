@@ -22,13 +22,12 @@ import org.project.Controller.ReceiveController;
 import src.lib.Send;
 
 public class ServerManager {
-    private ServerSocket serverSocket;
+    public static int PORT;
 
+    private ServerSocket serverSocket;
     private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
-    public static int PORT;
     private final int PORT_BROKER = 4000;
-
     private volatile boolean running;
     private ExecutorService threadPool;
 
@@ -133,9 +132,7 @@ public class ServerManager {
                 newContent.append(inputLine);
             }
 
-            // Close connections
             in.close();
-            loadBalancerConn.disconnect();
         } catch (IOException e) {
             Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
                     e.getMessage());
@@ -199,9 +196,7 @@ public class ServerManager {
                 newContent.append(inputLine);
             }
 
-            // Close connections
             in.close();
-            loadBalancerConn.disconnect();
         } catch (IOException e) {
             Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
                     e.getMessage());

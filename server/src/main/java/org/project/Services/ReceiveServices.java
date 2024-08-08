@@ -31,6 +31,7 @@ public class ReceiveServices {
 }
 
 class LoginMessageHandler implements InterfaceMessageHandler {
+    private static final String FLAG_TRUE = "&&flag:true";
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         if (BrokerInfo.brokerSocket == null) {
@@ -38,16 +39,23 @@ class LoginMessageHandler implements InterfaceMessageHandler {
                     " broker is not exits");
             return;
         }
-        
-        // if data is sent from client without broker
+
         if (!data.isSendBroker()) {
-            Client currentClient = new Client(data.getNameSend(), socket);
-            DataSave.clients.add(currentClient);
-            ReceiveController.receiveClientMap.put(socket, currentClient);
-            SendServices.SendMessage(BrokerInfo.brokerSocket, message + "&&flag:true");
+            SendMessageToBroker(data, socket, message);
         } else {
-            SendServices.SendUserOnline();
+            SendToClient();
         }
+    }
+    
+    private void SendMessageToBroker(TypeReceive data, Socket socket, String message) {
+        Client currentClient = new Client(data.getNameSend(), socket);
+        DataSave.clients.add(currentClient);
+        ReceiveController.receiveClientMap.put(socket, currentClient);
+        SendServices.SendMessage(BrokerInfo.brokerSocket, message + FLAG_TRUE);
+    }
+
+    private void SendToClient() {
+        SendServices.SendUserOnline();
     }
 }
 
@@ -64,13 +72,17 @@ class ChatMessageHandler implements InterfaceMessageHandler {
             SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
             return;
         }
-        
+
         Socket receiver = findClientSocketByName(data.getNameReceive());
         if (receiver != null) {
-            SendServices.SendMessage(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+            SendChatToClient(receiver, data);
         } else {
             handleChatGroup(data);
         }
+    }
+    
+    private void SendChatToClient(Socket receiver, TypeReceive data) {
+        SendServices.SendMessage(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
     }
     
     private Socket findClientSocketByName(String name) {
@@ -107,12 +119,19 @@ class GroupMessageHandler implements InterfaceMessageHandler {
         }
 
         if (!data.isSendBroker()) {
-            SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
-            CallAPI.PostData("/create-group",
-                    "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
-            return;
+            SendToBroker(receiveMsg, data);
+        } else {
+            SendToGroup(data);
         }
-        
+    }
+    
+    private void SendToBroker(String receiveMsg, TypeReceive data) {
+        SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
+        CallAPI.PostData("/create-group",
+                "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
+    }
+
+    private void SendToGroup(TypeReceive data) {
         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
         SendServices.SendUserOnline();
     }
@@ -126,17 +145,15 @@ class ChatGroupMessageHandler implements InterfaceMessageHandler {
                 String[] usersInGroup = dataName.getValue().split(",");
                 for (String userInGroup : usersInGroup) {
                     DataSave.clients.stream()
-                            .filter(client -> client.getName().equals(userInGroup))
-                            .forEach(client -> {
-                                SendServices.SendMessage(client.getSocket(), "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
-                            });
+                        .filter(client -> client.getName().equals(userInGroup))
+                        .forEach(client -> {
+                            SendServices.SendMessage(client.getSocket(), "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
+                        });
                 }
             }
         }
     }
 }
-
-
 
 class DisconnectHandler implements InterfaceMessageHandler {
     @Override

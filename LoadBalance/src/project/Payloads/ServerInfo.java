@@ -1,4 +1,4 @@
-package project.Chat;
+package project.Payloads;
 import java.net.Socket;
 
 public class ServerInfo {

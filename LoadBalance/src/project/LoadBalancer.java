@@ -10,9 +10,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import project.Chat.ClientInfo;
-import project.Chat.Database;
-import project.Chat.ServerInfo;
+
+import project.Database.Database;
+import project.Payloads.ClientInfo;
+import project.Payloads.ServerInfo;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +24,7 @@ import src.lib.TypeReceive;
 public class LoadBalancer {
     // MAX_CLIENTS is the maximum number of clients that can connect to a server (MUST BE LARGER 1 CLIENTS THAN REAL SERVER)
     private static final int PORT = 8080;
-    private static Map<String, Socket> activeConnections = new ConcurrentHashMap<>();
+    private static final  Map<String, Socket> activeConnections = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
         Database.serverList = new ArrayList<>();
@@ -68,7 +69,9 @@ public class LoadBalancer {
             BufferedOutputStream dataOut = new BufferedOutputStream(socket.getOutputStream())) {
 
             String inputLine = in.readLine();
-            if (inputLine == null || inputLine.isEmpty()) return;
+            if (inputLine == null || inputLine.isEmpty()) {
+                return;
+            }
 
             String[] requestParts = inputLine.split(" ");
             String method = requestParts[0];

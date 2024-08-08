@@ -1,4 +1,4 @@
-package project.Chat;
+package project.Payloads;
 
 public class ClientInfo {
     private String name;
