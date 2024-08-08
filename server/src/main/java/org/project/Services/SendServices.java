@@ -24,29 +24,23 @@ public class SendServices {
             LOGGER.log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
         }
     }
-    
     public static void SendUserOnline() {
         CallAPI.GetData("/get-clients").thenAccept(userOnline -> {
             if (!userOnline.equals("error")) {
                 for (Client client : DataSave.clients) {
                     processClient(client, userOnline);
                 }
-            } else {
-                LOGGER.log(Level.SEVERE, "Failed to fetch user online data");
-            }
+            } else LOGGER.log(Level.SEVERE, "Failed to fetch user online data");
         });
     }
-
     private static void processClient(Client client, String userOnline) {
         String[] userAndGroups = userOnline.split("%");
         String users = extractUsers(userAndGroups);
         List<String> listUserInGroups = extractUserGroups(userAndGroups);
         users = appendGroupUsers(client, users, listUserInGroups);
-
         String sanitizedUsers = users.replaceAll(",,", ",");
         SendServices.SendMessage(client.getSocket(), "type:online&&data:" + sanitizedUsers);
     }
-
     private static String extractUsers(String[] userAndGroups) {
         StringBuilder users = new StringBuilder();
         for (String userAndGroup : userAndGroups) {
@@ -56,7 +50,6 @@ public class SendServices {
         }
         return users.toString();
     }
-
     private static List<String> extractUserGroups(String[] userAndGroups) {
         List<String> listUserInGroups = new ArrayList<>();
         for (String userAndGroup : userAndGroups) {
@@ -66,7 +59,6 @@ public class SendServices {
         }
         return listUserInGroups;
     }
-
     private static String appendGroupUsers(Client client, String users, List<String> listUserInGroups) {
         StringBuilder usersBuilder = new StringBuilder(users);
         for (String listUserInGroup : listUserInGroups) {
