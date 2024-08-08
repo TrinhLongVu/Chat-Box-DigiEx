@@ -26,20 +26,22 @@ public class LoadBalancer {
 
     public static void main(String[] args) {
         Database.serverList = new ArrayList<>();
-        Database.serverList.add(new ServerInfo("localhost", 1235, null));
-        Database.serverList.add(new ServerInfo("localhost", 1234, null));
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
                 try (Socket socket = serverSocket.accept()) {
                     handleClient(socket);
                 } catch (IOException e) {
-                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Cannot connect to client: {0}", e.getMessage());
+                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Cannot connect to client: {0}",
+                            e.getMessage());
                 }
             }
         } catch (IOException e) {
-            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Error starting LoadBalance: {0}", e.getMessage());
+            Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Error starting LoadBalance: {0}",
+                    e.getMessage());
         }
     }
+    
     
     private static void handleClient(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -59,6 +61,8 @@ public class LoadBalancer {
                         case "/login" -> handleLogin(in, out, dataOut);
                         case "/disconnect" -> handleDisconnect(in, out, dataOut);
                         case "/create-group" -> handleCreateGroup(in, out, dataOut);
+                        case "/server-available" -> handleReceiveServerAvailable(in, out, dataOut);
+                        case "/server-disconnected" -> handleServerDisconnection(in, out, dataOut);
                         default -> sendNotFound(out, dataOut);
                     }
                 }
@@ -78,7 +82,7 @@ public class LoadBalancer {
         }
     }
     
-    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException { 
+    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         // Find a suitable server and prepare the response
         ServerInfo serverEmpty = Database.serverList.stream()
                 .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < MAX_CLIENTS)
@@ -88,16 +92,80 @@ public class LoadBalancer {
         String responseMessage = "type:server&&data:" + serverEmpty;
         byte[] responseData = responseMessage.getBytes();
 
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New connection has established: {0}", responseMessage);
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New connection has established: {0}",
+                responseMessage);
 
         TypeReceive data = Helper.FormatData(responseMessage);
         if (data.getData() == null) {
-            sendResponse(out, dataOut, "200", responseMessage, null);
+            sendResponse(out, dataOut, "400", responseMessage, null);
         } else {
             sendResponse(out, dataOut, "200", responseMessage, responseData);
         }
     }
+    
+    private static void handleServerDisconnection(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
+        int contentLength = 0;
+        String line;
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            if (line.startsWith("Content-Length: ")) {
+                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
+            }
+        }
 
+        // Read the request body based on Content-Length
+        char[] body = new char[contentLength];
+        in.read(body, 0, contentLength);
+        String requestBody = new String(body);
+        String[] hostAndPort = requestBody.split("@");
+        String host = hostAndPort[0];
+        int port = Integer.parseInt(hostAndPort[1]);
+
+
+        Database.serverList.removeIf(server -> server.getHost().equals(host) && server.getPort() == port);
+
+        String responseMessage = "Receieved Message";
+        byte[] responseData = responseMessage.getBytes();
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Server has disconnected: {0}", host + "@" + port);
+
+        sendResponse(out, dataOut, "200", responseMessage, responseData);
+    }
+
+    private static void handleReceiveServerAvailable(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
+        int contentLength = 0;
+        String line;
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            if (line.startsWith("Content-Length: ")) {
+                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
+            }
+        }
+
+        // Read the request body based on Content-Length
+        char[] body = new char[contentLength];
+        in.read(body, 0, contentLength);
+        String requestBody = new String(body);
+        // localhost@1234&&2
+        String[] serverAndThreadSize = requestBody.split("&&");
+        String[] hostAndPort = serverAndThreadSize[0].split("@");
+        String host = hostAndPort[0];
+        int port = Integer.parseInt(hostAndPort[1]);
+        int threadSize = Integer.parseInt(serverAndThreadSize[1]);
+
+        if (Database.serverList.stream()
+                .anyMatch(server -> server.getHost().equals(host) && server.getPort() == port)) {
+            sendResponse(out, dataOut, "400", "Server already exists", null);
+            return;
+        }
+        
+        ServerInfo server = new ServerInfo(host, port, null, threadSize);
+        Database.serverList.add(server);
+
+        String responseMessage = "Receieved Message";
+        byte[] responseData = responseMessage.getBytes();
+
+        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New server available: {0}", host + "@" + port);
+        sendResponse(out, dataOut, "200", responseMessage, responseData);
+    }
 
     private static void handleLogin(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         int contentLength = 0;
