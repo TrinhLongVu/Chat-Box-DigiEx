@@ -5,6 +5,9 @@ import src.lib.DataSave;
 
 import java.io.IOException;
 import javax.swing.*;
+
+import project.Chat.SocketManager;
+
 import java.awt.*;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -14,13 +17,11 @@ import java.util.UUID;
 
 public class Group extends JDialog {
 
-    private Socket socket = null;
     private String myName;
-    public Group(JFrame parent, Socket newSocket, String newName) {
+    public Group(JFrame parent, String newName) {
         super(parent, "Create Group", true); // true for modal dialog
-        socket = newSocket;
         myName = newName;
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setSize(400, 300);
         setLocationRelativeTo(parent);
 
@@ -44,7 +45,7 @@ public class Group extends JDialog {
             if (selectedUsers.length() > 0) {
                 try {
                     String uniqueID = UUID.randomUUID().toString();
-                    new Send(socket).sendData("type:group&&receive:" + selectedUsers.toString().replace(" ", "") + myName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);
+                    new Send(SocketManager.getSocket()).sendData("type:group&&receive:" + selectedUsers.toString().replace(" ", "") + myName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);
                 } catch (IOException ex) {
                     Logger.getLogger(Group.class.getName()).log(Level.SEVERE, "Error: {0}", ex.getMessage());
 

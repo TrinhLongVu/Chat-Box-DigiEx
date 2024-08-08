@@ -3,6 +3,7 @@ package project.Chat;
 import src.lib.TypeReceive;
 import project.View.HomePage;
 import project.View.LoginForm;
+import project.utls.LoadBalanceManager;
 
 import javax.swing.JOptionPane;
 
@@ -13,26 +14,31 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.LinkedList;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import src.lib.DataSave;
 import src.lib.Helper;
 import src.lib.Send;
 
-public class Receive extends Thread {
+public class MessageManager extends Thread {
+    public LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
     public static boolean isClose = false;
     private String receiveMsg = "";
     private BufferedReader br;
-    public static Socket socket;
 
-    public Receive(Socket ss) {
-        Receive.socket = ss;
-        initializeBufferedReader(ss);
+    public MessageManager(Socket connSocket) {
+        SocketManager.setSocket(connSocket);
+        initializeBufferedReader(connSocket);
     }
 
-    private void initializeBufferedReader(Socket ss) {
+    private void initializeBufferedReader(Socket connSocket) {
         try {
-            InputStream is = ss.getInputStream();
+            InputStream is = connSocket.getInputStream();
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "An error occurred: {0} ", e.getMessage());
+            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "An error occurred: {0} ", e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -40,9 +46,8 @@ public class Receive extends Thread {
 
     @Override
     public void run() {
-        isClose = false;
         try {
-            while (!isClose) {
+            while (true) {
                 this.receiveMsg = this.br.readLine();
                 if (receiveMsg != null) {
                     TypeReceive data = Helper.FormatData(receiveMsg);
@@ -52,29 +57,42 @@ public class Receive extends Thread {
                     }
                     MessageHandlerFactory factory = FactoryClientReceive.getFactory(data.getType());
                     if (factory != null) {
-                        factory.handle(data, Receive.socket, receiveMsg);
+                        factory.handle(data, SocketManager.getSocket(), receiveMsg);
                     }
                 }
             }
         } catch (Exception e) {
-            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE,
+            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE,
                     "An error occurred while receiving message: {0}", e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred while receiving message: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
+
+            loadBalanceManager.reconnectServerResponse();
         }
     }
 
-    public static void cleanup() {
-        try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
+
+    public static void sendMessage(String msg) {
+        String message = msg;
+        if (!message.trim().isEmpty()) {
+            HomePage.listModel.addElement("You: " + message);
+            LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
+            if (history == null) {
+                history = new LinkedList<>();
             }
-            isClose = true;
-        } catch (IOException e) {
-            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}",
+            history.add("You: " + message);
+            HomePage.tfInput.setText("");
+            try {
+                if (SocketManager.getSocket() != null && !SocketManager.getSocket().isClosed()) {
+                    new Send(SocketManager.getSocket()).sendData("type:chat&&send:" + HomePage.myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
+                }
+            } catch (IOException e) {
+                Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Error while sending message: {0}",
                     e.getMessage());
+            }
         }
     }
+    
 
     private void handleServer(String data) {
         String[] hostAndPort = data.split("@");
@@ -84,20 +102,20 @@ public class Receive extends Thread {
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
-            Logger.getLogger(Receive.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}",
+            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}",
                     e.getMessage());
             return;
         }
 
         try {
-            Receive.socket.close();
+            SocketManager.getSocket().close();
             Socket s = new Socket(host, port);
-            new Send(s).sendData("type:login&&send:" + LoginForm.username);
-            new HomePage(null, s, LoginForm.username);
-            Receive.socket = s;
+            new Send(s).sendData("type:login&&send:" + LoginForm.userName);
+            new HomePage(null, LoginForm.userName);
+            SocketManager.setSocket(s);
             initializeBufferedReader(s); // Reinitialize BufferedReader with new socket
         } catch (IOException e) {
-            Logger.getLogger(Receive.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
+            Logger.getLogger(MessageManager.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
                     e.getMessage());
         }
     }

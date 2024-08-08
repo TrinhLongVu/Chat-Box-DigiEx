@@ -53,6 +53,9 @@ public class ServerManager {
 
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new Receive(brokerSocket)).start();
+                ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
+                sendServerInfo("localhost", port, tpe.getCorePoolSize());
+                
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
