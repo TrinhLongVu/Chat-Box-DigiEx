@@ -1,4 +1,4 @@
-package org.project.Services;
+package org.project.Utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,10 +12,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CallAPI {
-    public static CompletableFuture<String> GetData(String string_url) {
+    private final static String HOST = "localhost";
+    private final static String PORT = "8080";
+    public static CompletableFuture<String> GetData(String paramString) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                URL url = new URL(string_url);
+                URL url = new URL("http://" + HOST + ":" + PORT + paramString);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 int responseCode = connection.getResponseCode();
@@ -34,9 +36,9 @@ public class CallAPI {
         });
     }
 
-    public static void PostData(String string_url, String data) {
+    public static void PostData(String paramString, String data) {
         try {
-            URL url = new URL(string_url);
+            URL url = new URL("http://" + HOST + ":" + PORT + paramString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -49,7 +51,6 @@ public class CallAPI {
             }
 
             // Read the response
-            int responseCode = connection.getResponseCode();
             try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
                 StringBuilder response = new StringBuilder();
                 String responseLine;
@@ -59,6 +60,6 @@ public class CallAPI {
             }
         } catch (IOException e) {
             Logger.getLogger(CallAPI.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-        }
+        } 
     }
 }

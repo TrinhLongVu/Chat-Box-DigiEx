@@ -1,4 +1,4 @@
-package org.project.Chat;
+package org.project.Payloads;
 
 import java.net.Socket;
 

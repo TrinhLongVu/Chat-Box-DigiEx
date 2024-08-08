@@ -21,7 +21,7 @@ public class TypeReceive {
     public String getNameReceive() {return this.receive;}
     public String getData() {return this.data;}
 
-    public boolean haveFlag() {
+    public boolean isSendBroker() {
         return flag != null ? true : false; 
     }
 }
