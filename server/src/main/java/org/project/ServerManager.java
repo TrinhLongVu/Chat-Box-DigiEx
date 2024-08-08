@@ -18,12 +18,10 @@ import java.util.logging.Logger;
 
 import org.project.Payloads.BrokerInfo;
 import org.project.Controller.ReceiveController;
-
 import src.lib.Send;
 
 public class ServerManager {
     public static int PORT;
-
     private ServerSocket serverSocket;
     private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
@@ -33,10 +31,11 @@ public class ServerManager {
 
     public ServerManager() {
         threadPool = new ThreadPoolExecutor(
-                THREAD_POOL_SIZE,
-                THREAD_POOL_SIZE,
-                0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE));
+            THREAD_POOL_SIZE,
+            THREAD_POOL_SIZE,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
+        );
     }
 
     public void startServer(int port) {
@@ -45,42 +44,51 @@ public class ServerManager {
 
         new Thread(() -> {
             try {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.INFO, "Starting new ServerManager on port {0}", port);
+                Logger.getLogger(ServerManager.class.getName()).log(Level.INFO,
+                        "Starting new ServerManager on port {0}", port);
                 serverSocket = new ServerSocket(port);
-
-                // connect with broker
                 Socket brokerSocket = new Socket("localhost", PORT_BROKER);
-
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new ReceiveController(brokerSocket)).start();
 
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                 sendServerInfo("localhost", port, tpe.getCorePoolSize());
-                
+
                 while (running) {
-                    try {
-                        Socket clientSocket = serverSocket.accept();
-                        if (tpe.getQueue().remainingCapacity() == 0) {
-                            new Send(clientSocket).sendData("type:error&&data: server is full, please try again later.");
-                        } else {
-                            try {
-                                threadPool.submit(new ReceiveController(clientSocket));
-                            } catch (RejectedExecutionException e) {
-                                Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING, "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
-                            }
-                        }
-                    } catch (IOException e) {
-                        Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error accepting connection: {0}", e.getMessage());
-                    }
+                    ConnectClient(tpe);
                 }
             } catch (IOException e) {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error starting server: {0}", e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error starting server: {0}",
+                        e.getMessage());
             } finally {
                 shutdown();
             }
         }).start();
     }
 
+    private void ConnectClient(ThreadPoolExecutor tpe) {
+        try {
+            Socket clientSocket = serverSocket.accept();
+            if (tpe.getQueue().remainingCapacity() == 0) {
+                new Send(clientSocket)
+                        .sendData("type:error&&data: server is full, please try again later.");
+            } else {
+                SubmitThreadPool(clientSocket);
+            }
+        } catch (IOException e) {
+            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE,
+                    "Error accepting connection: {0}", e.getMessage());
+        }
+    }
+    
+    private void SubmitThreadPool(Socket clientSocket) {
+        try {
+            threadPool.submit(new ReceiveController(clientSocket));
+        } catch (RejectedExecutionException e) {
+            Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING,
+                    "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
+        }
+    }    
 
     public void shutdown() {
         running = false;
@@ -88,8 +96,7 @@ public class ServerManager {
             try {
                 serverSocket.close();
             } catch (IOException e) {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}",
-                        e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}", e.getMessage());
             }
         }
         if (threadPool != null && !threadPool.isShutdown()) {
@@ -99,20 +106,17 @@ public class ServerManager {
                     threadPool.shutdownNow();
                 }
             } catch (InterruptedException e) {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}",
-                        e.getMessage());
-
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}", e.getMessage());
                 threadPool.shutdownNow();
                 Thread.currentThread().interrupt();
             }
         }
         notifyDisconnection("localhost", PORT);
     }
-    
+
     private void notifyDisconnection(String host, int port) {
         try {
             URL loadBalancerUrl = new URL("http://localhost:8080/server-disconnected");
-
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
             loadBalancerConn.setDoOutput(true);
@@ -125,17 +129,14 @@ public class ServerManager {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
             StringBuilder newContent = new StringBuilder();
-
             String inputLine;
-            
+
             while ((inputLine = in.readLine()) != null) {
                 newContent.append(inputLine);
             }
-
             in.close();
         } catch (IOException e) {
-            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
-                    e.getMessage());
+            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}", e.getMessage());
         }
     }
 
@@ -150,12 +151,11 @@ public class ServerManager {
     private void sendServerInfo(String host, int port, int threadSize) {
         try {
             URL loadBalancerUrl = new URL("http://localhost:8080/server-available");
-
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
             loadBalancerConn.setDoOutput(true);
 
-            String confirmationMessage = host + "@"+ port + "&&" + threadSize;
+            String confirmationMessage = host + "@" + port + "&&" + threadSize;
             try (OutputStream os = loadBalancerConn.getOutputStream()) {
                 os.write(confirmationMessage.getBytes());
                 os.flush();
@@ -163,17 +163,14 @@ public class ServerManager {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
             StringBuilder newContent = new StringBuilder();
-
             String inputLine;
-            
+
             while ((inputLine = in.readLine()) != null) {
                 newContent.append(inputLine);
             }
-
             in.close();
         } catch (IOException e) {
-            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
-                    e.getMessage());
+            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}", e.getMessage());
         }
     }
 }

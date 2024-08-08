@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import project.Database.Database;
 import project.Payloads.ClientInfo;
 import project.Payloads.ServerInfo;
+import project.Services.ApiService;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,19 +81,19 @@ public class LoadBalancer {
             switch (method) {
                 case "POST" -> {
                     switch (fileRequested) {
-                        case "/login" -> handleLogin(in, out, dataOut);
-                        case "/disconnect" -> handleDisconnect(in, out, dataOut);
-                        case "/create-group" -> handleCreateGroup(in, out, dataOut);
-                        case "/server-available" -> handleReceiveServerAvailable(in, out, dataOut);
-                        case "/server-disconnected" -> handleServerDisconnection(in, out, dataOut);
+                        case "/login" -> ApiService.handleLogin(in, out, dataOut);
+                        case "/disconnect" -> ApiService.handleDisconnect(in, out, dataOut);
+                        case "/create-group" -> ApiService.handleCreateGroup(in, out, dataOut);
+                        case "/server-available" -> ApiService.handleReceiveServerAvailable(in, out, dataOut);
+                        case "/server-disconnected" -> ApiService.handleServerDisconnection(in, out, dataOut);
                         default -> sendNotFound(out, dataOut);
                     }
                 }
 
                 case "GET" -> {
                     switch (fileRequested) {
-                        case "/connect" -> handleGetConnection(out, dataOut);
-                        case "/get-clients" -> handleGetClients(out, dataOut);
+                        case "/connect" -> ApiService.handleGetConnection(out, dataOut);
+                        case "/get-clients" -> ApiService.handleGetClients(out, dataOut);
                         default -> sendNotFound(out, dataOut);
                     }
                 }
@@ -104,209 +105,6 @@ public class LoadBalancer {
         }
     }
     
-    private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        // Find a suitable server and prepare the response
-        ServerInfo serverEmpty = Database.serverList.stream()
-                .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < server.getServerSize())
-                .findFirst()
-                .orElse(null);
-
-        String responseMessage = "type:server&&data:" + serverEmpty;
-        byte[] responseData = responseMessage.getBytes();
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New connection has established: {0}",
-                responseMessage);
-
-        TypeReceive data = Helper.FormatData(responseMessage);
-        if (data.getData() == null) {
-            sendResponse(out, dataOut, "400", responseMessage, null);
-        } else {
-            sendResponse(out, dataOut, "200", responseMessage, responseData);
-        }
-    }
-    
-    private static void handleServerDisconnection(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        int contentLength = 0;
-        String line;
-        while ((line = in.readLine()) != null && !line.isEmpty()) {
-            if (line.startsWith("Content-Length: ")) {
-                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
-            }
-        }
-
-        // Read the request body based on Content-Length
-        char[] body = new char[contentLength];
-        in.read(body, 0, contentLength);
-        String requestBody = new String(body);
-        String[] hostAndPort = requestBody.split("@");
-        String host = hostAndPort[0];
-        int port = Integer.parseInt(hostAndPort[1]);
-
-
-        Database.serverList.removeIf(server -> server.getHost().equals(host) && server.getPort() == port);
-
-        String responseMessage = "Receieved Message";
-        byte[] responseData = responseMessage.getBytes();
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Server has disconnected: {0}", host + "@" + port);
-
-        sendResponse(out, dataOut, "200", responseMessage, responseData);
-    }
-
-    private static void handleReceiveServerAvailable(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        int contentLength = 0;
-        String line;
-        while ((line = in.readLine()) != null && !line.isEmpty()) {
-            if (line.startsWith("Content-Length: ")) {
-                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
-            }
-        }
-
-        // Read the request body based on Content-Length
-        char[] body = new char[contentLength];
-        in.read(body, 0, contentLength);
-        String requestBody = new String(body);
-        // localhost@1234&&2
-        String[] serverAndThreadSize = requestBody.split("&&");
-        String[] hostAndPort = serverAndThreadSize[0].split("@");
-        String host = hostAndPort[0];
-        int port = Integer.parseInt(hostAndPort[1]);
-        int threadSize = Integer.parseInt(serverAndThreadSize[1]);
-
-        if (Database.serverList.stream()
-                .anyMatch(server -> server.getHost().equals(host) && server.getPort() == port)) {
-            sendResponse(out, dataOut, "400", "Server already exists", null);
-            return;
-        }
-        
-        ServerInfo server = new ServerInfo(host, port, null, threadSize);
-        Database.serverList.add(server);
-
-        String responseMessage = "Receieved Message";
-        byte[] responseData = responseMessage.getBytes();
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New server available: {0}", host + "@" + port);
-        sendResponse(out, dataOut, "200", responseMessage, responseData);
-    }
-
-    private static void handleLogin(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        int contentLength = 0;
-        String line;
-        while ((line = in.readLine()) != null && !line.isEmpty()) {
-            if (line.startsWith("Content-Length: ")) {
-                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
-            }
-        }
-
-        // Read the request body based on Content-Length
-        char[] body = new char[contentLength];
-        in.read(body, 0, contentLength);
-        String requestBody = new String(body);
-
-        String[] nameAndServer = requestBody.split("&&");
-        String name = nameAndServer[0];
-        ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-        Database.clients.add(client);
-        String[] hostAndPort = nameAndServer[1].split("@");
-        String host = hostAndPort[0];
-        int port = Integer.parseInt(hostAndPort[1]);
-        Database.serverList.forEach(server -> {
-            if (server.getHost().equals(host) && server.getPort() == port) {
-                server.incrementClients();
-            }
-        });
-
-        String responseMessage = "Receieved Message";
-        byte[] responseData = responseMessage.getBytes();
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New user login to server: {0}", name);
-
-        sendResponse(out, dataOut, "200", responseMessage, responseData);
-    }
-    
-    private static void handleDisconnect(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut)
-            throws IOException {
-        int contentLength = 0;
-        String line;
-        while ((line = in.readLine()) != null && !line.isEmpty()) {
-            if (line.startsWith("Content-Length: ")) {
-                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
-            }
-        }
-
-        // Read the request body based on Content-Length
-        char[] body = new char[contentLength];
-        in.read(body, 0, contentLength);
-        String requestBody = new String(body);
-        String[] nameAndPort = requestBody.split("&&");
-        String[] hostAndPortArray = nameAndPort[1].split("@");
-        String name = nameAndPort[0];
-        String host = hostAndPortArray[0];
-        int port = Integer.parseInt(hostAndPortArray[1]);
-
-        Database.clients.removeIf(client -> client.getName().equals(name));
-        Database.serverList.forEach(server -> {
-            if (server.getHost().equals(host) && server.getPort() == port) {
-                if (server.getActiveClients() > 0) {
-                    server.decrementClients();
-                }
-            }
-        });
-
-        String responseMessage = "Receieved Message";
-        byte[] responseData = responseMessage.getBytes();
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Client has disconnected from server: {0}", name);
-
-        sendResponse(out, dataOut, "200", responseMessage, responseData);
-    }
-
-    private static void handleCreateGroup(BufferedReader in, PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        int contentLength = 0;
-        String line;
-        while ((line = in.readLine()) != null && !line.isEmpty()) {
-            if (line.startsWith("Content-Length: ")) {
-                contentLength = Integer.parseInt(line.substring("Content-Length: ".length()));
-            }
-        }
-
-        // Read the request body based on Content-Length
-        char[] body = new char[contentLength];
-        in.read(body, 0, contentLength);
-        String requestBody = new String(body);
-
-        String[] nameAndServer = requestBody.split("&&");
-        String name = nameAndServer[0];
-        ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-        Database.clients.add(client);
-
-        String responseMessage = "Receieved Message";
-        byte[] responseData = responseMessage.getBytes();
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "New group was created: {0}", name);
-
-        sendResponse(out, dataOut, "200", responseMessage, responseData);
-    }
-
-    private static void handleGetClients(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        String response = "";
-        for (ClientInfo client : Database.clients) {
-            if (client == Database.clients.get(Database.clients.size() - 1)) {
-                response += client.getName();
-            } else {
-                response += client.getName() + ",";
-            }
-        }
-
-        byte[] responseData = response.getBytes();
-
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Server-clients: {0}", response);
-
-        sendResponse(out, dataOut, "200", response, responseData);
-    }
-
-
     private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         String errorMessage = """
                               HTTP/1.1 404 File Not Found\r
@@ -339,15 +137,5 @@ public class LoadBalancer {
         dataOut.flush();
     }
 
-    private static void sendResponse(PrintWriter out, BufferedOutputStream dataOut, String status, String contentType, byte[] content) throws IOException {
-        out.println("HTTP/1.1 " + status);
-        out.println("Server: SimpleJavaHttpServer");
-        out.println("Content-Type: " + contentType);
-        out.println("Content-Length: " + content.length);
-        out.println();
-        out.flush();
-
-        dataOut.write(content, 0, content.length);
-        dataOut.flush();
-    }
+    
 }

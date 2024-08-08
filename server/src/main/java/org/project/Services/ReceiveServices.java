@@ -24,67 +24,54 @@ public class ReceiveServices {
         factoryMethod.put("chat-group", new ChatGroupMessageHandler());
         factoryMethod.put("disconnect", new DisconnectHandler());
     }
-
     public static InterfaceMessageHandler getFactory(String type) {
         return factoryMethod.get(type);
     }
 }
-
 class LoginMessageHandler implements InterfaceMessageHandler {
     private static final String FLAG_TRUE = "&&flag:true";
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         if (BrokerInfo.brokerSocket == null) {
-            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                    " broker is not exits");
+            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}", " broker is not exits");
             return;
         }
-
-        if (!data.isSendBroker()) {
-            SendMessageToBroker(data, socket, message);
-        } else {
-            SendToClient();
-        }
+        if (!data.isSendBroker()) SendMessageToBroker(data, socket, message);
+        else SendToClient();
     }
-    
     private void SendMessageToBroker(TypeReceive data, Socket socket, String message) {
         Client currentClient = new Client(data.getNameSend(), socket);
         DataSave.clients.add(currentClient);
         ReceiveController.receiveClientMap.put(socket, currentClient);
         SendServices.SendMessage(BrokerInfo.brokerSocket, message + FLAG_TRUE);
     }
-
     private void SendToClient() {
         SendServices.SendUserOnline();
     }
 }
-
 class ChatMessageHandler implements InterfaceMessageHandler {
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
-        if (BrokerInfo.brokerSocket == null) {
-            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                    " broker is not exits");
-            return;
-        }
-
+        if (!isExitBroker()) return;
         if (!data.isSendBroker()) {
             SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
             return;
         }
-
         Socket receiver = findClientSocketByName(data.getNameReceive());
-        if (receiver != null) {
-            SendChatToClient(receiver, data);
-        } else {
-            handleChatGroup(data);
-        }
+        if (receiver != null) SendChatToClient(receiver, data);
+        else handleChatGroup(data);
     }
-    
+    private boolean isExitBroker() {
+        if (BrokerInfo.brokerSocket == null) {
+            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                    " broker is not exits");
+            return false;
+        }
+        return true;
+    }
     private void SendChatToClient(Socket receiver, TypeReceive data) {
         SendServices.SendMessage(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
     }
-    
     private Socket findClientSocketByName(String name) {
         for (Client client : DataSave.clients) {
             if (client.getName().equals(name)) {
@@ -93,7 +80,6 @@ class ChatMessageHandler implements InterfaceMessageHandler {
         }
         return null;
     }
-    
     public void handleChatGroup(TypeReceive data) {
         DataSave.groups.entrySet().stream()
             .filter(entry -> entry.getKey().equals(data.getNameReceive()))
@@ -108,23 +94,13 @@ class ChatMessageHandler implements InterfaceMessageHandler {
                 }));
     }
 }
-
 class GroupMessageHandler implements InterfaceMessageHandler {
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
-        if (BrokerInfo.brokerSocket == null) {
-            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                    " broker is not exits");
-            return;
-        }
-
-        if (!data.isSendBroker()) {
-            SendToBroker(receiveMsg, data);
-        } else {
-            SendToGroup(data);
-        }
+        if (!isExitBroker()) return;
+        if (!data.isSendBroker()) SendToBroker(receiveMsg, data);
+        else SendToGroup(data);
     }
-    
     private void SendToBroker(String receiveMsg, TypeReceive data) {
         SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
         CallAPI.PostData("/create-group",
@@ -135,8 +111,15 @@ class GroupMessageHandler implements InterfaceMessageHandler {
         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
         SendServices.SendUserOnline();
     }
+    private boolean isExitBroker() {
+        if (BrokerInfo.brokerSocket == null) {
+            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
+                    " broker is not exits");
+            return false;
+        }
+        return true;
+    }
 }
-
 class ChatGroupMessageHandler implements InterfaceMessageHandler {
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
@@ -154,7 +137,6 @@ class ChatGroupMessageHandler implements InterfaceMessageHandler {
         }
     }
 }
-
 class DisconnectHandler implements InterfaceMessageHandler {
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
