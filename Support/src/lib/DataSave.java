@@ -12,4 +12,7 @@ public class DataSave {
     public static String selectedUser = "";
     public static List<Client> clients = new ArrayList<>();
     public static Map<String, String> groups = new HashMap<>();
+
+    private DataSave() {
+    }
 }

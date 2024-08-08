@@ -53,10 +53,10 @@ public class ServerManager {
 
                 BrokerInfo.brokerSocket = brokerSocket;
                 new Thread(new ReceiveController(brokerSocket)).start();
-                new Thread(new HeartbeatSender(brokerSocket)).start();
+
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                 sendServerInfo("localhost", port, tpe.getCorePoolSize());
-
+                
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
@@ -136,32 +136,6 @@ public class ServerManager {
         } catch (IOException e) {
             Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
                     e.getMessage());
-        }
-    }
-
-    private class HeartbeatSender implements Runnable {
-        private Socket brokerSocket;
-        private static final int HEARTBEAT_INTERVAL = 3;
-
-        public HeartbeatSender(Socket brokerSocket) {
-            this.brokerSocket = brokerSocket;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    new Send(brokerSocket).sendData("type:heartbeat");
-                    TimeUnit.SECONDS.sleep(HEARTBEAT_INTERVAL);
-                } catch (IOException e) {
-                    System.err.println("Error sending heartbeat: " + e.getMessage());
-                    break;
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.err.println("Heartbeat sender interrupted: " + e.getMessage());
-                    break;
-                }
-            }
         }
     }
 

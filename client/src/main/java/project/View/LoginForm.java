@@ -17,15 +17,17 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import project.Chat.Receive;
+import project.Chat.MessageManager;
+import project.Chat.SocketManager;
+import project.utls.LoadBalanceManager;;
 
 public class LoginForm extends JDialog {
     private JTextField tfEmail;
     private JButton btnOK;
     private JButton btnCancel;
     private JPanel loginPanel;
-
-    static public String username = "";
+    public static String userName = "";
+    public LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
 
     public LoginForm(JFrame parent, String content) {
         super(parent);
@@ -52,33 +54,26 @@ public class LoginForm extends JDialog {
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        btnOK.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (tfEmail.getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(parent, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                String data = Helper.FormatData(content).getData();
-                if (data == null) {
-                    JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
-                    return;
-                } else {
-                    username = tfEmail.getText();
-                    handleServer(content);
-                }
-
-                dispose();
+        btnOK.addActionListener(e -> {
+            if (tfEmail.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            
+            String data = Helper.FormatData(content).getData();
+            if (data == null) {
+                JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            } else {
+                userName = tfEmail.getText();
+                handleServer(content);
+            }
+            dispose();
         });
 
-        btnCancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-                System.exit(0);
-            }
+        btnCancel.addActionListener(e -> {
+            dispose();
+            System.exit(0);
         });
         setVisible(true);
     }
@@ -95,7 +90,6 @@ public class LoginForm extends JDialog {
         int port;
         String host = hostAndPort[0];
 
-
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
@@ -103,49 +97,19 @@ public class LoginForm extends JDialog {
                     e.getMessage());
             return;
         }
+
         try {
             Socket s = new Socket(host, port);
             if (s.isConnected()) {
-                notifyConnected(host, port, LoginForm.username);
+                SocketManager.setSocket(s);
+                loadBalanceManager.notifyConnected(host, port, userName);
             }
-            new Receive(s).start();
-            new Send(s).sendData("type:login&&send:" + LoginForm.username);
-            new HomePage(null, s, LoginForm.username);
+
+            new MessageManager(s).start();
+            new Send(s).sendData("type:login&&send:" + userName);
+            new HomePage(null, userName);
         } catch (IOException e) {
             Logger.getLogger(LoginForm.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
-                    e.getMessage());
-        }
-    }
-
-    private void notifyConnected(String host, int port, String name) {
-        try {
-            URL loadBalancerUrl = new URL("http://localhost:8080/login");
-
-            HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
-            loadBalancerConn.setRequestMethod("POST");
-            loadBalancerConn.setDoOutput(true);
-
-            // Message indicating successful connection to the server
-            String confirmationMessage = name + "&&" + host + "@"+ port;
-            try (OutputStream os = loadBalancerConn.getOutputStream()) {
-                os.write(confirmationMessage.getBytes());
-                os.flush();
-            }
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
-            StringBuilder newContent = new StringBuilder();
-
-            String inputLine;
-            
-            while ((inputLine = in.readLine()) != null) {
-                newContent.append(inputLine);
-            }
-
-            // Close connections
-            in.close();
-            // loadBalancerConn.disconnect();
-        } catch (IOException e) {
-            Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Error sending confirmation to LoadBalancer: {0}",
                     e.getMessage());
         }
     }
