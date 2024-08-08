@@ -87,7 +87,7 @@ public class LoginForm extends JDialog {
         String data = Helper.FormatData(receiveMsg).getData();
 
         if (data.equals("null")) {
-            JOptionPane.showMessageDialog(null, "All servers are full right now.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -143,7 +143,7 @@ public class LoginForm extends JDialog {
 
             // Close connections
             in.close();
-            loadBalancerConn.disconnect();
+            // loadBalancerConn.disconnect();
         } catch (IOException e) {
             Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Error sending confirmation to LoadBalancer: {0}",
                     e.getMessage());

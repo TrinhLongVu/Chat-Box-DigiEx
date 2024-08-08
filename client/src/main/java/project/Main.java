@@ -31,7 +31,7 @@ public class Main {
 
             // Close connections
             in.close();
-            conn.disconnect();
+            // conn.disconnect();
         } catch (IOException e) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, "Error Test: {0}", e.getMessage());
         }
