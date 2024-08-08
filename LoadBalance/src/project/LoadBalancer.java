@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import project.Chat.ClientInfo;
 import project.Chat.Database;
 import project.Chat.ServerInfo;
@@ -20,20 +22,22 @@ import src.lib.TypeReceive;
 
 public class LoadBalancer {
     // MAX_CLIENTS is the maximum number of clients that can connect to a server (MUST BE LARGER 1 CLIENTS THAN REAL SERVER)
-    private static final int MAX_CLIENTS = 2;
     private static final int PORT = 8080;
-
+    private static Map<String, Socket> activeConnections = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
         Database.serverList = new ArrayList<>();
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
-                try (Socket socket = serverSocket.accept()) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    String clientAddress = socket.getRemoteSocketAddress().toString();
+                    activeConnections.put(clientAddress, socket);
                     handleClient(socket);
+                    disconnectClient(clientAddress);
                 } catch (IOException e) {
-                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Cannot connect to client: {0}",
-                            e.getMessage());
+                    Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Cannot connect to client: {0}", e.getMessage());
                 }
             }
         } catch (IOException e) {
@@ -42,6 +46,21 @@ public class LoadBalancer {
         }
     }
     
+    private static void disconnectClient(String clientAddress) {
+        Socket socket = activeConnections.get(clientAddress);
+        if (socket != null && !socket.isClosed()) {
+            try {
+                socket.close();
+                Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Disconnected client: {0}",
+                        clientAddress);
+                activeConnections.remove(clientAddress);
+            } catch (IOException e) {
+                Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Error disconnecting client: {0}",
+                        e.getMessage());
+            }
+        }
+    }
+
     
     private static void handleClient(Socket socket) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -85,7 +104,7 @@ public class LoadBalancer {
     private static void handleGetConnection(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
         // Find a suitable server and prepare the response
         ServerInfo serverEmpty = Database.serverList.stream()
-                .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < MAX_CLIENTS)
+                .filter(server -> Utils.isServerRunning(server) && server.getActiveClients() < server.getServerSize())
                 .findFirst()
                 .orElse(null);
 
