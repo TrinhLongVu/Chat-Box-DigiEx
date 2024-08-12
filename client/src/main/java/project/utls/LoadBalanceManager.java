@@ -34,6 +34,7 @@ public class LoadBalanceManager {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(false);
+            conn.setRequestProperty("Content-Type", "text/plain");
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
@@ -57,6 +58,7 @@ public class LoadBalanceManager {
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
             loadBalancerConn.setDoOutput(true);
+            loadBalancerConn.setRequestProperty("Content-Type", "text/plain");
 
             // Message indicating successful connection to the server
             String confirmationMessage = name + "&&" + host + "@"+ port;
@@ -90,6 +92,7 @@ public class LoadBalanceManager {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "text/plain");
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;

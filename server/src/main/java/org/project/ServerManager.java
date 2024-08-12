@@ -8,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -120,6 +121,7 @@ public class ServerManager {
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
             loadBalancerConn.setDoOutput(true);
+            loadBalancerConn.setRequestProperty("Content-Type", "text/plain");
 
             String confirmationMessage = host + "@" + port;
             try (OutputStream os = loadBalancerConn.getOutputStream()) {
@@ -154,12 +156,15 @@ public class ServerManager {
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
             loadBalancerConn.setDoOutput(true);
+            loadBalancerConn.setRequestProperty("Content-Type", "text/plain");
 
             String confirmationMessage = host + "@" + port + "&&" + threadSize;
+            // Add headers
             try (OutputStream os = loadBalancerConn.getOutputStream()) {
                 os.write(confirmationMessage.getBytes());
                 os.flush();
             }
+            System.out.println("confirmationMessage: " + confirmationMessage);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(loadBalancerConn.getInputStream()));
             StringBuilder newContent = new StringBuilder();
@@ -170,7 +175,8 @@ public class ServerManager {
             }
             in.close();
         } catch (IOException e) {
-            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}", e.getMessage());
+            Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error sending server information: {0}",
+                    e.getMessage());
         }
     }
 }

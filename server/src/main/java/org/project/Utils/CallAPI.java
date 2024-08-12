@@ -20,6 +20,8 @@ public class CallAPI {
                 URL url = new URL("http://" + HOST + ":" + PORT + paramString);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
+                connection.setRequestProperty("Content-Type", "text/plain");
+
                 int responseCode = connection.getResponseCode();
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
                     StringBuilder response = new StringBuilder();
@@ -42,7 +44,8 @@ public class CallAPI {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
+            connection.setRequestProperty("Content-Type", "text/plain");
+
 
             // Write the data
             try (OutputStream os = connection.getOutputStream()) {

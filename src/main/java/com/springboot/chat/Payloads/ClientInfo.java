@@ -1,4 +1,4 @@
-package project.Payloads;
+package com.springboot.chat.Payloads;
 
 public class ClientInfo {
     private String name;

@@ -1,4 +1,4 @@
-package project.Payloads;
+package com.springboot.chat.Payloads;
 import java.net.Socket;
 
 public class ServerInfo {
