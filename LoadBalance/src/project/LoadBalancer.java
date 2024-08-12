@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import project.Database.Database;
+import project.Exceptions.ExceptionsHandler;
 import project.Services.ApiService;
 
 public class LoadBalancer {
@@ -78,7 +79,7 @@ public class LoadBalancer {
                         case "/create-group" -> ApiService.handleCreateGroup(in, out, dataOut);
                         case "/server-available" -> ApiService.handleReceiveServerAvailable(in, out, dataOut);
                         case "/server-disconnected" -> ApiService.handleServerDisconnection(in, out, dataOut);
-                        default -> sendNotFound(out, dataOut);
+                        default -> ExceptionsHandler.sendNotFound(out, dataOut);
                     }
                 }
 
@@ -86,48 +87,15 @@ public class LoadBalancer {
                     switch (fileRequested) {
                         case "/connect" -> ApiService.handleGetConnection(out, dataOut);
                         case "/get-clients" -> ApiService.handleGetClients(out, dataOut);
-                        default -> sendNotFound(out, dataOut);
+                        default -> ExceptionsHandler.sendNotFound(out, dataOut);
                     }
                 }
-                default -> sendNotImplemented(out, dataOut);
+                default -> ExceptionsHandler.sendNotImplemented(out, dataOut);
             }
 
         } catch (IOException e) {
             Logger.getLogger(LoadBalancer.class.getName()).log(Level.SEVERE, "Method not supported: {0}", e.getMessage());
         }
     }
-    
-    private static void sendNotFound(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        String errorMessage = """
-                              HTTP/1.1 404 File Not Found\r
-                              Content-Type: text/html\r
-                              Content-Length: 23\r
-                              \r
-                              <h1>404 Not Found</h1>""";
 
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Method not supported: {0}", errorMessage);
-
-        out.println(errorMessage);
-        out.flush();
-        dataOut.write(errorMessage.getBytes());
-        dataOut.flush();
-    }
-
-    private static void sendNotImplemented(PrintWriter out, BufferedOutputStream dataOut) throws IOException {
-        String errorMessage = """
-                              HTTP/1.1 501 Not Implemented\r
-                              Content-Type: text/html\r
-                              Content-Length: 25\r
-                              \r
-                              <h1>501 Not Implemented</h1>""";
-
-        Logger.getLogger(LoadBalancer.class.getName()).log(Level.INFO, "Method not supported: {0}", errorMessage);
-
-        out.println(errorMessage);
-        out.flush();
-        dataOut.write(errorMessage.getBytes());
-        dataOut.flush();
-    }
-
-    
 }

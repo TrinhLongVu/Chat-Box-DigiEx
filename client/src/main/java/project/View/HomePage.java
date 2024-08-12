@@ -1,29 +1,20 @@
 package project.View;
 
-import src.lib.Send;
 import src.lib.DataSave;
 import src.lib.LogHandler;
-import src.lib.Helper;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 
 import project.Chat.MessageManager;
-import project.Chat.SocketManager;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.SocketException;
+
 import java.net.Socket;
-import java.net.URL;
 import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 public class HomePage extends JFrame {
     private transient LogHandler logger;
