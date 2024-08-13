@@ -22,6 +22,15 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <transformers>
+                <transformer>
+                  <manifestEntries>
+                    <Main-Class>com.example.Client.ClientApplication</Main-Class>
+                  </manifestEntries>
+                </transformer>
+              </transformers>
+            </configuration>
           </execution>
         </executions>
       </plugin>
