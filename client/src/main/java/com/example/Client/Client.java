@@ -2,11 +2,8 @@ package com.example.Client;
 
 import com.example.Client.View.LoginForm;
 import com.example.Client.utils.LoadBalanceManager;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 import javax.swing.*;
 
-@SpringBootApplication
 public class Client {
     public static void main(String[] args) {
         LoadBalanceManager loadBalanceManager = new LoadBalanceManager();

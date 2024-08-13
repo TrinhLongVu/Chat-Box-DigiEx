@@ -18,9 +18,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import com.example.Broker.utils.Receive;
 import src.lib.Send;
 
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
 public class MessageBroker {
     public static final int PORT = 4000;
     private static final String SERVER_TOPIC = "Server";

@@ -1,10 +1,7 @@
 package com.example.Server;
 
 import javax.swing.*;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
 public class Server extends JFrame {
     private JTextField portTextField;
     private JButton startButton;
