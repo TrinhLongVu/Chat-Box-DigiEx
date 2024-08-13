@@ -1,4 +1,4 @@
-package com.example.Support.lib;
+package com.example.Support;
 
 public class TypeReceive {
     private String type;

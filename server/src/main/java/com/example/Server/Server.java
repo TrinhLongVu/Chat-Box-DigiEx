@@ -1,7 +1,6 @@
 package com.example.Server;
 
 import javax.swing.*;
-import com.example.Support.lib.*;
 
 public class Server extends JFrame {
     private JTextField portTextField;
@@ -31,7 +30,6 @@ public class Server extends JFrame {
         panel.add(startButton);
         panel.add(stopButton);
         panel.add(statusLabel);
-        String da = Helper.formatData("type:ba").getData();
 
         add(panel);
 

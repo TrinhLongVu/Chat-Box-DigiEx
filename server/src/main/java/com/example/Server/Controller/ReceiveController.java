@@ -16,10 +16,7 @@ import com.example.Server.services.InterfaceMessageHandler;
 import com.example.Server.services.ReceiveServices;
 import com.example.Server.services.SendServices;
 import com.example.Server.utils.CallAPI;
-import com.example.Support.lib.Client;
-import com.example.Support.lib.DataSave;
-import com.example.Support.lib.Helper;
-import com.example.Support.lib.TypeReceive;
+import com.example.Support.*;
 
 public class ReceiveController implements Runnable {
     private BufferedReader br;

@@ -1,1 +1,0 @@
-java -cp target/LoadBalance-1.0.0.jar com.example.LoadBalance.LoadBalanceApplication

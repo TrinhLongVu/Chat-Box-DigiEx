@@ -8,9 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.example.Server.utils.CallAPI;
-import com.example.Support.lib.Client;
-import com.example.Support.lib.DataSave;
-import com.example.Support.lib.Send;
+import com.example.Support.*;
 
 
 public class SendServices {
