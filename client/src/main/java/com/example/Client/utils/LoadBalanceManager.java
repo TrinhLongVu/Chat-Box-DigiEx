@@ -1,11 +1,11 @@
 package com.example.Client.utils;
 
-import com.example.Client.View.HomePage;
-import com.example.Client.View.LoginForm;
+import com.example.Client.view.HomePage;
+import com.example.Client.view.LoginForm;
 import com.example.Client.chat.MessageManager;
 import com.example.Client.chat.SocketManager;
-import src.lib.Send;
-import src.lib.Helper;
+import com.example.Support.lib.Send;
+import com.example.Support.lib.Helper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -99,7 +99,7 @@ public class LoadBalanceManager {
                     content.append(inputLine);
                 }
             }
-            String data = Helper.FormatData(content.toString()).getData();
+            String data = Helper.formatData(content.toString()).getData();
             
             if (data.equals("null")) {
                 Logger.getLogger(MessageManager.class.getName()).log(Level.INFO, "No server available");

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Helper {
-    public static TypeReceive FormatData(String receiveMsg) {
+    public static TypeReceive formatData(String receiveMsg) {
         String[] pairs = receiveMsg.split("&&");
 
         Map<String, String> keyValueMap = new HashMap<>();

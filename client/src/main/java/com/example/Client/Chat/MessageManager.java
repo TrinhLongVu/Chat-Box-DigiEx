@@ -1,12 +1,13 @@
 package com.example.Client.chat;
 
-import com.example.Client.View.HomePage;
-import com.example.Client.View.LoginForm;
-import src.lib.TypeReceive;
+import com.example.Client.view.HomePage;
+import com.example.Client.view.LoginForm;
 import com.example.Client.utils.LoadBalanceManager;
-
+import com.example.Support.lib.TypeReceive;
+import com.example.Support.lib.DataSave;
+import com.example.Support.lib.Helper;
+import com.example.Support.lib.Send;
 import javax.swing.JOptionPane;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,10 +16,6 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.LinkedList;
-
-import src.lib.DataSave;
-import src.lib.Helper;
-import src.lib.Send;
 
 public class MessageManager extends Thread {
     public LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
@@ -48,7 +45,7 @@ public class MessageManager extends Thread {
             while (true) {
                 this.receiveMsg = this.br.readLine();
                 if (receiveMsg != null) {
-                    TypeReceive data = Helper.FormatData(receiveMsg);
+                    TypeReceive data = Helper.formatData(receiveMsg);
                     if (data.getType().equals("server")) {
                         handleServer(data.getData());
                         return;

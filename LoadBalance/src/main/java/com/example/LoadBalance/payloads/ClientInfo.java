@@ -2,18 +2,18 @@ package com.example.LoadBalance.payloads;
 
 public class ClientInfo {
     private String name;
-    private String serverinfo;
+    private String serverInfo;
 
     public ClientInfo(String name, String serverinfo) {
         this.name = name;
-        this.serverinfo = serverinfo;
+        this.serverInfo = serverinfo;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getServerinfo() {
-        return serverinfo;
+    public String getServerInfo() {
+        return serverInfo;
     }
 }

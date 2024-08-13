@@ -8,10 +8,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.example.Server.utils.CallAPI;
+import com.example.Support.lib.Client;
+import com.example.Support.lib.DataSave;
+import com.example.Support.lib.Send;
 
-import src.lib.Client;
-import src.lib.DataSave;
-import src.lib.Send;
 
 public class SendServices {
     private static final Logger LOGGER = Logger.getLogger(SendServices.class.getName());

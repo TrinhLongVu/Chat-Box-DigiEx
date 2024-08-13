@@ -1,10 +1,10 @@
 package com.example.Client;
 
-import com.example.Client.View.LoginForm;
+import com.example.Client.view.LoginForm;
 import com.example.Client.utils.LoadBalanceManager;
 import javax.swing.*;
 
-public class Client {
+public class ClientApplication {
     public static void main(String[] args) {
         LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
         String response = loadBalanceManager.getConnectResponse();

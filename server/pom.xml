@@ -26,8 +26,8 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>support</artifactId>
+			<groupId>com.example.Support</groupId>
+			<artifactId>Support</artifactId>
 		</dependency>
 	</dependencies>
 </project>

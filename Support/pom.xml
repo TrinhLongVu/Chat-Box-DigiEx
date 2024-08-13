@@ -10,24 +10,15 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>com.example.Client</groupId>
-	<artifactId>Client</artifactId>
+	<groupId>com.example.Support</groupId>
+	<artifactId>Support</artifactId>
 	<version>1.0.0</version>
-	<name>Client</name>
-	<description>Client side</description>
+	<packaging>jar</packaging>
 
 	<properties>
 		<java.version>22</java.version>
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.example.Support</groupId>
-			<artifactId>Support</artifactId>
-		</dependency>
 	</dependencies>
 </project>

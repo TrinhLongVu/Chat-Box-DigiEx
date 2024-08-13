@@ -8,10 +8,10 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import com.example.Client.View.HomePage;
-import com.example.Client.View.LoginForm;
-import src.lib.DataSave;
-import src.lib.TypeReceive;
+import com.example.Client.view.HomePage;
+import com.example.Client.view.LoginForm;
+import com.example.Support.lib.DataSave;
+import com.example.Support.lib.TypeReceive;
 
 public class FactoryClientReceive {
     private static final Map<String, MessageHandlerFactory> factoryMap = new HashMap<>();

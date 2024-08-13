@@ -10,13 +10,14 @@
 
     <modules>
         <module>Broker</module>
+        <module>Support</module>
         <module>Client</module>
         <module>LoadBalance</module>
         <module>Server</module>
     </modules>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>22</java.version>
     </properties>
 
     <dependencyManagement>
@@ -31,6 +32,11 @@
                 <groupId>org.modelmapper</groupId>
                 <artifactId>modelmapper</artifactId>
                 <version>2.4.4</version>
+            </dependency>
+            <dependency>
+                <groupId>com.example.Support</groupId>
+	            <artifactId>Support</artifactId>
+	            <version>1.0.0</version>
             </dependency>
             <!-- <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -52,13 +58,6 @@
                 <artifactId>spring-web</artifactId>
                 <version>6.1.11</version>
             </dependency> -->
-            <dependency>
-                <groupId>com.example</groupId>
-                <artifactId>support</artifactId>
-                <version>1.0</version>
-                <scope>system</scope>
-                <systemPath>${project.basedir}/lib/support.jar</systemPath>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

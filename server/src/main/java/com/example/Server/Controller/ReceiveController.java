@@ -1,10 +1,5 @@
 package com.example.Server.controller;
 
-import src.lib.Client;
-import src.lib.TypeReceive;
-import src.lib.Helper;
-import src.lib.DataSave;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +16,10 @@ import com.example.Server.services.InterfaceMessageHandler;
 import com.example.Server.services.ReceiveServices;
 import com.example.Server.services.SendServices;
 import com.example.Server.utils.CallAPI;
+import com.example.Support.lib.Client;
+import com.example.Support.lib.DataSave;
+import com.example.Support.lib.Helper;
+import com.example.Support.lib.TypeReceive;
 
 public class ReceiveController implements Runnable {
     private BufferedReader br;
@@ -42,7 +41,7 @@ public class ReceiveController implements Runnable {
         String receiveMsg;
         try {
             while ((receiveMsg = br.readLine()) != null) {
-                TypeReceive data = Helper.FormatData(receiveMsg);
+                TypeReceive data = Helper.formatData(receiveMsg);
                 if (data == null) {
                     continue;
                 }

@@ -1,15 +1,14 @@
-package com.example.Client.View;
+package com.example.Client.view;
 
 import com.example.Client.chat.MessageManager;
-import src.lib.DataSave;
-import src.lib.LogHandler;
+import com.example.Support.lib.DataSave;
+import com.example.Support.lib.LogHandler;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import java.net.Socket;
 import java.util.LinkedList;
 
 

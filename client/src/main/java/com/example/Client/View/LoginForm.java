@@ -1,12 +1,12 @@
-package com.example.Client.View;
+package com.example.Client.view;
 
 import javax.swing.*;
 
 import com.example.Client.chat.MessageManager;
 import com.example.Client.chat.SocketManager;
 import com.example.Client.utils.LoadBalanceManager;
-import src.lib.Helper;
-import src.lib.Send;
+import com.example.Support.lib.Helper;
+import com.example.Support.lib.Send;
 
 import java.awt.*;
 import java.net.Socket;
@@ -53,7 +53,7 @@ public class LoginForm extends JDialog {
                 return;
             }
             
-            String data = Helper.FormatData(content).getData();
+            String data = Helper.formatData(content).getData();
             if (data == null) {
                 JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
                 return;
@@ -72,7 +72,7 @@ public class LoginForm extends JDialog {
     }
     
     private void handleServer(String receiveMsg) {
-        String data = Helper.FormatData(receiveMsg).getData();
+        String data = Helper.formatData(receiveMsg).getData();
 
         if (data.equals("null")) {
             JOptionPane.showMessageDialog(null, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
