@@ -10,11 +10,11 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>com.example.LoadBalance</groupId>
-	<artifactId>LoadBalance</artifactId>
+	<groupId>com.example.Server</groupId>
+	<artifactId>Server</artifactId>
 	<version>1.0.0</version>
-	<name>LoadBalance</name>
-	<description>LoadBalance side</description>
+	<name>Server</name>
+	<description>Server side</description>
 
 	<properties>
 		<java.version>22</java.version>
@@ -27,23 +27,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.modelmapper</groupId>
-			<artifactId>modelmapper</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.example</groupId>
@@ -59,4 +47,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>

@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: project.Main
+Main-Class: com.example.Client.project.Main
 Class-Path: lib/support.jar
