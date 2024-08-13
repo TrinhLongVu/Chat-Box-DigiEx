@@ -20,7 +20,7 @@ public class CallAPI {
                 URL url = new URL("http://" + HOST + ":" + PORT + paramString);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
-                connection.setRequestProperty("Content-Type", "text/plain");
+                // connection.setRequestProperty("Content-Type", "text/plain");
 
                 int responseCode = connection.getResponseCode();
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {

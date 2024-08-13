@@ -34,7 +34,7 @@ public class LoadBalanceManager {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(false);
-            conn.setRequestProperty("Content-Type", "text/plain");
+            // conn.setRequestProperty("Content-Type", "text/plain");
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
@@ -92,7 +92,7 @@ public class LoadBalanceManager {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(true);
-            conn.setRequestProperty("Content-Type", "text/plain");
+            // conn.setRequestProperty("Content-Type", "text/plain");
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
