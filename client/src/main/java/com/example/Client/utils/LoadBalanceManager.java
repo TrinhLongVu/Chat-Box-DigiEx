@@ -4,8 +4,8 @@ import com.example.Client.view.HomePage;
 import com.example.Client.view.LoginForm;
 import com.example.Client.chat.MessageManager;
 import com.example.Client.chat.SocketManager;
-import com.example.Support.lib.Send;
-import com.example.Support.lib.Helper;
+import com.example.Support.Send;
+import com.example.Support.Helper;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,8 +1,8 @@
 package com.example.Client.view;
 
 import com.example.Client.chat.SocketManager;
-import com.example.Support.lib.DataSave;
-import com.example.Support.lib.Send;
+import com.example.Support.DataSave;
+import com.example.Support.Send;
 import java.io.IOException;
 import javax.swing.*;
 import java.awt.*;
