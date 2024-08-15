@@ -1,9 +1,1 @@
-find src -name "*.java" -print | xargs javac -cp lib/support.jar -d target/classes
-
-mkdir -p target/lib
-cp lib/support.jar target/lib/
-
-jar cvfm target/client.jar META-INF/MANIFEST.MF -C target/classes . -C target lib
-
-java -jar target/client.jar
-
+java -cp target/Client-1.0.0.jar com.example.Client.ClientApplication
