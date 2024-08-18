@@ -1,4 +1,4 @@
-package com.example.Broker;
+package com.example.Broker.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,25 +7,22 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.example.Broker.utils.Receive;
 import com.example.Support.Send;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MessageBroker {
+    private final String SERVER_TOPIC = "Server";
     public static final int PORT = 4000;
-    private static final String SERVER_TOPIC = "Server";
-    private ConcurrentHashMap<String, List<Socket>> connectedServers = new ConcurrentHashMap<>();
 
-    public static void main(String[] args) {
-        new MessageBroker();
-    }
+    private HashMap<String, List<Socket>> connectedServers = new HashMap<>();
 
     public MessageBroker() {
         startMessageBroker(PORT);
@@ -37,8 +34,8 @@ public class MessageBroker {
         try {
             brokerSocket = new ServerSocket(port);
 
-            // Start server monitor to determine if server is still connected
-            new Thread(new ServerMonitor()).start();
+//            // Start server monitor to determine if server is still connected
+//            new Thread(new ServerMonitor()).start();
             while (true) {
                 allowNewServerConnection(brokerSocket);
             }
@@ -60,8 +57,12 @@ public class MessageBroker {
         }
     }
 
-    private List<Socket> getSocketsByKey(String key) {
+    public List<Socket> getSocketsByKey(String key) {
         return connectedServers.getOrDefault(key, new ArrayList<>());
+    }
+
+    public HashMap<String, List<Socket>> getConnectedServers() {
+        return connectedServers;
     }
 
     private class ServerHandler implements Runnable {
@@ -71,10 +72,8 @@ public class MessageBroker {
         @Override
         public void run() {
             try {
-                Receive receive = new Receive(serverSocket);
                 String message;
                 while ((message = br.readLine()) != null) {
-                    receive.setReceiveMsg(message);
                     broadcastMessage(message);
                 }
             } catch (Exception e) {
@@ -109,44 +108,5 @@ public class MessageBroker {
         }
     }
 
-    private class ServerMonitor implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                Iterator<Socket> iterator = getSocketsByKey(SERVER_TOPIC).iterator();
 
-                while (iterator.hasNext()) {
-                    Socket serverSocket = iterator.next();
-                    try {
-                        serverSocket.getOutputStream().write(0);
-                    } catch (IOException e) {
-                        removeDisconnectedServer(serverSocket);
-                    }
-                }
-
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        }
-
-        public void removeDisconnectedServer(Socket serverSocket) {
-            try {
-                List<Socket> sockets = getSocketsByKey(SERVER_TOPIC);
-                if (sockets != null) {
-                    sockets.remove(serverSocket);
-                    if (sockets.isEmpty()) {
-                        connectedServers.remove(SERVER_TOPIC);
-                    }
-                }
-                serverSocket.close();
-            } catch (IOException e) {
-                Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}",
-                        e.getMessage());
-            }
-        }
-    }
 }

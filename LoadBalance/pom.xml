@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.org</groupId>
-		<artifactId>SystemConfiguration</artifactId>
-		<version>1.0.0</version>
-		<relativePath>../pom.xml</relativePath>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.3.2</version>
+		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-
+	
 	<groupId>com.example.LoadBalance</groupId>
 	<artifactId>LoadBalance</artifactId>
 	<version>1.0.0</version>
@@ -23,7 +23,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
 		</dependency>
 		<dependency>
 			<groupId>org.modelmapper</groupId>
