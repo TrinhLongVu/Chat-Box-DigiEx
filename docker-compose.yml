@@ -1,0 +1,23 @@
+services:
+  broker:
+    build:
+      context: ./Broker
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    container_name: broker
+    networks:
+      - networks
+  loadbalancer:
+    build:
+      context: ./LoadBalance
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    container_name: loadbalancer
+    networks:
+      - networks    
+
+networks:
+  networks:
+    external: true
