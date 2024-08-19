@@ -13,7 +13,6 @@ import java.util.LinkedList;
 
 
 public class HomePage extends JFrame {
-    private transient LogHandler logger;
     private JTextArea userArea;
     private JButton btnSend;
     public static DefaultListModel<String> listModel = new DefaultListModel<>();
@@ -143,13 +142,5 @@ public class HomePage extends JFrame {
                 setVisible(true);
             }
         });
-    }
-
-    @Override
-    public void dispose() {
-        super.dispose();
-        if (logger != null) {
-            logger.close();
-        }
     }
 }
