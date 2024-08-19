@@ -21,19 +21,27 @@ public class LoadBalancerController {
         
         
         String name = nameAndServer[0];
-        ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-        Database.clients.add(client);
+
         
         String host = hostAndPort[0];
         int port = Integer.parseInt(hostAndPort[1]);
-
-        Database.serverList.forEach(server -> {
-            if (server.getHost().equals(host) && server.getPort() == port) {
-                server.incrementClients();
+        for (ServerInfo server : Database.serverList) {
+            if (server.getHost().equals(host) && server.getPort() == port && isServerRunning(server)) {
+                if (server.getActiveClients() < server.getServerSize()) {
+                    // Log connection and update client information
+                    System.out.println("Client connected to server: " + name);
+                    ClientInfo client = new ClientInfo(name, nameAndServer[1]);
+                    Database.clients.add(client);
+                    server.incrementClients();
+                    return "New user logged in to server: " + name;
+                } else {
+                    return "Server is full, unable to connect user: " + name;
+                }
             }
-        });
+        }
 
-        return "New user login to server: " + name;
+        // Server not found in the list
+        return "Server is not available: " + host + "@" + port;
 
     }
 
@@ -50,14 +58,29 @@ public class LoadBalancerController {
         String host = hostAndPortArray[0];
         int port = Integer.parseInt(hostAndPortArray[1]);
 
-        Database.clients.removeIf(client -> client.getName().equals(name));
-        Database.serverList.forEach(server -> {
-            if (server.getHost().equals(host) && server.getPort() == port) {
+        // Remove the client with the specified name
+        boolean clientRemoved = Database.clients.removeIf(client -> client.getName().equals(name));
+
+        if (!clientRemoved) {
+            return "Client not found: " + name;
+        }
+
+        // Update the server's active client count
+        boolean serverUpdated = false;
+        for (ServerInfo server : Database.serverList) {
+            if (server.getHost().equals(host) && server.getPort() == port && isServerRunning(server)) {
                 if (server.getActiveClients() > 0) {
                     server.decrementClients();
+                    serverUpdated = true;
                 }
+                break; // Exit loop once the server is found and updated
             }
-        });
+        }
+
+        if (!serverUpdated) {
+            return "Server not found or no active clients to decrement: " + host + "@" + port;
+        }
+
         return "Client has disconnected from server: " + name;
         
     }
@@ -90,7 +113,9 @@ public class LoadBalancerController {
                 .anyMatch(server -> server.getHost().equals(host) && server.getPort() == port)) {
             return "Server already exists";
         }
-
+        if (!isServerRunning(new ServerInfo(host, port, null, threadSize))){
+            return "Server is not running";
+        }
         Database.serverList.add(new ServerInfo(host, port, null, threadSize));
 
         return "New server available: " + host + "@" + port;
@@ -106,7 +131,11 @@ public class LoadBalancerController {
         int port = Integer.parseInt(hostAndPort[1]);
 
 
-        Database.serverList.removeIf(server -> server.getHost().equals(host) && server.getPort() == port);
+        boolean removedServer =Database.serverList.removeIf(server -> server.getHost().equals(host) && server.getPort() == port);
+
+        if (!removedServer) {
+            return "Server not found: " + host + "@" + port;
+        }
 
         return "Server has disconnected: " + host + "@" + port;
     }
