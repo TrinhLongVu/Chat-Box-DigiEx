@@ -1,47 +1,41 @@
 package com.example.Broker.service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.example.Support.Send;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MessageBroker {
-    private final String SERVER_TOPIC = "Server";
+    private static final Logger log = LogManager.getLogger(MessageBroker.class);
+    private static final String SERVER_TOPIC = "Server";
     public static final int PORT = 4000;
 
-    private HashMap<String, List<Socket>> connectedServers = new HashMap<>();
+    private ConcurrentHashMap<String, List<Socket>> connectedServers = new ConcurrentHashMap<>();
 
     public MessageBroker() {
         startMessageBroker(PORT);
     }
 
     public void startMessageBroker(int port) {
-        Logger.getLogger(MessageBroker.class.getName()).log(Level.INFO, "Message Broker is running....");
+        log.info("MessageBroker is starting...");
         ServerSocket brokerSocket;
         try {
             brokerSocket = new ServerSocket(port);
-
-//            // Start server monitor to determine if server is still connected
-//            new Thread(new ServerMonitor()).start();
-            while (true) {
+            
+            while(true) {
                 allowNewServerConnection(brokerSocket);
             }
         } catch (IOException e) {
-            Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error starting server: {0}",
-                    e.getMessage());
+            log.error("Error starting server: {}", e.getMessage());
         }
     }
 
@@ -50,9 +44,9 @@ public class MessageBroker {
             Socket serverSocket = brokerSocket.accept();
             connectedServers.computeIfAbsent(SERVER_TOPIC, k -> new CopyOnWriteArrayList<>()).add(serverSocket);
 
-            new Thread(new ServerHandler(serverSocket)).start();
+            new Thread(new ServerHandler(this, serverSocket)).start();
         } catch (IOException e) {
-            Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error accepting connection: {0}",
+            log.error("Error accepting connection: {}",
                     e.getMessage());
         }
     }
@@ -61,52 +55,7 @@ public class MessageBroker {
         return connectedServers.getOrDefault(key, new ArrayList<>());
     }
 
-    public HashMap<String, List<Socket>> getConnectedServers() {
+    public ConcurrentMap<String, List<Socket>> getConnectedServers() {
         return connectedServers;
     }
-
-    private class ServerHandler implements Runnable {
-        private Socket serverSocket;
-        private BufferedReader br;
-
-        @Override
-        public void run() {
-            try {
-                String message;
-                while ((message = br.readLine()) != null) {
-                    broadcastMessage(message);
-                }
-            } catch (Exception e) {
-                Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error reading from server: {0}",
-                        e.getMessage());
-            }
-        }
-
-        public ServerHandler(Socket serverSocket) {
-            this.serverSocket = serverSocket;
-            InputStream is;
-            try {
-                is = this.serverSocket.getInputStream();
-                br = new BufferedReader(new InputStreamReader(is));
-            } catch (IOException e) {
-                Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE,
-                        "Problem with handling new server: {0}", e.getMessage());
-            }
-        }
-
-        private void broadcastMessage(String message) {
-            for (Socket serverDestination : getSocketsByKey(SERVER_TOPIC)) {
-                try {
-                    Logger.getLogger(MessageBroker.class.getName()).log(Level.INFO, "Message broadcasted: {0}",
-                            message);
-                    new Send(serverDestination).sendData(message);
-                } catch (IOException e) {
-                    Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error broadcasting message: {0}",
-                            e.getMessage());
-                }
-            }
-        }
-    }
-
-
 }
