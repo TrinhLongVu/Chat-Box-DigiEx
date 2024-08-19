@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +29,9 @@ public class ReceiveController implements Runnable {
     private BufferedReader br;
     private Socket socket;
     public static Map<Socket, Client> receiveClientMap = new HashMap();
+
+    @Value("${PORT}")
+    private int PORT;
 
     @Autowired
     private ReceiveServices receiveServices; 
@@ -76,7 +80,7 @@ public class ReceiveController implements Runnable {
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
 
-                CallAPI.PostData("/disconnect", currentClient.getName() + "&&localhost@" + ServerManager.PORT);
+                CallAPI.PostData("/disconnect", currentClient.getName() + "&&localhost@" + PORT);
                 SendServices.SendMessage(BrokerInfo.brokerSocket, "type:disconnect");
             }
         } catch (IOException e) {

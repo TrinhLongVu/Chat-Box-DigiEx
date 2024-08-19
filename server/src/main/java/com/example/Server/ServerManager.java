@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -26,11 +27,23 @@ import com.example.Support.*;
 
 @Component
 public class ServerManager {
-    public static int PORT;
+    
     private ServerSocket serverSocket;
     private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
-    private final int PORT_BROKER = 4000;
+
+    @Value("${PORT_BROKER}")
+    private int PORT_BROKER;
+
+    @Value("${HOST_BROKER}")
+    private String HOST_BROKER;
+
+    @Value("${HOST}")
+    private String HOST_SERVER;
+
+    @Value("${PORT}")
+    private int PORT;
+
     private volatile boolean running;
     private ExecutorService threadPool;
 
@@ -46,23 +59,24 @@ public class ServerManager {
         );
     }
 
-    public void startServer(int port) {
-        this.PORT = port;
+    public void startServer() {
         running = true;
 
         new Thread(() -> {
             try {
                 Logger.getLogger(ServerManager.class.getName()).log(Level.INFO,
-                        "Starting new ServerManager on port {0}", port);
-                serverSocket = new ServerSocket(port);
-                Socket brokerSocket = new Socket("localhost", PORT_BROKER);
+                        "Starting new ServerManager on port {0}", String.valueOf(PORT));
+                serverSocket = new ServerSocket(PORT);
+                System.out.println("broker::::" + PORT_BROKER);
+                Socket brokerSocket = new Socket(HOST_BROKER, PORT_BROKER);
+
 
                 BrokerInfo.brokerSocket = brokerSocket;
                 ReceiveController receive = context.getBean(ReceiveController.class, brokerSocket);
                 new Thread(receive).start();
 
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
-                sendServerInfo("localhost", port, tpe.getCorePoolSize());
+                sendServerInfo(HOST_SERVER, PORT, tpe.getCorePoolSize());
 
                 while (running) {
                     ConnectClient(tpe);
