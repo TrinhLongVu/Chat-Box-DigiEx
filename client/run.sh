@@ -1,1 +1,1 @@
-java -cp target/Client-1.0.0.jar com.example.Client.ClientApplication
+mvn spring-boot:run
