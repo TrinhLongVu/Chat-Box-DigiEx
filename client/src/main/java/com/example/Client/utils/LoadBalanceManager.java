@@ -1,12 +1,5 @@
 package com.example.Client.utils;
 
-import com.example.Client.view.HomePage;
-import com.example.Client.view.LoginForm;
-import com.example.Client.chat.MessageManager;
-import com.example.Client.chat.SocketManager;
-import com.example.Support.Send;
-import com.example.Support.Helper;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,6 +11,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
+
+import com.example.Client.chat.MessageManager;
+import com.example.Client.chat.SocketManager;
+import com.example.Client.view.HomePage;
+import com.example.Client.view.LoginForm;
+import com.example.Support.Helper;
+import com.example.Support.Send;
 
 public class LoadBalanceManager {
     private static final String LOAD_BALANCER_URL = "http://localhost:8080";
@@ -33,7 +33,7 @@ public class LoadBalanceManager {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(false);
-            // conn.setRequestProperty("Content-Type", "text/plain");
+            conn.setRequestProperty("Content-Type", "text/plain");
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String inputLine;
@@ -91,7 +91,7 @@ public class LoadBalanceManager {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setDoOutput(true);
-            // conn.setRequestProperty("Content-Type", "text/plain");
+            conn.setRequestProperty("Content-Type", "text/plain");
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
