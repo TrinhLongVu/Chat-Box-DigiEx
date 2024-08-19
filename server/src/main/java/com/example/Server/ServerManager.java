@@ -127,17 +127,13 @@ public class ServerManager {
         notifyDisconnection("localhost", PORT);
     }
     
-    private void setMethodHttp(HttpURLConnection loadBalancerConn) {
-        loadBalancerConn.setRequestMethod("POST");
-        loadBalancerConn.setDoOutput(true);
-        loadBalancerConn.setRequestProperty("Content-Type", "text/plain");
-    }
-
     private void notifyDisconnection(String host, int port) {
         try {
             URL loadBalancerUrl = new URL("http://localhost:8080/server-disconnected");
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
-            setMethodHttp(loadBalancerConn);
+            loadBalancerConn.setRequestMethod("POST");
+            loadBalancerConn.setDoOutput(true);
+            loadBalancerConn.setRequestProperty("Content-Type", "text/plain");
 
             String confirmationMessage = host + "@" + port;
             try (OutputStream os = loadBalancerConn.getOutputStream()) {
