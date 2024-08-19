@@ -7,14 +7,15 @@ import com.example.Client.chat.SocketManager;
 import com.example.Client.utils.LoadBalanceManager;
 import com.example.Support.Helper;
 import com.example.Support.Send;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.net.Socket;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class LoginForm extends JDialog {
+    private static final Logger log = LogManager.getLogger(LoginForm.class);
     private JTextField tfEmail;
     private JButton btnOK;
     private JButton btnCancel;
@@ -86,8 +87,7 @@ public class LoginForm extends JDialog {
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
-            Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}",
-                    e.getMessage());
+            log.error("Invalid port number format: {}", e.getMessage());
             return;
         }
 
@@ -102,8 +102,7 @@ public class LoginForm extends JDialog {
             new Send(s).sendData("type:login&&send:" + userName);
             new HomePage(null, userName);
         } catch (IOException e) {
-            Logger.getLogger(LoginForm.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
-                    e.getMessage());
+            log.error("Unable to connect to server: {}", e.getMessage());
         }
     }
 }

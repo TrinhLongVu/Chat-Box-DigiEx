@@ -7,20 +7,19 @@ import com.example.Support.TypeReceive;
 import com.example.Support.DataSave;
 import com.example.Support.Helper;
 import com.example.Support.Send;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import javax.swing.JOptionPane;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.LinkedList;
 
 public class MessageManager extends Thread {
+    private static final Logger log = LogManager.getLogger(MessageManager.class);
     public LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
-    public static boolean isClose = false;
-    private String receiveMsg = "";
     private BufferedReader br;
 
     public MessageManager(Socket connSocket) {
@@ -33,7 +32,7 @@ public class MessageManager extends Thread {
             InputStream is = connSocket.getInputStream();
             br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "An error occurred: {0} ", e.getMessage());
+            log.error("An error occurred: {} ", e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
         }
@@ -43,7 +42,7 @@ public class MessageManager extends Thread {
     public void run() {
         try {
             while (true) {
-                this.receiveMsg = this.br.readLine();
+                String receiveMsg = this.br.readLine();
                 if (receiveMsg != null) {
                     TypeReceive data = Helper.formatData(receiveMsg);
                     if (data.getType().equals("server")) {
@@ -57,8 +56,7 @@ public class MessageManager extends Thread {
                 }
             }
         } catch (Exception e) {
-            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE,
-                    "An error occurred while receiving message: {0}", e.getMessage());
+            log.error("An error occurred while receiving message: {}", e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred while receiving message: " + e.getMessage(), "Error",
                     JOptionPane.ERROR_MESSAGE);
 
@@ -68,22 +66,20 @@ public class MessageManager extends Thread {
 
 
     public static void sendMessage(String msg) {
-        String message = msg;
-        if (!message.trim().isEmpty()) {
-            HomePage.listModel.addElement("You: " + message);
+        if (!msg.trim().isEmpty()) {
+            HomePage.listModel.addElement("You: " + msg);
             LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
             if (history == null) {
                 history = new LinkedList<>();
             }
-            history.add("You: " + message);
+            history.add("You: " + msg);
             HomePage.tfInput.setText("");
             try {
                 if (SocketManager.getSocket() != null && !SocketManager.getSocket().isClosed()) {
-                    new Send(SocketManager.getSocket()).sendData("type:chat&&send:" + HomePage.myName + "&&receive:" + DataSave.selectedUser + "&&data:" + message);
+                    new Send(SocketManager.getSocket()).sendData("type:chat&&send:" + HomePage.myName + "&&receive:" + DataSave.selectedUser + "&&data:" + msg);
                 }
             } catch (IOException e) {
-                Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Error while sending message: {0}",
-                    e.getMessage());
+                log.error("Error while sending message: {}", e.getMessage());
             }
         }
     }
@@ -97,8 +93,7 @@ public class MessageManager extends Thread {
         try {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
-            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Invalid port number format: {0}",
-                    e.getMessage());
+            log.error("Invalid port number format: {}", e.getMessage());
             return;
         }
 
@@ -110,8 +105,7 @@ public class MessageManager extends Thread {
             SocketManager.setSocket(s);
             initializeBufferedReader(s); // Reinitialize BufferedReader with new socket
         } catch (IOException e) {
-            Logger.getLogger(MessageManager.class.getName()).log(Level.WARNING, "Unable to connect to server: {0}",
-                    e.getMessage());
+            log.error("Unable to connect to server: {}", e.getMessage());
         }
     }
 }
