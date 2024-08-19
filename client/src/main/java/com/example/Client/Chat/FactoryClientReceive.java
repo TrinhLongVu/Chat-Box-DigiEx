@@ -18,7 +18,7 @@ public class FactoryClientReceive {
     static {
         factoryMap.put("online", new UpdateUserOnlineMessageHandlerFactory());
         factoryMap.put("chat", new ChatMessageHandlerFactory());
-        factoryMap.put("com.example.Client.chat-group", new ChatGroupMessageHandlerFactory());
+        factoryMap.put("chat-group", new ChatGroupMessageHandlerFactory());
         factoryMap.put("error", new ErrorMessageHandlerFactory());
     }
 

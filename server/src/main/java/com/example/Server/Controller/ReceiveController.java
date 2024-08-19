@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import com.example.Server.ServerManager;
 import com.example.Server.payloads.BrokerInfo;
 import com.example.Server.services.InterfaceMessageHandler;
@@ -18,10 +22,15 @@ import com.example.Server.services.SendServices;
 import com.example.Server.utils.CallAPI;
 import com.example.Support.*;
 
+@Component
+@Scope("prototype")
 public class ReceiveController implements Runnable {
     private BufferedReader br;
     private Socket socket;
     public static Map<Socket, Client> receiveClientMap = new HashMap();
+
+    @Autowired
+    private ReceiveServices receiveServices; 
 
     public ReceiveController(Socket socket) {
         this.socket = socket;
@@ -43,13 +52,11 @@ public class ReceiveController implements Runnable {
                     continue;
                 }
 
-                InterfaceMessageHandler factory = ReceiveServices.getFactory(data.getType());
-                if (factory == null) {
-                    continue;
+                InterfaceMessageHandler factory = receiveServices.getFactory(data.getType());
+                if (factory != null) {
+                    Logger.getLogger(ReceiveController.class.getName()).log(Level.INFO, "Server received: {0}", receiveMsg);
+                    factory.handle(data, socket, receiveMsg);
                 }
-
-                Logger.getLogger(ReceiveController.class.getName()).log(Level.INFO, "Server received: {0}", receiveMsg);
-                factory.handle(data, socket, receiveMsg);
             }
         } catch (Exception e) {
             Logger.getLogger(ReceiveController.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());

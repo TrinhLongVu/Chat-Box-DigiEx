@@ -16,10 +16,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
 import com.example.Server.payloads.BrokerInfo;
 import com.example.Server.controller.ReceiveController;
 import com.example.Support.*;
 
+@Component
 public class ServerManager {
     public static int PORT;
     private ServerSocket serverSocket;
@@ -28,6 +33,9 @@ public class ServerManager {
     private final int PORT_BROKER = 4000;
     private volatile boolean running;
     private ExecutorService threadPool;
+
+    @Autowired
+    private ApplicationContext context; 
 
     public ServerManager() {
         threadPool = new ThreadPoolExecutor(
@@ -48,8 +56,10 @@ public class ServerManager {
                         "Starting new ServerManager on port {0}", port);
                 serverSocket = new ServerSocket(port);
                 Socket brokerSocket = new Socket("localhost", PORT_BROKER);
+
                 BrokerInfo.brokerSocket = brokerSocket;
-                new Thread(new ReceiveController(brokerSocket)).start();
+                ReceiveController receive = context.getBean(ReceiveController.class, brokerSocket);
+                new Thread(receive).start();
 
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
                 sendServerInfo("localhost", port, tpe.getCorePoolSize());
@@ -83,7 +93,8 @@ public class ServerManager {
     
     private void SubmitThreadPool(Socket clientSocket) {
         try {
-            threadPool.submit(new ReceiveController(clientSocket));
+            ReceiveController receive = context.getBean(ReceiveController.class, clientSocket);
+            threadPool.submit(receive);
         } catch (RejectedExecutionException e) {
             Logger.getLogger(ServerManager.class.getName()).log(Level.WARNING,
                     "Server is overloaded, adding client to pending queue. {0}", e.getMessage());
@@ -96,7 +107,8 @@ public class ServerManager {
             try {
                 serverSocket.close();
             } catch (IOException e) {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}", e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}",
+                        e.getMessage());
             }
         }
         if (threadPool != null && !threadPool.isShutdown()) {
@@ -106,14 +118,15 @@ public class ServerManager {
                     threadPool.shutdownNow();
                 }
             } catch (InterruptedException e) {
-                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}", e.getMessage());
+                Logger.getLogger(ServerManager.class.getName()).log(Level.SEVERE, "Error shutting down server: {0}",
+                        e.getMessage());
                 threadPool.shutdownNow();
                 Thread.currentThread().interrupt();
             }
         }
         notifyDisconnection("localhost", PORT);
     }
-
+    
     private void notifyDisconnection(String host, int port) {
         try {
             URL loadBalancerUrl = new URL("http://localhost:8080/server-disconnected");

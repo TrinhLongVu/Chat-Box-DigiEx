@@ -2,16 +2,21 @@ package com.example.Server;
 
 import javax.swing.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class Server extends JFrame {
     private JTextField portTextField;
     private JButton startButton;
     private JButton stopButton;
     private JLabel statusLabel;
+    @Autowired
     private ServerManager serverManager;
 
     public Server() {
-        serverManager = new ServerManager();
-
         setTitle("Server Control");
         setSize(300, 150);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,6 +66,8 @@ public class Server extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(Server::new);
+        SpringApplication app = new SpringApplication(Server.class);
+        app.setWebApplicationType(WebApplicationType.NONE);
+        app.run(args);
     }
 }
