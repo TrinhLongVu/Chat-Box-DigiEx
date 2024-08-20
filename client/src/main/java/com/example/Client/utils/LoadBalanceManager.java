@@ -7,19 +7,20 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 import javax.swing.JOptionPane;
 
 import com.example.Client.chat.MessageManager;
 import com.example.Client.chat.SocketManager;
 import com.example.Client.view.HomePage;
-import com.example.Client.view.LoginForm;
 import com.example.Support.Helper;
 import com.example.Support.Send;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LoadBalanceManager {
+    private static final Logger log = LogManager.getLogger(LoadBalanceManager.class);
     private static final String LOAD_BALANCER_URL = "http://localhost:8080";
 
     public String getConnectResponse() {
@@ -44,7 +45,7 @@ public class LoadBalanceManager {
 
             in.close();
         } catch (IOException e) {
-            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Failed to handle request from server: {0}", e.getMessage());
+            log.error("Failed to handle request from server: {}", e.getMessage());
         }
 
         return content.toString();
@@ -78,8 +79,7 @@ public class LoadBalanceManager {
             // Close connections
             in.close();
         } catch (IOException e) {
-            Logger.getLogger(LoginForm.class.getName()).log(Level.SEVERE, "Error sending confirmation to LoadBalancer: {0}",
-                e.getMessage());
+            log.error("Error sending confirmation to LoadBalancer: {}", e.getMessage());
         }
     }
 
@@ -102,7 +102,7 @@ public class LoadBalanceManager {
             String data = Helper.formatData(content.toString()).getData();
             
             if (data.equals("null")) {
-                Logger.getLogger(MessageManager.class.getName()).log(Level.INFO, "No server available");
+                log.error("No server available");
                 JOptionPane.showMessageDialog(null, "No server available", "Error", JOptionPane.ERROR_MESSAGE);
                 System.exit(0);
                 return null;
@@ -123,13 +123,12 @@ public class LoadBalanceManager {
                 SocketManager.setSocket(newSocket);
                 new MessageManager(SocketManager.getSocket()).start();
             } catch (IOException e) {
-                Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}",
-                        e.getMessage());
+                log.error("Error closing client socket: {}", e.getMessage());
             }
 
             new Send(newSocket).sendData("type:login&&send:" + HomePage.myName);
         } catch (IOException e) {
-            Logger.getLogger(MessageManager.class.getName()).log(Level.SEVERE, "Failed to reconnect to server: {0}", e.getMessage());
+            log.error("Failed to reconnect to server: {}", e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
 
