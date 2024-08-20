@@ -4,8 +4,10 @@ services:
       context: ./Broker
       dockerfile: Dockerfile
     ports:
-      - "4000:4000"
+      - ${BROKER_PORT}:${BROKER_PORT}
     container_name: broker
+    env_file:
+      - .env
 
   loadbalancer:
     build:
