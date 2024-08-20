@@ -14,65 +14,81 @@ import java.util.UUID;
 public class Group extends JDialog {
     private static final Logger log = LogManager.getLogger(Group.class);
     private String myName;
+
     public Group(JFrame parent, String newName) {
         super(parent, "Create Group", true); // true for modal dialog
         myName = newName;
+        initializeComponents(parent);
+    }
+
+    private void initializeComponents(JFrame parent) {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setSize(400, 300);
         setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); // Vertical layout
-
+        JPanel namePanel = new JPanel();
         JLabel nameLabel = new JLabel("Group Name: ");
         JTextField fieldName = new JTextField(20);
-
         JButton submitButton = getjButton(panel, fieldName);
 
-
-        JPanel namePanel = new JPanel();
         namePanel.add(nameLabel);
         namePanel.add(fieldName);
+
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); // Vertical layout
         panel.add(namePanel);
         panel.add(new JLabel("Select users:"));
-
-        for (String online : DataSave.userOnline) {
-            JCheckBox checkBox = new JCheckBox(online);
-            if(!online.contains("?"))
-                panel.add(checkBox);
-        }
-
         panel.add(submitButton);
 
+        listUserInCreateGroup(panel);
         setContentPane(panel);
+    }
+    
+    private void listUserInCreateGroup(JPanel panel) {
+        for (String online : DataSave.userOnline) {
+            JCheckBox checkBox = new JCheckBox(online);
+            if (!online.contains("?"))
+                panel.add(checkBox);
+        }
     }
 
     private JButton getjButton(JPanel panel, JTextField fieldName) {
         JButton submitButton = new JButton("Submit");
         submitButton.addActionListener(e -> {
-            StringBuilder selectedUsers = new StringBuilder();
-            for (Component comp : panel.getComponents()) {
-                if (comp instanceof JCheckBox) {
-                    JCheckBox checkBox = (JCheckBox) comp;
-                    if (checkBox.isSelected()) {
-                        selectedUsers.append(checkBox.getText()).append(", ");
-                    }
-                }
-            }
+            StringBuilder selectedUsers = getListUsers(panel);
             if (selectedUsers.length() > 0) {
-                try {
-                    String uniqueID = UUID.randomUUID().toString();
-                    new Send(SocketManager.getSocket()).sendData("type:group&&receive:" + selectedUsers.toString().replace(" ", "") + myName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);
-                } catch (IOException ex) {
-                    log.error("Error: {}", ex.getMessage());
-
-                }
+                sendMessage(selectedUsers, fieldName);
             } else {
-                JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "You have not selected any users!", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
-
             setVisible(false);
         });
         return submitButton;
+    }
+    
+    private StringBuilder getListUsers(JPanel panel) {
+        StringBuilder selectedUsers = new StringBuilder();
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JCheckBox) {
+                JCheckBox checkBox = (JCheckBox) comp;
+                if (checkBox.isSelected()) {
+                    selectedUsers.append(checkBox.getText()).append(", ");
+                }
+            }
+        }
+        return selectedUsers;
+    }
+
+    private void sendMessage(StringBuilder selectedUsers, JTextField fieldName) {
+        try {
+            String uniqueID = UUID.randomUUID().toString();
+            new Send(SocketManager.getSocket())
+                    .sendData("type:group&&receive:" + selectedUsers.toString().replace(" ", "") + myName + "&&"
+                            + "send:" + fieldName.getText() + "?" + uniqueID);
+        } catch (IOException ex) {
+            log.error("Error: {}", ex.getMessage());
+
+        }
     }
 }

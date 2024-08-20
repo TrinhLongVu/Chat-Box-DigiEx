@@ -25,61 +25,80 @@ public class LoginForm extends JDialog {
 
     public LoginForm(JFrame parent, String content) {
         super(parent);
+        initializeComponents(parent);
+        eventButtonSubmit(parent, content);
+        eventButtonCancel();
+        setVisible(true);
+    }
+    
+    private void initializeComponents(JFrame parent) {
         setTitle("Login");
+        JPanel buttonPanel = new JPanel();
 
-        // Initialize components
         loginPanel = new JPanel(new GridLayout(3, 1));
         tfEmail = new JTextField(20);
         btnOK = new JButton("OK");
         btnCancel = new JButton("Cancel");
 
-        // Layout setup
         loginPanel.add(new JLabel("Username:"));
         loginPanel.add(tfEmail);
+        loginPanel.add(buttonPanel);
 
-        JPanel buttonPanel = new JPanel();
         buttonPanel.add(btnOK);
         buttonPanel.add(btnCancel);
-        loginPanel.add(buttonPanel);
 
         setContentPane(loginPanel);
         setMinimumSize(new Dimension(450, 150));
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
+    }
+    
+    private void eventButtonSubmit(JFrame parent, String content) {
         btnOK.addActionListener(e -> {
             if (tfEmail.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(parent, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            String data = Helper.formatData(content).getData();
-            if (data == null) {
-                JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            } else {
-                userName = tfEmail.getText();
-                handleServer(content);
-            }
+            handleLogin(content, parent);
             dispose();
         });
+    }
 
+    private void handleLogin(String content, JFrame parent) {
+        String data = Helper.formatData(content).getData();
+        if (data == null) {
+            JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        userName = tfEmail.getText();
+        handleServer(content);
+    }
+
+    private void eventButtonCancel() {
         btnCancel.addActionListener(e -> {
             dispose();
             System.exit(0);
         });
-        setVisible(true);
     }
+
+    
     
     private void handleServer(String receiveMsg) {
         String data = Helper.formatData(receiveMsg).getData();
-
         if (data.equals("null")) {
-            JOptionPane.showMessageDialog(null, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Don't have any available servers.", "Notification",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
+        InfoServer infoServer = parseHostAndPort(data);
+        sendMessageLogin(infoServer);
+    }
+    
+    private InfoServer parseHostAndPort(String data) {
         String[] hostAndPort = data.split("@");
         int port;
         String host = hostAndPort[0];
@@ -88,8 +107,14 @@ public class LoginForm extends JDialog {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
             log.error("Invalid port number format: {}", e.getMessage());
-            return;
+            return null;
         }
+        return new InfoServer(host, port);
+    }
+
+    private void sendMessageLogin(InfoServer infoServer) {
+        String host = infoServer.getHost();
+        int port = infoServer.getPort();
 
         try {
             Socket s = new Socket(host, port);
@@ -104,5 +129,23 @@ public class LoginForm extends JDialog {
         } catch (IOException e) {
             log.error("Unable to connect to server: {}", e.getMessage());
         }
+    }
+}
+
+class InfoServer {
+    private String host;
+    private int port;
+
+    public InfoServer(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

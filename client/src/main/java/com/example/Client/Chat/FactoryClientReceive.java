@@ -35,6 +35,11 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         String dataReceive = data.getData();
+        addUsersOnline(dataReceive);
+        addGroups();
+    }
+
+    private void addUsersOnline(String dataReceive) {
         String[] userOnlines = dataReceive.split(",");
         DataSave.userOnline.clear();
         for (String userOnline : userOnlines) {
@@ -42,7 +47,9 @@ class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
                 DataSave.userOnline.add(userOnline);
             }
         }
+    }
 
+    private void addGroups() {
         SwingUtilities.invokeLater(() -> {
             HomePage.listModelUsers.clear();
             for (String userOnline : DataSave.userOnline) {
@@ -58,13 +65,22 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
     public void handle(TypeReceive data, Socket socket, String message) {
         String content = data.getData();
         String userSend = data.getNameSend();
+        LinkedList<String> history = addHistory(userSend, content);
+        addHistoryToScreen(history, userSend);
+    }
+    
+    private LinkedList<String> addHistory(String userSend, String content) {
         LinkedList<String> history = DataSave.contentChat.get(userSend);
         if (history == null) {
             history = new LinkedList<>();
             DataSave.contentChat.put(userSend, history);
         }
         history.add(userSend + ": " + content);
-        final LinkedList<String> finalHistory = history; 
+        return history;
+    }
+
+    private void addHistoryToScreen(LinkedList<String> history, String userSend) {
+        final LinkedList<String> finalHistory = history;
         if (DataSave.selectedUser.equals(userSend)) {
             SwingUtilities.invokeLater(() -> {
                 HomePage.listModel.clear();
@@ -80,15 +96,23 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         String content = data.getData();
-        String userSendCombined = data.getNameSend();
-        String[] userSend = userSendCombined.split(",");
+        String[] userSend = data.getNameSend().split(",");
+        LinkedList<String> history = addHistory(userSend, content);
+        addHistoryToScreen(history, userSend);
+    }
+    
+    private LinkedList<String> addHistory(String[] userSend, String content) {
         LinkedList<String> history = DataSave.contentChat.get(userSend[1]);
         if (history == null) {
             history = new LinkedList<>();
             DataSave.contentChat.put(userSend[1], history);
         }
         history.add(userSend[0] + ": " + content);
-        final LinkedList<String> finalHistory = history; 
+        return history;
+    }
+
+    private void addHistoryToScreen(LinkedList<String> history, String[] userSend) {
+        final LinkedList<String> finalHistory = history;
         if (DataSave.selectedUser.equals(userSend[1])) {
             SwingUtilities.invokeLater(() -> {
                 HomePage.listModel.clear();
