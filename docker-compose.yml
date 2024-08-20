@@ -6,18 +6,13 @@ services:
     ports:
       - "4000:4000"
     container_name: broker
-    networks:
-      - networks
+
   loadbalancer:
     build:
       context: ./LoadBalance
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - ${LOAD_BALANCE_PORT}:${LOAD_BALANCE_PORT}
     container_name: loadbalancer
-    networks:
-      - networks    
-
-networks:
-  networks:
-    external: true
+    env_file:
+      - .env
