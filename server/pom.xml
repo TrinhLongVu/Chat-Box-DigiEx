@@ -67,7 +67,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<mainClass>com.example.Server.Server</mainClass>
+					<mainClass>com.example.Server.Main</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
