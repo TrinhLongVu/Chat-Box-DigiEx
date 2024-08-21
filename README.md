@@ -10,18 +10,17 @@ git clone https://github.com/TrinhLongVu/Chat-Box-DigiEx.git
 ```
 ## jumb to folder LoadBalance 
 ```bash
-    ./build_and_run.sh
+    ./run.sh
 ```
 ## jumb to folder Broker 
 ```bash
-    ./build_and_run.sh
+    ./run.sh
 ```
-## jumb to folder server (run 2 port 1234, 1235) 
+## jumb to folder server
 ```bash
-    ./build_and_run.sh 
-    ./build_and_run.sh
+    ./run.sh 
 ```
 ## jumb to folder client
 ```bash
-    ./build_and_run.sh
+    ./run.sh
 ```
