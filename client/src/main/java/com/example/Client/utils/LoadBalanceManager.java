@@ -16,8 +16,11 @@ import com.example.Client.chat.SocketManager;
 import com.example.Client.view.HomePage;
 import com.example.Support.Helper;
 import com.example.Support.Send;
+import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 public class LoadBalanceManager {
     private static final Logger log = LogManager.getLogger(LoadBalanceManager.class);
@@ -26,6 +29,7 @@ public class LoadBalanceManager {
 
     private static final String LOAD_BALANCER_URL = "http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT;
 
+    @PostConstruct
     public String getConnectResponse() {
         StringBuilder content = new StringBuilder();
 
