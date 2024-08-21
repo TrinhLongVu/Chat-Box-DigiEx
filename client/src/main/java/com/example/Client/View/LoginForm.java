@@ -82,7 +82,7 @@ public class LoginForm extends JDialog {
 
         String[] hostAndPort = data.split("@");
         int port;
-        String host = hostAndPort[0];
+        String host = "localhost";
 
         try {
             port = Integer.parseInt(hostAndPort[1]);
@@ -102,6 +102,7 @@ public class LoginForm extends JDialog {
             new Send(s).sendData("type:login&&send:" + userName);
             new HomePage(null, userName);
         } catch (IOException e) {
+            e.printStackTrace();
             log.error("Unable to connect to server: {}", e.getMessage());
         }
     }

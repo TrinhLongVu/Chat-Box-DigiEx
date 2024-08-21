@@ -1,5 +1,7 @@
 package com.example.Server.utils;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,8 +14,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CallAPI {
-    private final static String HOST = "localhost";
-    private final static String PORT = "8080";
+    @Value("${LOADBALANCER_HOST}")
+    private static String host;
+    @Value("${LOADBALANCER_PORT}")
+    private static String port;
+    private final static String HOST = host;
+    private final static String PORT = port;
     public static CompletableFuture<String> GetData(String paramString) {
         return CompletableFuture.supplyAsync(() -> {
             try {

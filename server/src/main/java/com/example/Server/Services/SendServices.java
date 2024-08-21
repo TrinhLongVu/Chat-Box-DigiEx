@@ -4,22 +4,22 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.example.Server.utils.CallAPI;
 import com.example.Support.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SendServices {
-    private static final Logger LOGGER = Logger.getLogger(SendServices.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(SendServices.class.getName());
 
     public static void SendMessage(Socket sender, String msg) {
-        LOGGER.log(Level.INFO, "SendMessage called with sender: {0} and message: {1}", new Object[] { sender, msg });
+        log.info("SendMessage called with sender: {} and message: {}", sender, msg);
         try {
             new Send(sender).sendData(msg);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
+            log.error("An error occurred: {}", e.getMessage());
         }
     }
     public static void SendUserOnline() {
@@ -28,7 +28,9 @@ public class SendServices {
                 for (Client client : DataSave.clients) {
                     processClient(client, userOnline);
                 }
-            } else LOGGER.log(Level.SEVERE, "Failed to fetch user online data");
+            } else {
+               log.error( "Failed to fetch user online data");
+            }
         });
     }
     private static void processClient(Client client, String userOnline) {

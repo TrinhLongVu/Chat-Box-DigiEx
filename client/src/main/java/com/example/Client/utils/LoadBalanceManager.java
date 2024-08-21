@@ -21,7 +21,10 @@ import org.apache.logging.log4j.Logger;
 
 public class LoadBalanceManager {
     private static final Logger log = LogManager.getLogger(LoadBalanceManager.class);
-    private static final String LOAD_BALANCER_URL = "http://localhost:8080";
+    private static String LOADBALANCER_HOST = "localhost";
+    private static String LOADBALANCER_PORT = "8080";
+
+    private static final String LOAD_BALANCER_URL = "http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT;
 
     public String getConnectResponse() {
         StringBuilder content = new StringBuilder();
@@ -109,7 +112,7 @@ public class LoadBalanceManager {
             }
 
             String[] hostAndPort = data.split("@");
-            String host = "localhost";
+            String host = hostAndPort[0];
             int port = Integer.parseInt(hostAndPort[1]);
 
             newSocket = new Socket(host, port);

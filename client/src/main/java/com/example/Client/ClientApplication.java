@@ -2,6 +2,7 @@ package com.example.Client;
 
 import com.example.Client.view.LoginForm;
 import com.example.Client.utils.LoadBalanceManager;
+
 import javax.swing.*;
 
 public class ClientApplication {

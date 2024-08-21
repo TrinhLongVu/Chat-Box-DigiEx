@@ -30,7 +30,7 @@ public class ReceiveController implements Runnable {
     private Socket socket;
     public static Map<Socket, Client> receiveClientMap = new HashMap();
 
-    @Value("${PORT}")
+    @Value("${SERVER_PORT}")
     private int PORT;
 
     @Autowired

@@ -14,6 +14,7 @@ import java.util.UUID;
 public class Group extends JDialog {
     private static final Logger log = LogManager.getLogger(Group.class);
     private String myName;
+
     public Group(JFrame parent, String newName) {
         super(parent, "Create Group", true); // true for modal dialog
         myName = newName;
