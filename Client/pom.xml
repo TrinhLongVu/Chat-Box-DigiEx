@@ -9,12 +9,12 @@
 		<version>3.3.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	
-	<groupId>com.example.Server</groupId>
-	<artifactId>Server</artifactId>
+
+	<groupId>com.example.Client</groupId>
+	<artifactId>Client</artifactId>
 	<version>1.0.0</version>
-	<name>Server</name>
-	<description>Server side</description>
+	<name>Client</name>
+	<description>Client side</description>
 
 	<properties>
 		<java.version>22</java.version>
@@ -27,24 +27,18 @@
             <version>1.18.34</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>2.23.1</version>
-		</dependency>
-		<dependency>
 			<groupId>com.example.Support</groupId>
 			<artifactId>Support</artifactId>
 			<scope>compile</scope>
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>javax.annotation-api</artifactId>
-			<version>1.3.2</version>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -53,9 +47,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<mainClass>com.example.servers.ServerApplication</mainClass>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

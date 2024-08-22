@@ -1,4 +1,4 @@
-package com.example.Server.services;
+package com.example.servers.services;
 
 import java.net.Socket;
 import java.util.HashMap;
@@ -12,8 +12,8 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.example.Server.controller.ReceiveController;
-import com.example.Server.payloads.BrokerInfo;
+import com.example.servers.controller.ReceiveController;
+import com.example.servers.payloads.BrokerInfo;
 import com.example.Server.utils.CallAPI;
 import com.example.support.*;
 

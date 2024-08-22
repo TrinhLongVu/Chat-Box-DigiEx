@@ -1,4 +1,4 @@
-package com.example.Server.services;
+package com.example.servers.services;
 
 import com.example.support.*;
 import java.net.Socket;

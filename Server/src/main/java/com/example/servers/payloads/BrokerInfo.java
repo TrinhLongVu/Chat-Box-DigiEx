@@ -1,4 +1,4 @@
-package com.example.Server.payloads;
+package com.example.servers.payloads;
 
 import java.net.Socket;
 

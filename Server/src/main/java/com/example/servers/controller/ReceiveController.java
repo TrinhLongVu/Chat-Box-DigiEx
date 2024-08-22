@@ -1,4 +1,4 @@
-package com.example.server.controller;
+package com.example.servers.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,11 +15,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import com.example.server.payloads.BrokerInfo;
-import com.example.server.services.InterfaceMessageHandler;
-import com.example.server.services.ReceiveServices;
-import com.example.server.services.SendServices;
-import com.example.server.utils.CallAPI;
+import com.example.servers.payloads.BrokerInfo;
+import com.example.servers.services.InterfaceMessageHandler;
+import com.example.servers.services.ReceiveServices;
+import com.example.servers.services.SendServices;
+import com.example.servers.utils.CallAPI;
 import com.example.support.*;
 
 @Component

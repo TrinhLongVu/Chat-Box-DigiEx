@@ -1,4 +1,4 @@
-package com.example.Server.services;
+package com.example.servers.services;
 
 import java.io.IOException;
 import java.net.Socket;
