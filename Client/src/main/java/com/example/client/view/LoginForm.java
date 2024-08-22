@@ -7,73 +7,68 @@ import com.example.client.chat.SocketManager;
 import com.example.client.utils.LoadBalanceManager;
 import com.example.support.Helper;
 import com.example.support.Send;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 
 import java.awt.*;
 import java.net.Socket;
 import java.io.IOException;
 
+@Configuration
+@RequiredArgsConstructor
 public class LoginForm extends JDialog {
     private static final Logger log = LogManager.getLogger(LoginForm.class);
     private JTextField tfEmail;
-    private JButton btnOK;
-    private JButton btnCancel;
-    private JPanel loginPanel;
     public static String userName = "";
-    public LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
+    private final LoadBalanceManager loadBalanceManager;
+    private final MessageManager messageManager;
+    private final SocketManager socketManager;
+    private final HomePage homePage;
 
-    public LoginForm(JFrame parent, String content) {
-        super(parent);
+    public void init() {
         setTitle("Login");
+        setMinimumSize(new Dimension(450, 150));
+        setModal(true);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        // Initialize components
-        loginPanel = new JPanel(new GridLayout(3, 1));
+        JPanel loginPanel = new JPanel(new GridLayout(2, 2));
         tfEmail = new JTextField(20);
-        btnOK = new JButton("OK");
-        btnCancel = new JButton("Cancel");
+        JButton btnOK = new JButton("OK");
+        JButton btnCancel = new JButton("Cancel");
 
-        // Layout setup
         loginPanel.add(new JLabel("Username:"));
         loginPanel.add(tfEmail);
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(btnOK);
         buttonPanel.add(btnCancel);
-        loginPanel.add(buttonPanel);
-
-        setContentPane(loginPanel);
-        setMinimumSize(new Dimension(450, 150));
-        setModal(true);
-        setLocationRelativeTo(parent);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        getContentPane().add(loginPanel, BorderLayout.CENTER);
+        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
         btnOK.addActionListener(e -> {
             if (tfEmail.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(parent, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            String data = Helper.formatData(content).getData();
-            if (data == null) {
-                JOptionPane.showMessageDialog(parent, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
-                return;
+                JOptionPane.showMessageDialog(this, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                userName = tfEmail.getText();
-                handleServer(content);
+                handleServer();
+                dispose();
             }
-            dispose();
         });
 
         btnCancel.addActionListener(e -> {
             dispose();
             System.exit(0);
         });
+
         setVisible(true);
     }
     
-    private void handleServer(String receiveMsg) {
-        String data = Helper.formatData(receiveMsg).getData();
+    private void handleServer() {
+        String connectString = loadBalanceManager.getConnectResponse();
+        String data = Helper.formatData(connectString).getData();
 
         if (data.equals("null")) {
             JOptionPane.showMessageDialog(null, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
@@ -94,15 +89,14 @@ public class LoginForm extends JDialog {
         try {
             Socket s = new Socket(host, port);
             if (s.isConnected()) {
-                SocketManager.setSocket(s);
+                socketManager.setSocket(s);
                 loadBalanceManager.notifyConnected(host, port, userName);
             }
 
-            new MessageManager(s).start();
             new Send(s).sendData("type:login&&send:" + userName);
-            new HomePage(null, userName);
+            homePage.setName(userName);
+            homePage.init();
         } catch (IOException e) {
-            e.printStackTrace();
             log.error("Unable to connect to server: {}", e.getMessage());
         }
     }

@@ -1,4 +1,4 @@
-package com.example.loadbalance.Controller;
+package com.example.loadbalance.controllers;
 
 import java.io.IOException;
 import java.net.ConnectException;

@@ -10,7 +10,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>com.example.Client</groupId>
+	<groupId>com.example.client</groupId>
 	<artifactId>Client</artifactId>
 	<version>1.0.0</version>
 	<name>Client</name>
@@ -21,6 +21,10 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

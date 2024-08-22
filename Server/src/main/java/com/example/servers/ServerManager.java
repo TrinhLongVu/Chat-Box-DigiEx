@@ -79,7 +79,7 @@ public class ServerManager {
                 new Thread(receive).start();
 
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
-                sendServerInfo(SERVER_HOST, SERVER_PORT, tpe.getCorePoolSize());
+                sendServerInfo("localhost", 1234, tpe.getCorePoolSize());
 
                 while (running) {
                     connectClient(tpe);

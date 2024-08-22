@@ -1,14 +1,14 @@
-package com.example.client.chat;
+package com.example.client.core;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
-import java.net.Socket;
+import java.io.BufferedReader;
 
 @Getter
 @Setter
 @Component
-public class SocketManager {
-    private Socket socket;
+public class Message {
+    private BufferedReader buffer;
 }

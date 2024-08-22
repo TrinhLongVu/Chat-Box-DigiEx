@@ -2,16 +2,15 @@ package com.example.client.view;
 
 import com.example.client.chat.MessageManager;
 import com.example.support.DataSave;
-
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import java.util.LinkedList;
 
-
+@Component
+@RequiredArgsConstructor
 public class HomePage extends JFrame {
     private JTextArea userArea;
     private JButton btnSend;
@@ -22,22 +21,21 @@ public class HomePage extends JFrame {
     private JList<String> chatList;
     public static JLabel userLabel = new JLabel();
     public static JList<String> JlistUsers;
-    public static String myName = "";
+    public static String userName = "";
     private JButton btnCreateGroup;
+    private final MessageManager messageManager;
+    private final Group group;
 
-    public HomePage(JFrame parent, String newName) {
-        myName = newName;
-
+    public void init() {
         setTitle("Home Page");
         setMinimumSize(new Dimension(450, 474));
-        setLocationRelativeTo(parent);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         // Initialize components
         homePanel = new JPanel(new BorderLayout());
         chatList = new JList<>(listModel);
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        userLabel.setText(myName);
+        userLabel.setText(userName);
 
         userArea = new JTextArea();
         userArea.setEditable(false);
@@ -71,7 +69,7 @@ public class HomePage extends JFrame {
 
                     // Update userLabel on the EDT
                     SwingUtilities.invokeLater(() -> {
-                        userLabel.setText(myName + " is chatting with user: " + DataSave.selectedUser.split("\\?")[0]);
+                        userLabel.setText(userName + " is chatting with user: " + DataSave.selectedUser.split("\\?")[0]);
                         LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
                         if (history == null) {
                             history = new LinkedList<>();
@@ -105,7 +103,7 @@ public class HomePage extends JFrame {
         inputPanel.add(buttonPanel, BorderLayout.EAST);
 
         JPanel chatPanel = new JPanel(new BorderLayout());
-        chatPanel.add(userLabel, BorderLayout.NORTH); // Ensure userLabel is added
+        chatPanel.add(userLabel, BorderLayout.NORTH);
         chatPanel.add(scrollPane, BorderLayout.CENTER);
 
         homePanel.add(chatPanel, BorderLayout.CENTER);
@@ -119,28 +117,15 @@ public class HomePage extends JFrame {
     }
 
     private void handleEvent() {
-        btnSend.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MessageManager.sendMessage(tfInput.getText());
-            }
-        });
+        btnSend.addActionListener(_ -> messageManager.sendMessage(tfInput.getText()));
 
-        tfInput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MessageManager.sendMessage(tfInput.getText());
-            }
-        });
+        tfInput.addActionListener(_ -> messageManager.sendMessage(tfInput.getText()));
 
-        btnCreateGroup.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false); // Hide the HomePage
-                Group groupDialog = new Group(HomePage.this, myName);  // Pass HomePage instance
-                groupDialog.setVisible(true); // Show the GroupDialog
-                setVisible(true);
-            }
+        btnCreateGroup.addActionListener(_ -> {
+            setVisible(false);
+            group.setUserName(userName);
+            group.init();
+            setVisible(true);
         });
     }
 }
