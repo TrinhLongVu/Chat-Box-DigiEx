@@ -17,13 +17,14 @@ import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import com.example.servers.payloads.BrokerInfo;
 import com.example.servers.controller.ReceiveController;
-import com.example.support.*;
+import com.example.Support.*;
 
 @Component
 @AllArgsConstructor
@@ -53,14 +54,15 @@ public class ServerManager {
 
     private volatile boolean running;
     private ExecutorService threadPool;
-    private ApplicationContext context; 
+    @Autowired
+    private ApplicationContext context;
 
     public ServerManager() {
         threadPool = new ThreadPoolExecutor(
-            THREAD_POOL_SIZE,
-            THREAD_POOL_SIZE,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
+                THREAD_POOL_SIZE,
+                THREAD_POOL_SIZE,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
         );
     }
 
@@ -79,7 +81,7 @@ public class ServerManager {
                 new Thread(receive).start();
 
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) threadPool;
-                sendServerInfo("localhost", 1234, tpe.getCorePoolSize());
+                sendServerInfo(SERVER_HOST, SERVER_PORT, tpe.getCorePoolSize());
 
                 while (running) {
                     connectClient(tpe);
@@ -105,7 +107,7 @@ public class ServerManager {
             log.error("Error accepting connection: {}", e.getMessage());
         }
     }
-    
+
     private void submitThreadPool(Socket clientSocket) {
         try {
             ReceiveController receive = context.getBean(ReceiveController.class, clientSocket);
@@ -113,7 +115,7 @@ public class ServerManager {
         } catch (RejectedExecutionException e) {
             log.error("Server is overloaded, adding client to pending queue. {}", e.getMessage());
         }
-    }    
+    }
 
     public void shutdown() {
         running = false;
@@ -138,7 +140,7 @@ public class ServerManager {
         }
         notifyDisconnection("localhost", SERVER_PORT);
     }
-    
+
     private void notifyDisconnection(String host, int port) {
         try {
             URL loadBalancerUrl = new URL("http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT + "/server-disconnected");

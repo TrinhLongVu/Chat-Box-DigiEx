@@ -1,8 +1,0 @@
-loadbalancer:
-  scheme: http://
-  host: localhost
-  port: 8080
-
-spring:
-  profiles:
-    active:

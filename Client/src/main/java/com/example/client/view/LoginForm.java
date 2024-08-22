@@ -4,29 +4,30 @@ import javax.swing.*;
 
 import com.example.client.chat.MessageManager;
 import com.example.client.chat.SocketManager;
+import com.example.client.core.ClientInfo;
 import com.example.client.utils.LoadBalanceManager;
-import com.example.support.Helper;
-import com.example.support.Send;
+import com.example.Support.Helper;
+import com.example.Support.Send;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.awt.*;
+import java.io.BufferedReader;
 import java.net.Socket;
 import java.io.IOException;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
 public class LoginForm extends JDialog {
     private static final Logger log = LogManager.getLogger(LoginForm.class);
-    private JTextField tfEmail;
-    public static String userName = "";
     private final LoadBalanceManager loadBalanceManager;
-    private final MessageManager messageManager;
     private final SocketManager socketManager;
     private final HomePage homePage;
+    private final ClientInfo clientInfo;
+    private final MessageManager messageManager;
+    private JTextField tfEmail;
 
     public void init() {
         setTitle("Login");
@@ -49,12 +50,14 @@ public class LoginForm extends JDialog {
         getContentPane().add(loginPanel, BorderLayout.CENTER);
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
-        btnOK.addActionListener(e -> {
+        btnOK.addActionListener(_ -> {
             if (tfEmail.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please enter a username.", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                handleServer();
-                dispose();
+                clientInfo.setUserName(tfEmail.getText());
+                if (!handleServer().equals("null")) {
+                    dispose();
+                }
             }
         });
 
@@ -65,14 +68,14 @@ public class LoginForm extends JDialog {
 
         setVisible(true);
     }
-    
-    private void handleServer() {
+
+    private String handleServer() {
         String connectString = loadBalanceManager.getConnectResponse();
         String data = Helper.formatData(connectString).getData();
 
         if (data.equals("null")) {
             JOptionPane.showMessageDialog(null, "Don't have any available servers.", "Notification", JOptionPane.INFORMATION_MESSAGE);
-            return;
+            return "null";
         }
 
         String[] hostAndPort = data.split("@");
@@ -83,21 +86,26 @@ public class LoginForm extends JDialog {
             port = Integer.parseInt(hostAndPort[1]);
         } catch (NumberFormatException e) {
             log.error("Invalid port number format: {}", e.getMessage());
-            return;
+            return "null";
         }
 
         try {
             Socket s = new Socket(host, port);
             if (s.isConnected()) {
                 socketManager.setSocket(s);
-                loadBalanceManager.notifyConnected(host, port, userName);
+                loadBalanceManager.notifyConnected(host, port, clientInfo.getUserName());
             }
 
-            new Send(s).sendData("type:login&&send:" + userName);
-            homePage.setName(userName);
+            new Send(s).sendData("type:login&&send:" + clientInfo.getUserName());
+
+            messageManager.initializeBufferedReader(s);
+            messageManager.start();
+            homePage.setName(clientInfo.getUserName());
             homePage.init();
         } catch (IOException e) {
             log.error("Unable to connect to server: {}", e.getMessage());
         }
+
+        return "login";
     }
 }

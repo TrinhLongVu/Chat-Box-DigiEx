@@ -10,7 +10,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
-	<groupId>com.example.LoadBalance</groupId>
+	<groupId>com.example.loadBalance</groupId>
 	<artifactId>LoadBalance</artifactId>
 	<version>1.0.0</version>
 	<name>LoadBalance</name>
@@ -39,7 +39,7 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>com.example.Support</groupId>
+			<groupId>com.example.support</groupId>
 			<artifactId>Support</artifactId>
 			<scope>compile</scope>
 			<version>1.0.0</version>

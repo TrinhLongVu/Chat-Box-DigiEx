@@ -8,31 +8,25 @@ import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
 import javax.swing.JOptionPane;
-import com.example.client.chat.MessageManager;
 import com.example.client.chat.SocketManager;
-import com.example.client.view.HomePage;
-import com.example.support.Helper;
-import com.example.support.Send;
+import com.example.Support.Helper;
+import com.example.Support.Send;
+import com.example.client.core.ClientInfo;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class LoadBalanceManager {
     private static final Logger log = LogManager.getLogger(LoadBalanceManager.class);
-    private final HomePage homePage;
     private final SocketManager socketManager;
-    private final MessageManager messageManager;
+    private final ClientInfo clientInfo;
 
-    @Value("${loadbalancer.scheme}")
-    private String SCHEME;
-    @Value("${loadbalancer.host}")
-    private String LOADBALANCER_HOST;
-    @Value("${loadbalancer.port}")
-    private String LOADBALANCER_PORT;
+    private String SCHEME = "http://";
+    private String LOADBALANCER_HOST = "localhost";
+    private String LOADBALANCER_PORT = "8080";
 
     private String LOADBALANCER_URL = SCHEME + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT;
 
@@ -84,7 +78,7 @@ public class LoadBalanceManager {
             StringBuilder newContent = new StringBuilder();
 
             String inputLine;
-            
+
             while ((inputLine = in.readLine()) != null) {
                 newContent.append(inputLine);
             }
@@ -113,7 +107,7 @@ public class LoadBalanceManager {
                 }
             }
             String data = Helper.formatData(content.toString()).getData();
-            
+
             if (data.equals("null")) {
                 log.error("No server available");
                 JOptionPane.showMessageDialog(null, "No server available", "Error", JOptionPane.ERROR_MESSAGE);
@@ -131,14 +125,14 @@ public class LoadBalanceManager {
                 if (socketManager.getSocket() != null && !socketManager.getSocket().isClosed()) {
                     socketManager.getSocket().close();
                 }
-                
+
                 // Reconnect to new server
                 socketManager.setSocket(newSocket);
             } catch (IOException e) {
                 log.error("Error closing client socket: {}", e.getMessage());
             }
 
-            new Send(newSocket).sendData("type:login&&send:" + homePage.getName());
+            new Send(newSocket).sendData("type:login&&send:" + clientInfo.getUserName());
         } catch (IOException e) {
             log.error("Failed to reconnect to server: {}", e.getMessage());
             JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

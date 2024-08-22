@@ -1,7 +1,8 @@
 package com.example.client.view;
 
 import com.example.client.chat.MessageManager;
-import com.example.support.DataSave;
+import com.example.Support.DataSave;
+import com.example.client.core.ClientInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import javax.swing.*;
@@ -12,32 +13,28 @@ import java.util.LinkedList;
 @Component
 @RequiredArgsConstructor
 public class HomePage extends JFrame {
-    private JTextArea userArea;
     private JButton btnSend;
-    public static DefaultListModel<String> listModel = new DefaultListModel<>();
-    public static DefaultListModel<String> listModelUsers = new DefaultListModel<>();
-    private JPanel homePanel;
     public static JTextField tfInput;
-    private JList<String> chatList;
     public static JLabel userLabel = new JLabel();
     public static JList<String> JlistUsers;
-    public static String userName = "";
     private JButton btnCreateGroup;
-    private final MessageManager messageManager;
     private final Group group;
+    private final ClientInfo clientInfo;
+    private final MessageManager messageManager;
 
     public void init() {
+        String userName = clientInfo.getUserName();
         setTitle("Home Page");
         setMinimumSize(new Dimension(450, 474));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         // Initialize components
-        homePanel = new JPanel(new BorderLayout());
-        chatList = new JList<>(listModel);
+        JPanel homePanel = new JPanel(new BorderLayout());
+        JList<String> chatList = new JList<>(clientInfo.getMessageList());
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         userLabel.setText(userName);
 
-        userArea = new JTextArea();
+        JTextArea userArea = new JTextArea();
         userArea.setEditable(false);
 
         tfInput = new JTextField();
@@ -46,7 +43,7 @@ public class HomePage extends JFrame {
 
         JPanel onlineUser = new JPanel(new BorderLayout());
 
-        JlistUsers = new JList<>(listModelUsers);
+        JlistUsers = new JList<>(clientInfo.getClientList());
         JScrollPane JScrollPaneUsers = new JScrollPane(JlistUsers);
 
         JlistUsers.addListSelectionListener((ListSelectionEvent e) -> {
@@ -75,10 +72,10 @@ public class HomePage extends JFrame {
                             history = new LinkedList<>();
                             DataSave.contentChat.put(DataSave.selectedUser, history);
                         }
-                        listModel.clear();
+                        clientInfo.getMessageList().clear();
 
                         for (String content : history) {
-                            listModel.addElement(content);
+                            clientInfo.getMessageList().addElement(content);
                         }
                     });
                 }
@@ -117,6 +114,8 @@ public class HomePage extends JFrame {
     }
 
     private void handleEvent() {
+        String userName = clientInfo.getUserName();
+
         btnSend.addActionListener(_ -> messageManager.sendMessage(tfInput.getText()));
 
         tfInput.addActionListener(_ -> messageManager.sendMessage(tfInput.getText()));

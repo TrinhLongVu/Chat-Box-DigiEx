@@ -9,5 +9,4 @@ import org.springframework.stereotype.Component;
 @Component
 public class ResponseLoadBalancer {
     private String response;
-    private boolean isRunning = false;
 }

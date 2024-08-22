@@ -10,7 +10,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>com.example.Broker</groupId>
+	<groupId>com.example.broker</groupId>
 	<artifactId>Broker</artifactId>
 	<version>1.0.0</version>
 	<name>Broker</name>
@@ -26,12 +26,18 @@
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.example.Support</groupId>
-			<artifactId>Support</artifactId>
+			<groupId>com.example.support</groupId>
+			<artifactId>support</artifactId>
 			<scope>compile</scope>
 			<version>1.0.0</version>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.example.support</groupId>
+            <artifactId>Support</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

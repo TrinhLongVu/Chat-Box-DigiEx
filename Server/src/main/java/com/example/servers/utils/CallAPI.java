@@ -1,6 +1,7 @@
 package com.example.servers.utils;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,14 +14,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Component
 public class CallAPI {
     @Value("${LOADBALANCER_HOST}")
-    private static String host;
+    private String HOST;
     @Value("${LOADBALANCER_PORT}")
-    private static String port;
-    private final static String HOST = host;
-    private final static String PORT = port;
-    public static CompletableFuture<String> GetData(String paramString) {
+    private String PORT;
+
+    public CompletableFuture<String> GetData(String paramString) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 URL url = new URL("http://" + HOST + ":" + PORT + paramString);
@@ -28,7 +29,6 @@ public class CallAPI {
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Content-Type", "text/plain");
 
-                int responseCode = connection.getResponseCode();
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
                     StringBuilder response = new StringBuilder();
                     String responseLine;
@@ -44,14 +44,13 @@ public class CallAPI {
         });
     }
 
-    public static void PostData(String paramString, String data) {
+    public void PostData(String paramString, String data) {
         try {
             URL url = new URL("http://" + HOST + ":" + PORT + paramString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "text/plain");
-
 
             // Write the data
             try (OutputStream os = connection.getOutputStream()) {
@@ -69,6 +68,6 @@ public class CallAPI {
             }
         } catch (IOException e) {
             Logger.getLogger(CallAPI.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
-        } 
+        }
     }
 }
