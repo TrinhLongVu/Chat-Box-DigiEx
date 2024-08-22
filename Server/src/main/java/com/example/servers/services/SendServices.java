@@ -5,16 +5,21 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.Server.utils.CallAPI;
+import com.example.servers.utils.CallAPI;
 import com.example.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-
+@Component
 public class SendServices {
-    private static final Logger log = LoggerFactory.getLogger(SendServices.class.getName());
+    private final Logger log = LoggerFactory.getLogger(SendServices.class.getName());
 
-    public static void SendMessage(Socket sender, String msg) {
+    @Autowired
+    private CallAPI callAPI;
+
+    public void SendMessage(Socket sender, String msg) {
         log.info("SendMessage called with sender: {} and message: {}", sender, msg);
         try {
             new Send(sender).sendData(msg);
@@ -22,8 +27,8 @@ public class SendServices {
             log.error("An error occurred: {}", e.getMessage());
         }
     }
-    public static void SendUserOnline() {
-        CallAPI.GetData("/get-clients").thenAccept(userOnline -> {
+    public void SendUserOnline() {
+        callAPI.GetData("/get-clients").thenAccept(userOnline -> {
             if (!userOnline.equals("error")) {
                 for (Client client : DataSave.clients) {
                     processClient(client, userOnline);
@@ -33,15 +38,15 @@ public class SendServices {
             }
         });
     }
-    private static void processClient(Client client, String userOnline) {
+    private void processClient(Client client, String userOnline) {
         String[] userAndGroups = userOnline.split("%");
         String users = extractUsers(userAndGroups);
         List<String> listUserInGroups = extractUserGroups(userAndGroups);
         users = appendGroupUsers(client, users, listUserInGroups);
         String sanitizedUsers = users.replaceAll(",,", ",");
-        SendServices.SendMessage(client.getSocket(), "type:online&&data:" + sanitizedUsers);
+        SendMessage(client.getSocket(), "type:online&&data:" + sanitizedUsers);
     }
-    private static String extractUsers(String[] userAndGroups) {
+    private String extractUsers(String[] userAndGroups) {
         StringBuilder users = new StringBuilder();
         for (String userAndGroup : userAndGroups) {
             if (!userAndGroup.contains("group")) {
@@ -50,7 +55,7 @@ public class SendServices {
         }
         return users.toString();
     }
-    private static List<String> extractUserGroups(String[] userAndGroups) {
+    private List<String> extractUserGroups(String[] userAndGroups) {
         List<String> listUserInGroups = new ArrayList<>();
         for (String userAndGroup : userAndGroups) {
             if (userAndGroup.contains("group")) {
@@ -59,7 +64,7 @@ public class SendServices {
         }
         return listUserInGroups;
     }
-    private static String appendGroupUsers(Client client, String users, List<String> listUserInGroups) {
+    private String appendGroupUsers(Client client, String users, List<String> listUserInGroups) {
         StringBuilder usersBuilder = new StringBuilder(users);
         for (String listUserInGroup : listUserInGroups) {
             String[] usersInGroup = listUserInGroup.split(",");

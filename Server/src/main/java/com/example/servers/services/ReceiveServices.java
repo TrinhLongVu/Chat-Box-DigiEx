@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.servers.controller.ReceiveController;
 import com.example.servers.payloads.BrokerInfo;
-import com.example.Server.utils.CallAPI;
+import com.example.servers.utils.CallAPI;
 import com.example.support.*;
 
 @Component
@@ -50,6 +50,9 @@ public class ReceiveServices {
 class LoginMessageHandler implements InterfaceMessageHandler {
     private static final String FLAG_TRUE = "&&flag:true";
 
+    @Autowired
+    private SendServices sendServices;
+
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         if (BrokerInfo.brokerSocket == null) {
@@ -66,23 +69,25 @@ class LoginMessageHandler implements InterfaceMessageHandler {
     private void SendMessageToBroker(TypeReceive data, Socket socket, String message) {
         Client currentClient = new Client(data.getNameSend(), socket);
         DataSave.clients.add(currentClient);
-        ReceiveController.receiveClientMap.put(socket, currentClient);
-        SendServices.SendMessage(BrokerInfo.brokerSocket, message + FLAG_TRUE);
+        sendServices.SendMessage(BrokerInfo.brokerSocket, message + FLAG_TRUE);
     }
 
     private void SendToClient() {
-        SendServices.SendUserOnline();
+        sendServices.SendUserOnline();
     }
 }
 
 @Component
 class ChatMessageHandler implements InterfaceMessageHandler {
+    @Autowired
+    private SendServices sendServices;
+
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
         if (!isExitBroker())
             return;
         if (!data.isSendBroker()) {
-            SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
+            sendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
             return;
         }
         Socket receiver = findClientSocketByName(data.getNameReceive());
@@ -102,7 +107,7 @@ class ChatMessageHandler implements InterfaceMessageHandler {
     }
 
     private void SendChatToClient(Socket receiver, TypeReceive data) {
-        SendServices.SendMessage(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
+        sendServices.SendMessage(receiver, "type:chat&&send:" + data.getNameSend() + "&&data:" + data.getData());
     }
 
     private Socket findClientSocketByName(String name) {
@@ -123,7 +128,7 @@ class ChatMessageHandler implements InterfaceMessageHandler {
                 .forEach(userInGroup -> DataSave.clients.stream()
                         .filter(client -> client.getName().equals(userInGroup))
                         .forEach(client -> {
-                            SendServices.SendMessage(client.getSocket(),
+                            sendServices.SendMessage(client.getSocket(),
                                     "type:chat-group&&send:" + data.getNameSend() + ","
                                             + data.getNameReceive() + "&&data:" + data.getData());
                         }));
@@ -132,6 +137,12 @@ class ChatMessageHandler implements InterfaceMessageHandler {
 
 @Component
 class GroupMessageHandler implements InterfaceMessageHandler {
+    @Autowired
+    private CallAPI callAPI;
+
+    @Autowired
+    private SendServices sendServices;
+
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
         if (!isExitBroker())
@@ -143,14 +154,14 @@ class GroupMessageHandler implements InterfaceMessageHandler {
     }
 
     private void SendToBroker(String receiveMsg, TypeReceive data) {
-        SendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
-        CallAPI.PostData("/create-group",
+        sendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
+        callAPI.PostData("/create-group",
                 "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
     }
 
     private void SendToGroup(TypeReceive data) {
         DataSave.groups.put(data.getNameSend(), data.getNameReceive());
-        SendServices.SendUserOnline();
+        sendServices.SendUserOnline();
     }
 
     private boolean isExitBroker() {
@@ -165,6 +176,8 @@ class GroupMessageHandler implements InterfaceMessageHandler {
 
 @Component
 class ChatGroupMessageHandler implements InterfaceMessageHandler {
+    @Autowired
+    private SendServices sendServices;
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
         for (Map.Entry<String, String> dataName : DataSave.groups.entrySet()) {
@@ -174,7 +187,7 @@ class ChatGroupMessageHandler implements InterfaceMessageHandler {
                     DataSave.clients.stream()
                             .filter(client -> client.getName().equals(userInGroup))
                             .forEach(client -> {
-                                SendServices.SendMessage(client.getSocket(),
+                                sendServices.SendMessage(client.getSocket(),
                                         "type:chat-group&&send:" + data.getNameSend() + "&&data:" + data.getData());
                             });
                 }
@@ -184,8 +197,10 @@ class ChatGroupMessageHandler implements InterfaceMessageHandler {
 }
 @Component
 class DisconnectHandler implements InterfaceMessageHandler {
+    @Autowired
+    private SendServices sendServices;
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
-        SendServices.SendUserOnline();
+        sendServices.SendUserOnline();
     }
 }

@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,13 +25,18 @@ import com.example.support.*;
 public class ReceiveController implements Runnable {
     private BufferedReader br;
     private Socket socket;
-    public static Map<Socket, Client> receiveClientMap = new HashMap();
 
     @Value("${SERVER_PORT}")
     private int PORT;
 
     @Autowired
-    private ReceiveServices receiveServices; 
+    private ReceiveServices receiveServices;
+
+    @Autowired
+    private CallAPI callAPI;
+
+    @Autowired
+    private SendServices sendServices;
 
     public ReceiveController(Socket socket) {
         this.socket = socket;
@@ -69,22 +72,29 @@ public class ReceiveController implements Runnable {
     }
 
     private void cleanup() {
-        Client currentClient;
         try {
-            currentClient = receiveClientMap.get(socket);
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
-
+            Client currentClient = getClientfromDataSave(socket);
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
-
-                CallAPI.PostData("/disconnect", currentClient.getName() + "&&localhost@" + PORT);
-                SendServices.SendMessage(BrokerInfo.brokerSocket, "type:disconnect");
+                callAPI.PostData("/disconnect", currentClient.getName() + "&&localhost@" + PORT);
+                sendServices.SendMessage(BrokerInfo.brokerSocket, "type:disconnect");
             }
         } catch (IOException e) {
-            Logger.getLogger(ReceiveController.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}", e.getMessage());
+            Logger.getLogger(ReceiveController.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}",
+                    e.getMessage());
         }
+    }
+    
+    private Client getClientfromDataSave(Socket socket) {
+        for(Client client: DataSave.clients) {
+            if (client.getSocket() == socket) {
+                return client;
+            }
+        }
+        return null;
     }
 }
 

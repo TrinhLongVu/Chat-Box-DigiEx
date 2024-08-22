@@ -10,7 +10,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
-	<groupId>com.example.Server</groupId>
+	<groupId>com.example.server</groupId>
 	<artifactId>Server</artifactId>
 	<version>1.0.0</version>
 	<name>Server</name>
@@ -32,8 +32,8 @@
 			<version>2.23.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.example.Support</groupId>
-			<artifactId>Support</artifactId>
+			<groupId>com.example.support</groupId>
+			<artifactId>support</artifactId>
 			<scope>compile</scope>
 			<version>1.0.0</version>
 		</dependency>
