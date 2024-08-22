@@ -1,12 +1,12 @@
-package com.example.Client.view;
+package com.example.client.view;
 
 import javax.swing.*;
 
-import com.example.Client.chat.MessageManager;
-import com.example.Client.chat.SocketManager;
-import com.example.Client.utils.LoadBalanceManager;
-import com.example.Support.Helper;
-import com.example.Support.Send;
+import com.example.client.chat.MessageManager;
+import com.example.client.chat.SocketManager;
+import com.example.client.utils.LoadBalanceManager;
+import com.example.support.Helper;
+import com.example.support.Send;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

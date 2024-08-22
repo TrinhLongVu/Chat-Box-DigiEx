@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import com.example.Server.controller.ReceiveController;
 import com.example.Server.payloads.BrokerInfo;
 import com.example.Server.utils.CallAPI;
-import com.example.Support.*;
+import com.example.support.*;
 
 @Component
 public class ReceiveServices {

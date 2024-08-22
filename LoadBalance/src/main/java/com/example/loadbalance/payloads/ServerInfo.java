@@ -1,4 +1,4 @@
-package com.example.LoadBalance.payloads;
+package com.example.loadbalance.payloads;
 import java.net.Socket;
 
 public class ServerInfo {

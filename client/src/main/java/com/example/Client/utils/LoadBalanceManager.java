@@ -1,4 +1,4 @@
-package com.example.Client.utils;
+package com.example.client.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,11 +11,11 @@ import java.net.URL;
 
 import javax.swing.JOptionPane;
 
-import com.example.Client.chat.MessageManager;
-import com.example.Client.chat.SocketManager;
-import com.example.Client.view.HomePage;
-import com.example.Support.Helper;
-import com.example.Support.Send;
+import com.example.client.chat.MessageManager;
+import com.example.client.chat.SocketManager;
+import com.example.client.view.HomePage;
+import com.example.support.Helper;
+import com.example.support.Send;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

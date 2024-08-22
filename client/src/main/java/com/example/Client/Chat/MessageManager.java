@@ -1,12 +1,12 @@
-package com.example.Client.chat;
+package com.example.client.chat;
 
-import com.example.Client.view.HomePage;
-import com.example.Client.view.LoginForm;
-import com.example.Client.utils.LoadBalanceManager;
-import com.example.Support.TypeReceive;
-import com.example.Support.DataSave;
-import com.example.Support.Helper;
-import com.example.Support.Send;
+import com.example.client.view.HomePage;
+import com.example.client.view.LoginForm;
+import com.example.client.utils.LoadBalanceManager;
+import com.example.support.TypeReceive;
+import com.example.support.DataSave;
+import com.example.support.Helper;
+import com.example.support.Send;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.swing.JOptionPane;

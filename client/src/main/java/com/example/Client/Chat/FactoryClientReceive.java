@@ -1,4 +1,4 @@
-package com.example.Client.chat;
+package com.example.client.chat;
 
 import java.net.Socket;
 import java.util.HashMap;
@@ -8,10 +8,10 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import com.example.Client.view.HomePage;
-import com.example.Client.view.LoginForm;
-import com.example.Support.DataSave;
-import com.example.Support.TypeReceive;
+import com.example.client.view.HomePage;
+import com.example.client.view.LoginForm;
+import com.example.support.DataSave;
+import com.example.support.TypeReceive;
 
 public class FactoryClientReceive {
     private static final Map<String, MessageHandlerFactory> factoryMap = new HashMap<>();

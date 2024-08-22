@@ -1,8 +1,8 @@
-package com.example.Client.view;
+package com.example.client.view;
 
-import com.example.Client.chat.MessageManager;
-import com.example.Support.DataSave;
-import com.example.Support.LogHandler;
+import com.example.client.chat.MessageManager;
+import com.example.support.DataSave;
+
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;

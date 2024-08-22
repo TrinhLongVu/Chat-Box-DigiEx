@@ -1,7 +1,7 @@
-package com.example.Client;
+package com.example.client;
 
-import com.example.Client.view.LoginForm;
-import com.example.Client.utils.LoadBalanceManager;
+import com.example.client.view.LoginForm;
+import com.example.client.utils.LoadBalanceManager;
 
 import javax.swing.*;
 

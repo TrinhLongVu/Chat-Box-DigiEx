@@ -1,4 +1,4 @@
-package com.example.LoadBalance.Controller;
+package com.example.loadbalance.Controller;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.LoadBalance.database.Database;
-import com.example.LoadBalance.payloads.ClientInfo;
-import com.example.LoadBalance.payloads.ServerInfo;
+import com.example.loadbalance.database.Database;
+import com.example.loadbalance.payloads.ClientInfo;
+import com.example.loadbalance.payloads.ServerInfo;
 
 @RestController
 @RequestMapping("")

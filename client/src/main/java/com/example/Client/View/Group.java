@@ -1,8 +1,8 @@
-package com.example.Client.view;
+package com.example.client.view;
 
-import com.example.Client.chat.SocketManager;
-import com.example.Support.DataSave;
-import com.example.Support.Send;
+import com.example.client.chat.SocketManager;
+import com.example.support.DataSave;
+import com.example.support.Send;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.io.IOException;

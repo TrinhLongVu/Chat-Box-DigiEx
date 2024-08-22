@@ -1,4 +1,4 @@
-package com.example.Broker;
+package com.example.broker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;

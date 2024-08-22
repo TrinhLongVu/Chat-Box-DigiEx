@@ -1,4 +1,4 @@
-package com.example.Server;
+package com.example.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,9 +21,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.example.Server.payloads.BrokerInfo;
-import com.example.Server.controller.ReceiveController;
-import com.example.Support.*;
+import com.example.server.payloads.BrokerInfo;
+import com.example.server.controller.ReceiveController;
+import com.example.support.*;
 
 @Component
 @AllArgsConstructor

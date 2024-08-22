@@ -1,6 +1,6 @@
-package com.example.Broker.service;
+package com.example.broker.service;
 
-import com.example.Support.Send;
+import com.example.support.Send;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.io.BufferedReader;

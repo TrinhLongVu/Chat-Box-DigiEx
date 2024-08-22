@@ -1,4 +1,4 @@
-package com.example.Support;
+package com.example.support;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
