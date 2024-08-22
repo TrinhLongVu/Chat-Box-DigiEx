@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 
 @Component
 public class CallAPI {
-    @Value("${LOADBALANCER_HOST}")
+    @Value("${app.loadbalancer.host}")
     private String HOST;
-    @Value("${LOADBALANCER_PORT}")
+    @Value("${app.loadbalancer.port}")
     private String PORT;
 
     public CompletableFuture<String> GetData(String paramString) {

@@ -1,0 +1,10 @@
+app:
+  broker:
+    host: broker
+    port: 4000
+  server:
+    host: ${SERVER_HOST}
+    port: ${SERVER_PORT}
+  loadbalancer:
+    host: loadbalancer
+    port: 8080
