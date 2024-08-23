@@ -158,6 +158,7 @@ public class LoadBalancerController {
         String host = hostAndPort[0];
         int port = Integer.parseInt(hostAndPort[1]);
 
+        Database.clients.forEach(client -> log.info("Before Client: {}", client));
         Database.clients.removeIf(client -> client.getName().equals(name) && client.getServerInfo().equals(nameAndServer[1]));
 
         for (ServerInfo server : Database.serverList) {
@@ -171,6 +172,8 @@ public class LoadBalancerController {
                 break;
             }
         }
+        Database.serverList.forEach(server -> log.info("Server: {}", server));
+        Database.clients.forEach(client -> log.info("After Client: {}", client));
 
         ServerInfo serverEmpty = Database.serverList.stream()
                 .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize()

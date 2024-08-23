@@ -7,15 +7,19 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
+
 import javax.swing.JOptionPane;
-import com.example.client.chat.SocketManager;
-import com.example.support.Helper;
-import com.example.support.Send;
-import com.example.client.core.ClientInfo;
-import lombok.RequiredArgsConstructor;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
+
+import com.example.client.chat.SocketManager;
+import com.example.client.core.ClientInfo;
+import com.example.support.Helper;
+import com.example.support.Send;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -84,6 +88,7 @@ public class LoadBalanceManager {
             }
 
             // Close connections
+
             in.close();
         } catch (IOException e) {
             log.error("Error sending confirmation to LoadBalancer: {}", e.getMessage());
@@ -98,11 +103,17 @@ public class LoadBalanceManager {
             StringBuilder content = new StringBuilder();
             try {
                 Thread.sleep(4000);
-                URL url = new URL(LOADBALANCER_URL + "/connect");
+                URL url = new URL(LOADBALANCER_URL + "/reconnect");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
+                conn.setRequestMethod("POST");
                 conn.setDoOutput(true);
                 conn.setRequestProperty("Content-Type", "text/plain");
+
+                String confirmationMessage = clientInfo.getUserName() + "&&" + "localhost@" + socketManager.getSocket().getPort();
+
+                OutputStream os = conn.getOutputStream();
+                os.write(confirmationMessage.getBytes());
+                os.flush();
 
                 try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                     String inputLine;
@@ -110,8 +121,8 @@ public class LoadBalanceManager {
                         content.append(inputLine);
                     }
                 }
+                System.out.println(content.toString());
                 String data = Helper.formatData(content.toString()).getData();
-
                 if (data.equals("null")) {
                     log.error("No server available");
                 } else {
@@ -127,7 +138,11 @@ public class LoadBalanceManager {
                         }
 
                         // Reconnect to new server
-                        socketManager.setSocket(newSocket);
+                        if(newSocket.isConnected()) {
+                            log.info("Reconnected to server: {}:{}", host, port);
+                            socketManager.setSocket(newSocket);
+                            notifyConnected(host, port, clientInfo.getUserName());
+                        }
                     } catch (IOException e) {
                         log.error("Error closing client socket: {}", e.getMessage());
                     }
