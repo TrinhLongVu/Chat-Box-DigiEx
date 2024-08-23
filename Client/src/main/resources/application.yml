@@ -1,0 +1,3 @@
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 5s

@@ -46,6 +46,12 @@
 			<artifactId>javax.annotation-api</artifactId>
 			<version>1.3.2</version>
 		</dependency>
+        <dependency>
+            <groupId>com.example.Support</groupId>
+            <artifactId>Support</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>

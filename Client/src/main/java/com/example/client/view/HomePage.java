@@ -2,44 +2,44 @@ package com.example.client.view;
 
 import com.example.client.chat.MessageManager;
 import com.example.support.DataSave;
-
+import com.example.client.core.ClientInfo;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.LinkedList;
 
-
+@Component
+@RequiredArgsConstructor
 public class HomePage extends JFrame {
-    private JTextArea userArea;
-    private JButton btnSend;
-    public static DefaultListModel<String> listModel = new DefaultListModel<>();
-    public static DefaultListModel<String> listModelUsers = new DefaultListModel<>();
-    private JPanel homePanel;
-    public static JTextField tfInput;
-    private JList<String> chatList;
+    private static final Logger log = LoggerFactory.getLogger(HomePage.class);
     public static JLabel userLabel = new JLabel();
-    public static JList<String> JlistUsers;
-    public static String myName = "";
+    private final MessageManager messageManager;
+    public static JList<String> JListUsers;
+    private final ClientInfo clientInfo;
+    public static JTextField tfInput;
     private JButton btnCreateGroup;
+    private final Group group;
+    private JButton btnSend;
 
-    public HomePage(JFrame parent, String newName) {
-        myName = newName;
-
+    public void init() {
+        String userName = clientInfo.getUserName();
         setTitle("Home Page");
         setMinimumSize(new Dimension(450, 474));
-        setLocationRelativeTo(parent);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         // Initialize components
-        homePanel = new JPanel(new BorderLayout());
-        chatList = new JList<>(listModel);
+        JPanel homePanel = new JPanel(new BorderLayout());
+        JList<String> chatList = new JList<>(clientInfo.getMessageList());
         chatList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        userLabel.setText(myName);
+        userLabel.setText(userName);
 
-        userArea = new JTextArea();
+        JTextArea userArea = new JTextArea();
         userArea.setEditable(false);
 
         tfInput = new JTextField();
@@ -48,44 +48,41 @@ public class HomePage extends JFrame {
 
         JPanel onlineUser = new JPanel(new BorderLayout());
 
-        JlistUsers = new JList<>(listModelUsers);
-        JScrollPane JScrollPaneUsers = new JScrollPane(JlistUsers);
+        JListUsers = new JList<>(clientInfo.getClientList());
+        JScrollPane JScrollPaneUsers = new JScrollPane(JListUsers);
 
-        JlistUsers.addListSelectionListener((ListSelectionEvent e) -> {
+        JListUsers.addListSelectionListener((ListSelectionEvent e) -> {
             if (!e.getValueIsAdjusting()) {
-                String selectedValue = JlistUsers.getSelectedValue();
+                String selectedValue = JListUsers.getSelectedValue();
 
                 if (selectedValue == null) {
-                    if (!DataSave.selectedUser.equals("")) {
+                    if (!DataSave.selectedUser.isEmpty()) {
                         int i = 0;
                         for (String online : DataSave.userOnline) {
                             if (online.equals(DataSave.selectedUser)) {
-                                JlistUsers.setSelectedIndex(i);
+                                JListUsers.setSelectedIndex(i);
                             }
                             i++;
                         }
                     }
-                } else if (selectedValue != null) {
-                    int index = JlistUsers.getSelectedIndex();
+                } else {
+                    int index = JListUsers.getSelectedIndex();
                     DataSave.selectedUser =  DataSave.userOnline.get(index);
 
                     // Update userLabel on the EDT
                     SwingUtilities.invokeLater(() -> {
-                        userLabel.setText(myName + " is chatting with user: " + DataSave.selectedUser.split("\\?")[0]);
-                        LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
-                        if (history == null) {
-                            history = new LinkedList<>();
-                            DataSave.contentChat.put(DataSave.selectedUser, history);
-                        }
-                        listModel.clear();
+                        userLabel.setText(userName + " is chatting with user: " + DataSave.selectedUser.split("\\?")[0]);
+                        LinkedList<String> history = DataSave.contentChat.computeIfAbsent(DataSave.selectedUser, k -> new LinkedList<>());
+                        clientInfo.getMessageList().clear();
 
                         for (String content : history) {
-                            listModel.addElement(content);
+                            clientInfo.getMessageList().addElement(content);
                         }
                     });
                 }
             }
         });
+
 
         onlineUser.add(JScrollPaneUsers, BorderLayout.CENTER);
         onlineUser.add(new JLabel("Users Online"), BorderLayout.NORTH);
@@ -105,7 +102,7 @@ public class HomePage extends JFrame {
         inputPanel.add(buttonPanel, BorderLayout.EAST);
 
         JPanel chatPanel = new JPanel(new BorderLayout());
-        chatPanel.add(userLabel, BorderLayout.NORTH); // Ensure userLabel is added
+        chatPanel.add(userLabel, BorderLayout.NORTH);
         chatPanel.add(scrollPane, BorderLayout.CENTER);
 
         homePanel.add(chatPanel, BorderLayout.CENTER);
@@ -114,33 +111,30 @@ public class HomePage extends JFrame {
 
         setContentPane(homePanel);
 
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                log.info("Shutting down application...");
+                System.exit(0);
+            }
+        });
+
         handleEvent();
         setVisible(true);
     }
 
     private void handleEvent() {
-        btnSend.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MessageManager.sendMessage(tfInput.getText());
-            }
-        });
+        String userName = clientInfo.getUserName();
 
-        tfInput.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                MessageManager.sendMessage(tfInput.getText());
-            }
-        });
+        btnSend.addActionListener(_ -> messageManager.sendMessage(tfInput.getText()));
 
-        btnCreateGroup.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false); // Hide the HomePage
-                Group groupDialog = new Group(HomePage.this, myName);  // Pass HomePage instance
-                groupDialog.setVisible(true); // Show the GroupDialog
-                setVisible(true);
-            }
+        tfInput.addActionListener(_ -> messageManager.sendMessage(tfInput.getText()));
+
+        btnCreateGroup.addActionListener(_ -> {
+            setVisible(false);
+            group.setUserName(userName);
+            group.init();
+            setVisible(true);
         });
     }
 }

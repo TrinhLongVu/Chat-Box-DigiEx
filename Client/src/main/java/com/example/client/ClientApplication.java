@@ -1,19 +1,23 @@
 package com.example.client;
 
 import com.example.client.view.LoginForm;
-import com.example.client.utils.LoadBalanceManager;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.swing.*;
 
+@SpringBootApplication
+@EnableScheduling
 public class ClientApplication {
     public static void main(String[] args) {
-        LoadBalanceManager loadBalanceManager = new LoadBalanceManager();
-        String response = loadBalanceManager.getConnectResponse();
+        // need head full to run GUI
+        System.setProperty("java.awt.headless", "false");
 
-        JFrame mainFrame = new JFrame();
-        mainFrame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        new LoginForm(mainFrame, response);
-        mainFrame.setVisible(false);
+        ApplicationContext context = SpringApplication.run(ClientApplication.class, args);
+        SwingUtilities.invokeLater(() -> {
+            context.getBean(LoginForm.class).init();
+        });
     }
 }

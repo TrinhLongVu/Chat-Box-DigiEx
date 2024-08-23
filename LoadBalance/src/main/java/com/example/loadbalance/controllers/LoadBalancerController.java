@@ -1,4 +1,4 @@
-package com.example.loadbalance.Controller;
+package com.example.loadbalance.controllers;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.loadbalance.database.Database;
 import com.example.loadbalance.payloads.ClientInfo;
 import com.example.loadbalance.payloads.ServerInfo;
+
+import javax.xml.crypto.Data;
 
 @RestController
 @RequestMapping("")
@@ -146,6 +148,42 @@ public class LoadBalancerController {
         return "Server has disconnected: " + host + "@" + port;
     }
 
+    @PostMapping("/reconnect")
+    public String handleClientReconnection(@RequestBody String requestBody){
+        log.info("Received client reconnection request: {}", requestBody);
+        //clientName&&localhost@1234
+        String[] nameAndServer = requestBody.split("&&");
+        String[] hostAndPort = nameAndServer[1].split("@");
+        String name = nameAndServer[0];
+        String host = hostAndPort[0];
+        int port = Integer.parseInt(hostAndPort[1]);
+
+        Database.clients.forEach(client -> log.info("Before Client: {}", client));
+        Database.clients.removeIf(client -> client.getName().equals(name) && client.getServerInfo().equals(nameAndServer[1]));
+
+        for (ServerInfo server : Database.serverList) {
+            if (server.getHost().equals(host) && server.getPort() == port) {
+                if(!isServerRunning(server)) {
+                    log.info("Old Server is not running, remove server: {}", nameAndServer[1]);
+                    Database.serverList.remove(server);
+                }else {
+                    server.decrementClients();
+                }
+                break;
+            }
+        }
+        Database.serverList.forEach(server -> log.info("Server: {}", server));
+        Database.clients.forEach(client -> log.info("After Client: {}", client));
+
+        ServerInfo serverEmpty = Database.serverList.stream()
+                .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize())
+                .findFirst()
+                .orElse(null);
+
+        String responseMessage = "type:server&&data:" + serverEmpty;
+        log.info("Returning reconnection info: {}", responseMessage);
+        return responseMessage;
+    }
     @GetMapping("/connect")
     public String handleGetConnection() {
         log.info("Received get connection request");

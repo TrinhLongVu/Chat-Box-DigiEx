@@ -34,7 +34,7 @@ public class SendServices {
                     processClient(client, userOnline);
                 }
             } else {
-               log.error( "Failed to fetch user online data");
+                log.error( "Failed to fetch user online data");
             }
         });
     }

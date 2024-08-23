@@ -31,7 +31,18 @@
 			<scope>compile</scope>
 			<version>1.0.0</version>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.example.support</groupId>
+            <artifactId>Support</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

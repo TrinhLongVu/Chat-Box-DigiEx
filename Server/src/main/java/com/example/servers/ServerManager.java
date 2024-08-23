@@ -14,6 +14,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.example.support.Send;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,14 +56,14 @@ public class ServerManager {
     private volatile boolean running;
     private ExecutorService threadPool;
     @Autowired
-    private ApplicationContext context; 
+    private ApplicationContext context;
 
     public ServerManager() {
         threadPool = new ThreadPoolExecutor(
-            THREAD_POOL_SIZE,
-            THREAD_POOL_SIZE,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
+                THREAD_POOL_SIZE,
+                THREAD_POOL_SIZE,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(LIMIT_QUEUE_SIZE)
         );
     }
 
@@ -107,7 +108,7 @@ public class ServerManager {
             log.error("Error accepting connection: {}", e.getMessage());
         }
     }
-    
+
     private void submitThreadPool(Socket clientSocket) {
         try {
             ReceiveController receive = context.getBean(ReceiveController.class, clientSocket);
@@ -115,7 +116,7 @@ public class ServerManager {
         } catch (RejectedExecutionException e) {
             log.error("Server is overloaded, adding client to pending queue. {}", e.getMessage());
         }
-    }    
+    }
 
     public void shutdown() {
         running = false;
@@ -140,7 +141,7 @@ public class ServerManager {
         }
         notifyDisconnection("localhost", SERVER_PORT);
     }
-    
+
     private void notifyDisconnection(String host, int port) {
         try {
             URL loadBalancerUrl = new URL("http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT + "/server-disconnected");

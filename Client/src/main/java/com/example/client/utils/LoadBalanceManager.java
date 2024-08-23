@@ -1,37 +1,39 @@
 package com.example.client.utils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.Socket;
-import java.net.URL;
-
-
+import java.io.*;
+import java.net.*;
 import javax.swing.JOptionPane;
-
-import com.example.client.chat.MessageManager;
-import com.example.client.chat.SocketManager;
-import com.example.client.view.HomePage;
-import com.example.support.Helper;
-import com.example.support.Send;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+import com.example.client.chat.SocketManager;
+import com.example.client.core.ClientInfo;
+import com.example.support.Helper;
+import com.example.support.Send;
 
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class LoadBalanceManager {
     private static final Logger log = LogManager.getLogger(LoadBalanceManager.class);
-    private static String LOADBALANCER_HOST = "localhost";
-    private static String LOADBALANCER_PORT = "8080";
+    private final SocketManager socketManager;
+    private final ClientInfo clientInfo;
+    private final ApplicationContext context;
 
-    private static final String LOAD_BALANCER_URL = "http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT;
+    private String SCHEME = "http://";
+    private String LOADBALANCER_HOST = "localhost";
+    private String LOADBALANCER_PORT = "8080";
+
+    private String LOADBALANCER_URL = SCHEME + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT;
 
     public String getConnectResponse() {
         StringBuilder content = new StringBuilder();
 
         try {
             // URL of the LoadBalancer
-            URL url = new URL(LOAD_BALANCER_URL + "/connect");
+            URL url = new URL(LOADBALANCER_URL + "/connect");
 
             // Open connection
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -56,7 +58,7 @@ public class LoadBalanceManager {
 
     public void notifyConnected(String host, int port, String name) {
         try {
-            URL loadBalancerUrl = new URL(LOAD_BALANCER_URL + "/login");
+            URL loadBalancerUrl = new URL(LOADBALANCER_URL + "/login");
 
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
@@ -74,27 +76,64 @@ public class LoadBalanceManager {
             StringBuilder newContent = new StringBuilder();
 
             String inputLine;
-            
+
             while ((inputLine = in.readLine()) != null) {
                 newContent.append(inputLine);
             }
 
             // Close connections
+
             in.close();
         } catch (IOException e) {
             log.error("Error sending confirmation to LoadBalancer: {}", e.getMessage());
         }
     }
 
-    public Socket reconnectServerResponse() {
-        Socket newSocket = null;
-        StringBuilder content = new StringBuilder();
+    public void reconnectToNewServer() {
+        boolean isRunning = false;
+        while (!isRunning) {
+            Socket newSocket;
+            StringBuilder content = new StringBuilder();
+            try {
+                content = sendRequest(content);
+                log.info(content);
+
+                String data;
+                if (content == null) {
+                    log.error("No server available");
+                } else {
+                    data = Helper.formatData(content.toString()).getData();
+                    String[] hostAndPort = data.split("@");
+                    String host = hostAndPort[0];
+                    int port = Integer.parseInt(hostAndPort[1]);
+
+                    newSocket = new Socket(host, port);
+                    establishConnection(newSocket, host, port);
+                    new Send(newSocket).sendData("type:login&&send:" + clientInfo.getUserName());
+                    isRunning = true;
+                }
+
+            } catch (IOException e) {
+                log.error("Failed to reconnect to server: {}", e.getMessage());
+                JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private StringBuilder sendRequest(StringBuilder content) {
         try {
-            URL url = new URL(LOAD_BALANCER_URL + "/connect");
+            Thread.sleep(2000);
+            URL url = new URL(LOADBALANCER_URL + "/reconnect");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+            conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "text/plain");
+
+            String confirmationMessage = clientInfo.getUserName() + "&&" + "localhost@" + socketManager.getSocket().getPort();
+
+            OutputStream os = conn.getOutputStream();
+            os.write(confirmationMessage.getBytes());
+            os.flush();
 
             try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 String inputLine;
@@ -102,39 +141,37 @@ public class LoadBalanceManager {
                     content.append(inputLine);
                 }
             }
-            String data = Helper.formatData(content.toString()).getData();
-            
-            if (data.equals("null")) {
-                log.error("No server available");
-                JOptionPane.showMessageDialog(null, "No server available", "Error", JOptionPane.ERROR_MESSAGE);
-                System.exit(0);
-                return null;
-            }
 
-            String[] hostAndPort = data.split("@");
-            String host = hostAndPort[0];
-            int port = Integer.parseInt(hostAndPort[1]);
-
-            newSocket = new Socket(host, port);
-
-            try {
-                if (SocketManager.getSocket() != null && !SocketManager.getSocket().isClosed()) {
-                    SocketManager.getSocket().close();
-                }
-                
-                // Reconnect to new server
-                SocketManager.setSocket(newSocket);
-                new MessageManager(SocketManager.getSocket()).start();
-            } catch (IOException e) {
-                log.error("Error closing client socket: {}", e.getMessage());
-            }
-
-            new Send(newSocket).sendData("type:login&&send:" + HomePage.myName);
-        } catch (IOException e) {
-            log.error("Failed to reconnect to server: {}", e.getMessage());
-            JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return content;
+        } catch (MalformedURLException e) {
+            log.error("Error occurred while trying to create URL {}", e.getMessage());
+        } catch (ProtocolException pe) {
+            log.error("Protocol exception: {}", pe.getMessage());
+        }  catch (IOException e) {
+            log.error("Error occurred while reconnecting to the server: {}", e.getMessage());
+        } catch (InterruptedException ie) {
+            log.error("Interrupted while reconnecting to the server: {}", ie.getMessage());
         }
 
-        return newSocket;
+        return null;
     }
+
+    private void establishConnection(Socket newSocket, String host, int port) {
+        try {
+            if (socketManager.getSocket() != null && !socketManager.getSocket().isClosed()) {
+                socketManager.getSocket().close();
+            }
+
+            if (newSocket.isConnected()) {
+                log.info("Reconnected to server: {}:{}", host, port);
+                socketManager.setSocket(newSocket);
+
+                socketManager.initializeBufferedReader(newSocket);
+                notifyConnected(host, port, clientInfo.getUserName());
+            }
+        } catch (IOException e) {
+            log.error("Error closing client socket: {}", e.getMessage());
+        }
+    }
+
 }

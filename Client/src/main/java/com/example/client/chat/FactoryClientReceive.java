@@ -4,25 +4,42 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
+import com.example.client.core.ClientInfo;
 import com.example.client.view.HomePage;
-import com.example.client.view.LoginForm;
 import com.example.support.DataSave;
 import com.example.support.TypeReceive;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import javax.annotation.PostConstruct;
 
+@Component
 public class FactoryClientReceive {
-    private static final Map<String, MessageHandlerFactory> factoryMap = new HashMap<>();
-    static {
-        factoryMap.put("online", new UpdateUserOnlineMessageHandlerFactory());
-        factoryMap.put("chat", new ChatMessageHandlerFactory());
-        factoryMap.put("chat-group", new ChatGroupMessageHandlerFactory());
-        factoryMap.put("error", new ErrorMessageHandlerFactory());
+    private final Map<String, MessageHandlerFactory> factoryMap = new HashMap<>();
+
+    @Autowired
+    private UpdateUserOnlineMessageHandlerFactory updateUserOnlineMessageHandlerFactory;
+
+    @Autowired
+    private ChatMessageHandlerFactory chatMessageHandlerFactory;
+
+    @Autowired
+    private ChatGroupMessageHandlerFactory chatGroupMessageHandlerFactory;
+
+    @Autowired
+    private ErrorMessageHandlerFactory errorMessageHandlerFactory;
+
+    @PostConstruct
+    private void init() {
+        factoryMap.put("online", updateUserOnlineMessageHandlerFactory);
+        factoryMap.put("chat", chatMessageHandlerFactory);
+        factoryMap.put("chat-group", chatGroupMessageHandlerFactory);
+        factoryMap.put("error", errorMessageHandlerFactory);
     }
 
-    public static MessageHandlerFactory getFactory(String type) {
+    public MessageHandlerFactory getFactory(String type) {
         return factoryMap.get(type);
     }
 }
@@ -31,29 +48,36 @@ interface MessageHandlerFactory {
     default void handle(TypeReceive data, Socket socket, String message){};
 }
 
+@Component
+@RequiredArgsConstructor
 class UpdateUserOnlineMessageHandlerFactory implements MessageHandlerFactory {
+    private final ClientInfo clientInfo;
+
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         String dataReceive = data.getData();
         String[] userOnlines = dataReceive.split(",");
         DataSave.userOnline.clear();
         for (String userOnline : userOnlines) {
-            if (!userOnline.equals(LoginForm.userName)) {
+            if (!userOnline.equals(clientInfo.getUserName())) {
                 DataSave.userOnline.add(userOnline);
             }
         }
 
         SwingUtilities.invokeLater(() -> {
-            HomePage.listModelUsers.clear();
+            clientInfo.getClientList().clear();
             for (String userOnline : DataSave.userOnline) {
                 String user[] = userOnline.split("\\?");
-                HomePage.listModelUsers.addElement(user[0]);
+                clientInfo.getClientList().addElement(user[0]);
             }
         });
     }
 }
 
+@Component
+@RequiredArgsConstructor
 class ChatMessageHandlerFactory implements MessageHandlerFactory {
+    private final ClientInfo clientInfo;
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         String content = data.getData();
@@ -64,19 +88,22 @@ class ChatMessageHandlerFactory implements MessageHandlerFactory {
             DataSave.contentChat.put(userSend, history);
         }
         history.add(userSend + ": " + content);
-        final LinkedList<String> finalHistory = history; 
+        final LinkedList<String> finalHistory = history;
         if (DataSave.selectedUser.equals(userSend)) {
             SwingUtilities.invokeLater(() -> {
-                HomePage.listModel.clear();
+                clientInfo.getMessageList().clear();
                 for (String hist : finalHistory) {
-                    HomePage.listModel.addElement(hist);
+                    clientInfo.getMessageList().addElement(hist);
                 }
             });
         }
     }
 }
 
+@Component
+@RequiredArgsConstructor
 class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
+    private final ClientInfo clientInfo;
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         String content = data.getData();
@@ -88,18 +115,20 @@ class ChatGroupMessageHandlerFactory implements MessageHandlerFactory {
             DataSave.contentChat.put(userSend[1], history);
         }
         history.add(userSend[0] + ": " + content);
-        final LinkedList<String> finalHistory = history; 
+        final LinkedList<String> finalHistory = history;
         if (DataSave.selectedUser.equals(userSend[1])) {
             SwingUtilities.invokeLater(() -> {
-                HomePage.listModel.clear();
+                clientInfo.getMessageList().clear();
                 for (String hist : finalHistory) {
-                    HomePage.listModel.addElement(hist);
+                    clientInfo.getMessageList().addElement(hist);
                 }
             });
         }
     }
 }
 
+@Component
+@RequiredArgsConstructor
 class ErrorMessageHandlerFactory implements MessageHandlerFactory {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
