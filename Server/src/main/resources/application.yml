@@ -1,0 +1,14 @@
+#spring:
+#  profiles:
+#    active: dev
+
+app:
+  broker:
+    host: localhost
+    port: 4000
+  server:
+    host: localhost
+    port: 1234
+  loadbalancer:
+    host: localhost
+    port: 8080

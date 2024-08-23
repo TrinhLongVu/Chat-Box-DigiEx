@@ -34,22 +34,22 @@ public class ServerManager {
     private static final int THREAD_POOL_SIZE = 2;
     private static final int LIMIT_QUEUE_SIZE = 1;
 
-    @Value("${BROKER_PORT}")
+    @Value("${app.broker.port}")
     private int BROKER_PORT;
 
-    @Value("${BROKER_HOST}")
+    @Value("${app.broker.host}")
     private String BROKER_HOST;
 
-    @Value("${SERVER_HOST}")
+    @Value("${app.server.host}")
     private String SERVER_HOST;
 
-    @Value("${SERVER_PORT}")
+    @Value("${app.server.port}")
     private int SERVER_PORT;
 
-    @Value("${LOADBALANCER_HOST}")
+    @Value("${app.loadbalancer.host}")
     private String LOADBALANCER_HOST;
 
-    @Value("${LOADBALANCER_PORT}")
+    @Value("${app.loadbalancer.port}")
     private int LOADBALANCER_PORT;
 
     private volatile boolean running;
