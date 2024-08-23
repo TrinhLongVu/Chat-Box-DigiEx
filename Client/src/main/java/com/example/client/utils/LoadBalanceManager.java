@@ -91,51 +91,56 @@ public class LoadBalanceManager {
     }
 
     public void reconnectServerResponse() {
-        Socket newSocket;
-        StringBuilder content = new StringBuilder();
-        try {
-            URL url = new URL(LOADBALANCER_URL + "/connect");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setDoOutput(true);
-            conn.setRequestProperty("Content-Type", "text/plain");
+        boolean isRunning = false;
+        while (!isRunning) {
 
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-            }
-            String data = Helper.formatData(content.toString()).getData();
-
-            if (data.equals("null")) {
-                log.error("No server available");
-                JOptionPane.showMessageDialog(null, "No server available", "Error", JOptionPane.ERROR_MESSAGE);
-                System.exit(0);
-                return;
-            }
-
-            String[] hostAndPort = data.split("@");
-            String host = hostAndPort[0];
-            int port = Integer.parseInt(hostAndPort[1]);
-
-            newSocket = new Socket(host, port);
-
+            Socket newSocket;
+            StringBuilder content = new StringBuilder();
             try {
-                if (socketManager.getSocket() != null && !socketManager.getSocket().isClosed()) {
-                    socketManager.getSocket().close();
+                Thread.sleep(4000);
+                URL url = new URL(LOADBALANCER_URL + "/connect");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "text/plain");
+
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        content.append(inputLine);
+                    }
                 }
+                String data = Helper.formatData(content.toString()).getData();
 
-                // Reconnect to new server
-                socketManager.setSocket(newSocket);
+                if (data.equals("null")) {
+                    log.error("No server available");
+                } else {
+                    String[] hostAndPort = data.split("@");
+                    String host = hostAndPort[0];
+                    int port = Integer.parseInt(hostAndPort[1]);
+
+                    newSocket = new Socket(host, port);
+
+                    try {
+                        if (socketManager.getSocket() != null && !socketManager.getSocket().isClosed()) {
+                            socketManager.getSocket().close();
+                        }
+
+                        // Reconnect to new server
+                        socketManager.setSocket(newSocket);
+                    } catch (IOException e) {
+                        log.error("Error closing client socket: {}", e.getMessage());
+                    }
+
+                    new Send(newSocket).sendData("type:login&&send:" + clientInfo.getUserName());
+                    isRunning = true;
+                }
             } catch (IOException e) {
-                log.error("Error closing client socket: {}", e.getMessage());
+                log.error("Failed to reconnect to server: {}", e.getMessage());
+                JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (InterruptedException e) {
+                log.error("Interrupted while reconnecting to the server: {}", e.getMessage());
             }
-
-            new Send(newSocket).sendData("type:login&&send:" + clientInfo.getUserName());
-        } catch (IOException e) {
-            log.error("Failed to reconnect to server: {}", e.getMessage());
-            JOptionPane.showMessageDialog(null, "An error occurred while reconnecting to the server: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

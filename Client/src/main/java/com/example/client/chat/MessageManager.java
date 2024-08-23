@@ -16,8 +16,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.LinkedList;
 
 @Component
@@ -43,8 +43,8 @@ public class MessageManager extends Thread {
 
     @Override
     public void run() {
-        try {
-            while (true) {
+        while (true) {
+            try {
                 String receiveMsg = clientInfo.getBuffer().readLine();
                 if (receiveMsg != null) {
                     TypeReceive data = Helper.formatData(receiveMsg);
@@ -57,12 +57,12 @@ public class MessageManager extends Thread {
                         factory.handle(data, socketManager.getSocket(), receiveMsg);
                     }
                 }
+            } catch (SocketException ce) {
+                loadBalanceManager.reconnectServerResponse();
+            } catch (Exception e) {
+                log.error("An error occurred while receiving message: {}", e.getMessage());
+                JOptionPane.showMessageDialog(null, "An error occurred while receiving message");
             }
-        } catch (ConnectException ce) {
-            loadBalanceManager.reconnectServerResponse();
-        } catch (Exception e) {
-            log.error("An error occurred while receiving message: {}", e.getMessage());
-            JOptionPane.showMessageDialog(null, "An error occurred while receiving message");
         }
     }
 
@@ -81,6 +81,7 @@ public class MessageManager extends Thread {
                     new Send(socketManager.getSocket()).sendData("type:chat&&send:" + clientInfo.getUserName() + "&&receive:" + DataSave.selectedUser + "&&data:" + msg);
                 }
             } catch (IOException e) {
+                loadBalanceManager.reconnectServerResponse();
                 log.error("Error while sending message: {}", e.getMessage());
             }
         }

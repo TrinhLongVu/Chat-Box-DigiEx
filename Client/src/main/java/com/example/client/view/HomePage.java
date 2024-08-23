@@ -16,7 +16,7 @@ public class HomePage extends JFrame {
     private JButton btnSend;
     public static JTextField tfInput;
     public static JLabel userLabel = new JLabel();
-    public static JList<String> JlistUsers;
+    public static JList<String> JListUsers;
     private JButton btnCreateGroup;
     private final Group group;
     private final ClientInfo clientInfo;
@@ -43,25 +43,25 @@ public class HomePage extends JFrame {
 
         JPanel onlineUser = new JPanel(new BorderLayout());
 
-        JlistUsers = new JList<>(clientInfo.getClientList());
-        JScrollPane JScrollPaneUsers = new JScrollPane(JlistUsers);
+        JListUsers = new JList<>(clientInfo.getClientList());
+        JScrollPane JScrollPaneUsers = new JScrollPane(JListUsers);
 
-        JlistUsers.addListSelectionListener((ListSelectionEvent e) -> {
+        JListUsers.addListSelectionListener((ListSelectionEvent e) -> {
             if (!e.getValueIsAdjusting()) {
-                String selectedValue = JlistUsers.getSelectedValue();
+                String selectedValue = JListUsers.getSelectedValue();
 
                 if (selectedValue == null) {
                     if (!DataSave.selectedUser.equals("")) {
                         int i = 0;
                         for (String online : DataSave.userOnline) {
                             if (online.equals(DataSave.selectedUser)) {
-                                JlistUsers.setSelectedIndex(i);
+                                JListUsers.setSelectedIndex(i);
                             }
                             i++;
                         }
                     }
                 } else if (selectedValue != null) {
-                    int index = JlistUsers.getSelectedIndex();
+                    int index = JListUsers.getSelectedIndex();
                     DataSave.selectedUser =  DataSave.userOnline.get(index);
 
                     // Update userLabel on the EDT
