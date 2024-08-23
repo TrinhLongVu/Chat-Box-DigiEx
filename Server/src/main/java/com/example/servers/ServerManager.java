@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.servers.payloads.BrokerInfo;
 import com.example.servers.controller.ReceiveController;
-import com.example.Support.*;
+import com.example.support.*;
 
 @Component
 @AllArgsConstructor
