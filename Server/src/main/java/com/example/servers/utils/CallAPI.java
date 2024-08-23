@@ -3,6 +3,8 @@ package com.example.servers.utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.example.servers.controller.ReceiveController;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,11 +13,13 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Component
 public class CallAPI {
+    private final Logger log = LogManager.getLogger(CallAPI.class);
+
     @Value("${LOADBALANCER_HOST}")
     private String HOST;
     @Value("${LOADBALANCER_PORT}")
@@ -38,7 +42,7 @@ public class CallAPI {
                     return response.toString();
                 }
             } catch (IOException e) {
-                Logger.getLogger(CallAPI.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
+                log.error("An error occurred: {0}" + e.getMessage());
             }
             return "error";
         });
@@ -67,7 +71,7 @@ public class CallAPI {
                 }
             }
         } catch (IOException e) {
-            Logger.getLogger(CallAPI.class.getName()).log(Level.SEVERE, "An error occurred: {0}", e.getMessage());
+            log.error("An error occurred: {0}" + e.getMessage());
         } 
     }
 }

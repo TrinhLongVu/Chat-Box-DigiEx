@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ import com.example.support.*;
 @Component
 @Scope("prototype")
 public class ReceiveController implements Runnable {
+    private final Logger log = LogManager.getLogger(ReceiveController.class);
     private BufferedReader br;
     private Socket socket;
 
@@ -44,7 +46,7 @@ public class ReceiveController implements Runnable {
             InputStream is = socket.getInputStream();
             this.br = new BufferedReader(new InputStreamReader(is));
         } catch (IOException e) {
-            Logger.getLogger(ReceiveController.class.getName()).log(Level.SEVERE, "Cannot establish receive socket: {0}", e.getMessage());
+            log.error("Cannot establish receive socket: {0}", e.getMessage());
         }
     }
     
@@ -60,12 +62,12 @@ public class ReceiveController implements Runnable {
 
                 InterfaceMessageHandler factory = receiveServices.getFactory(data.getType());
                 if (factory != null) {
-                    Logger.getLogger(ReceiveController.class.getName()).log(Level.INFO, "Server received: {0}", receiveMsg);
+                    log.info("Server received: {0}" + receiveMsg);
                     factory.handle(data, socket, receiveMsg);
                 }
             }
         } catch (Exception e) {
-            Logger.getLogger(ReceiveController.class.getName()).log(Level.SEVERE, "Error reading from socket: {0}", e.getMessage());
+            log.error("Error reading from socket: {0}" + e.getMessage());
         } finally {
             cleanup();
         }
@@ -83,8 +85,7 @@ public class ReceiveController implements Runnable {
                 sendServices.SendMessage(BrokerInfo.brokerSocket, "type:disconnect");
             }
         } catch (IOException e) {
-            Logger.getLogger(ReceiveController.class.getName()).log(Level.SEVERE, "Error closing client socket: {0}",
-                    e.getMessage());
+            log.error("Error closing client socket: {0}" + e.getMessage());
         }
     }
     
