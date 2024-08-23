@@ -19,10 +19,9 @@ import org.apache.logging.log4j.Logger;
 @Component
 public class CallAPI {
     private final Logger log = LogManager.getLogger(CallAPI.class);
-
-    @Value("${LOADBALANCER_HOST}")
+    @Value("${app.loadbalancer.host}")
     private String HOST;
-    @Value("${LOADBALANCER_PORT}")
+    @Value("${app.loadbalancer.port}")
     private String PORT;
 
     public CompletableFuture<String> GetData(String paramString) {

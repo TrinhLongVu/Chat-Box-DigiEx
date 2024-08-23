@@ -28,7 +28,7 @@ public class ReceiveController implements Runnable {
     private BufferedReader br;
     private Socket socket;
 
-    @Value("${SERVER_PORT}")
+    @Value("${app.server.port}")
     private int PORT;
 
     @Autowired
