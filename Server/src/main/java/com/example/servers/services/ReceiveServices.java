@@ -3,12 +3,15 @@ package com.example.servers.services;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import com.example.servers.payloads.BrokerInfo;
 import com.example.servers.utils.CallAPI;
 import com.example.support.*;
@@ -45,6 +48,7 @@ public class ReceiveServices {
 @Component
 class LoginMessageHandler implements InterfaceMessageHandler {
     private static final String FLAG_TRUE = "&&flag:true";
+    private final Logger log = LogManager.getLogger(LoginMessageHandler.class);
 
     @Autowired
     private SendServices sendServices;
@@ -52,8 +56,7 @@ class LoginMessageHandler implements InterfaceMessageHandler {
     @Override
     public void handle(TypeReceive data, Socket socket, String message) {
         if (BrokerInfo.brokerSocket == null) {
-            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                    " broker is not exits");
+            log.warn("An error occurred: {0} broker is not exits");
             return;
         }
         if (!data.isSendBroker())
@@ -77,6 +80,7 @@ class LoginMessageHandler implements InterfaceMessageHandler {
 class ChatMessageHandler implements InterfaceMessageHandler {
     @Autowired
     private SendServices sendServices;
+    private final Logger log = LogManager.getLogger(ChatMessageHandler.class);
 
     @Override
     public void handle(TypeReceive data, Socket socket, String receiveMsg) {
@@ -95,8 +99,7 @@ class ChatMessageHandler implements InterfaceMessageHandler {
 
     private boolean isExitBroker() {
         if (BrokerInfo.brokerSocket == null) {
-            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                    " broker is not exits");
+            log.warn("An error occurred: {0} broker is not exits");
             return false;
         }
         return true;
@@ -133,6 +136,7 @@ class ChatMessageHandler implements InterfaceMessageHandler {
 
 @Component
 class GroupMessageHandler implements InterfaceMessageHandler {
+    private final Logger log = LogManager.getLogger(GroupMessageHandler.class);
     @Autowired
     private CallAPI callAPI;
 
@@ -162,8 +166,7 @@ class GroupMessageHandler implements InterfaceMessageHandler {
 
     private boolean isExitBroker() {
         if (BrokerInfo.brokerSocket == null) {
-            Logger.getLogger(ChatMessageHandler.class.getName()).log(Level.SEVERE, "An error occurred: {0}",
-                    " broker is not exits");
+            log.warn("An error occurred: {0}  broker is not exits");
             return false;
         }
         return true;
