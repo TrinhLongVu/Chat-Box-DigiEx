@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.example.servers.payloads.BrokerInfo;
 import com.example.servers.utils.CallAPI;
-import com.example.Support.*;
+import com.example.support.*;
 
 @Component
 public class ReceiveServices {

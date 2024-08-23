@@ -18,7 +18,7 @@ import com.example.servers.services.InterfaceMessageHandler;
 import com.example.servers.services.ReceiveServices;
 import com.example.servers.services.SendServices;
 import com.example.servers.utils.CallAPI;
-import com.example.Support.*;
+import com.example.support.*;
 
 @Component
 @Scope("prototype")

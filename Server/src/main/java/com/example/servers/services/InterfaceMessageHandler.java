@@ -1,6 +1,6 @@
 package com.example.servers.services;
 
-import com.example.Support.*;
+import com.example.support.*;
 import java.net.Socket;
 
 public interface InterfaceMessageHandler {

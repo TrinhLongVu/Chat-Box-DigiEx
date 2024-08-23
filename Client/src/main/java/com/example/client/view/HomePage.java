@@ -1,7 +1,7 @@
 package com.example.client.view;
 
 import com.example.client.chat.MessageManager;
-import com.example.Support.DataSave;
+import com.example.support.DataSave;
 import com.example.client.core.ClientInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

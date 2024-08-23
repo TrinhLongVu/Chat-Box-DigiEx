@@ -6,15 +6,14 @@ import com.example.client.chat.MessageManager;
 import com.example.client.chat.SocketManager;
 import com.example.client.core.ClientInfo;
 import com.example.client.utils.LoadBalanceManager;
-import com.example.Support.Helper;
-import com.example.Support.Send;
+import com.example.support.Helper;
+import com.example.support.Send;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
-import java.io.BufferedReader;
 import java.net.Socket;
 import java.io.IOException;
 
