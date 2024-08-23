@@ -11,12 +11,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MessageBroker {
     private static final Logger log = LogManager.getLogger(MessageBroker.class);
     private static final String SERVER_TOPIC = "Server";
+
     public static final int PORT = 4000;
 
     private ConcurrentHashMap<String, List<Socket>> connectedServers = new ConcurrentHashMap<>();
