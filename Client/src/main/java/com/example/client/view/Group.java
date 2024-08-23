@@ -64,7 +64,7 @@ public class Group extends JDialog {
                     }
                 }
             }
-            if (selectedUsers.length() > 0) {
+            if (!selectedUsers.isEmpty()) {
                 try {
                     String uniqueID = UUID.randomUUID().toString();
                     new Send(socketManager.getSocket()).sendData("type:group&&receive:" + selectedUsers.toString().replace(" ", "") + userName + "&&" + "send:" + fieldName.getText() + "?" + uniqueID);

@@ -22,10 +22,10 @@ import java.io.IOException;
 public class LoginForm extends JDialog {
     private static final Logger log = LogManager.getLogger(LoginForm.class);
     private final LoadBalanceManager loadBalanceManager;
-    private final SocketManager socketManager;
-    private final HomePage homePage;
-    private final ClientInfo clientInfo;
     private final MessageManager messageManager;
+    private final SocketManager socketManager;
+    private final ClientInfo clientInfo;
+    private final HomePage homePage;
     private JTextField tfEmail;
 
     public void init() {
@@ -97,8 +97,7 @@ public class LoginForm extends JDialog {
 
             new Send(s).sendData("type:login&&send:" + clientInfo.getUserName());
 
-            messageManager.initializeBufferedReader(s);
-            messageManager.start();
+            socketManager.initializeBufferedReader(s);
             homePage.setName(clientInfo.getUserName());
             homePage.init();
         } catch (IOException e) {

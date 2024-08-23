@@ -1,63 +1,53 @@
 package com.example.broker.service;
 
-import java.io.IOException;
-import java.net.ServerSocket;
+import java.util.List;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.apache.logging.log4j.LogManager;
+import java.io.IOException;
+import java.net.ServerSocket;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.logging.log4j.LogManager;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.Scheduled;
+
 
 @Component
+@RequiredArgsConstructor
 public class MessageBroker {
-    private static final Logger log = LogManager.getLogger(MessageBroker.class);
-    private static final String SERVER_TOPIC = "Server";
-
-    public static final int PORT = 4000;
-
     private ConcurrentHashMap<String, List<Socket>> connectedServers = new ConcurrentHashMap<>();
+    private static final Logger log = LogManager.getLogger(MessageBroker.class);
+    private final ServerSocketHandler serverSocketHandler;
+    private static final String SERVER_TOPIC = "Server";
+    public int PORT = 4000;
 
-    public MessageBroker() {
-        startMessageBroker(PORT);
-    }
 
-    public void startMessageBroker(int port) {
+    @Bean
+    public void init() {
         log.info("MessageBroker is starting...");
-        ServerSocket brokerSocket;
         try {
-            brokerSocket = new ServerSocket(port);
-            
-            while(true) {
-                allowNewServerConnection(brokerSocket);
-            }
+            serverSocketHandler.setServerSocket(new ServerSocket(PORT));
         } catch (IOException e) {
             log.error("Error starting server: {}", e.getMessage());
         }
     }
 
-    private void allowNewServerConnection(ServerSocket brokerSocket) {
+    @Scheduled(fixedRate = 300)
+    private void allowNewServerConnection() {
         try {
-            Socket serverSocket = brokerSocket.accept();
-            connectedServers.computeIfAbsent(SERVER_TOPIC, k -> new CopyOnWriteArrayList<>()).add(serverSocket);
+            Socket serverSocket = serverSocketHandler.getServerSocket().accept();
+            connectedServers.computeIfAbsent(SERVER_TOPIC, _ -> new CopyOnWriteArrayList<>()).add(serverSocket);
 
             new Thread(new ServerHandler(this, serverSocket)).start();
         } catch (IOException e) {
-            log.error("Error accepting connection: {}",
-                    e.getMessage());
+            log.error("Error accepting connection: {}", e.getMessage());
         }
     }
 
-    public List<Socket> getSocketsByKey(String key) {
+    public List<Socket> getConnectedServersByKey(String key) {
         return connectedServers.getOrDefault(key, new ArrayList<>());
-    }
-
-    public ConcurrentMap<String, List<Socket>> getConnectedServers() {
-        return connectedServers;
     }
 }

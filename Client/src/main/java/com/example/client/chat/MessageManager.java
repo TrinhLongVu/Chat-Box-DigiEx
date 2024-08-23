@@ -10,59 +10,42 @@ import com.example.support.Send;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import javax.swing.JOptionPane;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.LinkedList;
 
 @Component
 @RequiredArgsConstructor
-public class MessageManager extends Thread {
+public class MessageManager {
     private static final Logger log = LogManager.getLogger(MessageManager.class);
     private final FactoryClientReceive factoryClientReceive;
     private final LoadBalanceManager loadBalanceManager;
     private final SocketManager socketManager;
     private final ClientInfo clientInfo;
 
-
-    public void initializeBufferedReader(Socket connSocket) {
+    @Scheduled(fixedRate = 500)
+    public void receiveServerMessage() {
         try {
-            InputStream is = connSocket.getInputStream();
-            clientInfo.setBuffer(new BufferedReader(new InputStreamReader(is)));
-        } catch (IOException e) {
-            log.error("An error occurred while setting buffer: {} ", e.getMessage());
-            JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                String receiveMsg = clientInfo.getBuffer().readLine();
-                if (receiveMsg != null) {
-                    TypeReceive data = Helper.formatData(receiveMsg);
-                    if (data.getType().equals("server")) {
-                        handleServer(data.getData());
-                        return;
-                    }
-                    MessageHandlerFactory factory = factoryClientReceive.getFactory(data.getType());
-                    if (factory != null) {
-                        factory.handle(data, socketManager.getSocket(), receiveMsg);
-                    }
+            String receiveMsg ;
+            log.info(socketManager.getBuffer().toString());
+            while ((receiveMsg = socketManager.getBuffer().readLine()) != null) {
+                TypeReceive data = Helper.formatData(receiveMsg);
+                if (data.getType().equals("server")) {
+                    handleServer(data.getData());
+                    return;
                 }
-            } catch (SocketException ce) {
-                loadBalanceManager.reconnectServerResponse();
-            } catch (Exception e) {
-                log.error("An error occurred while receiving message: {}", e.getMessage());
-                JOptionPane.showMessageDialog(null, "An error occurred while receiving message");
+                MessageHandlerFactory factory = factoryClientReceive.getFactory(data.getType());
+                if (factory != null) {
+                    factory.handle(data, socketManager.getSocket(), receiveMsg);
+                }
             }
+        } catch (IOException ie) {
+            log.error("IOException: {}", ie.getMessage());
+            loadBalanceManager.reconnectToNewServer();
+        } catch (Exception e) {
         }
     }
 
@@ -81,7 +64,7 @@ public class MessageManager extends Thread {
                     new Send(socketManager.getSocket()).sendData("type:chat&&send:" + clientInfo.getUserName() + "&&receive:" + DataSave.selectedUser + "&&data:" + msg);
                 }
             } catch (IOException e) {
-                loadBalanceManager.reconnectServerResponse();
+                loadBalanceManager.reconnectToNewServer();
                 log.error("Error while sending message: {}", e.getMessage());
             }
         }
@@ -105,7 +88,7 @@ public class MessageManager extends Thread {
             Socket s = new Socket(host, port);
             new Send(s).sendData("type:login&&send:" + clientInfo.getUserName());
             socketManager.setSocket(s);
-            initializeBufferedReader(s);
+            socketManager.initializeBufferedReader(s);
         } catch (IOException e) {
             log.error("Unable to connect to server: {}", e.getMessage());
         }

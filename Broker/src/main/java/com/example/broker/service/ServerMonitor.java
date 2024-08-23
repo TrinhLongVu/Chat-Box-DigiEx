@@ -1,58 +1,43 @@
 package com.example.broker.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.net.Socket;
+import org.slf4j.Logger;
+import java.io.IOException;
+import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Scheduled;
+
 
 @Component
-public class ServerMonitor implements Runnable {
+@RequiredArgsConstructor
+public class ServerMonitor {
+    private static final Logger log = LoggerFactory.getLogger(ServerMonitor.class);
     private static final String SERVER_TOPIC = "Server";
     private final MessageBroker messageBroker;
 
-    @Autowired
-    public ServerMonitor(MessageBroker messageBroker) {
-        this.messageBroker = messageBroker;
-    }
-
-    @Override
+    @Scheduled(fixedRate = 300)
     public void run() {
-        while (true) {
-
-            for (Socket serverSocket : messageBroker.getSocketsByKey(SERVER_TOPIC)) {
-                try {
-                    serverSocket.getOutputStream().write(0);
-                } catch (IOException e) {
-                    removeDisconnectedServer(serverSocket);
-                }
-            }
-
+        for (Socket serverSocket : messageBroker.getConnectedServersByKey(SERVER_TOPIC)) {
             try {
-                TimeUnit.SECONDS.sleep(5);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+                serverSocket.getOutputStream().write(0);
+            } catch (IOException e) {
+                log.info("Remove Client From Broadcast: {}", serverSocket);
+                removeDisconnectedServer(serverSocket);
             }
         }
     }
 
     public void removeDisconnectedServer(Socket serverSocket) {
         try {
-            List<Socket> sockets = messageBroker.getSocketsByKey(SERVER_TOPIC);
-            if (sockets != null) {
-                sockets.remove(serverSocket);
-                if (sockets.isEmpty()) {
-                    messageBroker.getConnectedServers().remove(SERVER_TOPIC);
-                }
+            List<Socket> sockets = messageBroker.getConnectedServersByKey(SERVER_TOPIC);
+            if (sockets != null && !sockets.isEmpty()) {
+                messageBroker.getConnectedServersByKey(SERVER_TOPIC).remove(serverSocket);
             }
             serverSocket.close();
         } catch (IOException e) {
-            Logger.getLogger(MessageBroker.class.getName()).log(Level.SEVERE, "Error closing server socket: {0}",
-                    e.getMessage());
+            log.error("Error closing server socket: {}", e.getMessage());
         }
     }
 }

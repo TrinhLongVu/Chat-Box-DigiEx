@@ -4,10 +4,12 @@ import com.example.client.view.LoginForm;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.swing.*;
 
 @SpringBootApplication
+@EnableScheduling
 public class ClientApplication {
     public static void main(String[] args) {
         // need head full to run GUI

@@ -176,8 +176,7 @@ public class LoadBalancerController {
         Database.clients.forEach(client -> log.info("After Client: {}", client));
 
         ServerInfo serverEmpty = Database.serverList.stream()
-                .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize()
-                        && (!server.getHost().equals(host) || server.getPort() != port))
+                .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize())
                 .findFirst()
                 .orElse(null);
 

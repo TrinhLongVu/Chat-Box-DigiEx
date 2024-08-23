@@ -4,23 +4,28 @@ import com.example.client.chat.MessageManager;
 import com.example.support.DataSave;
 import com.example.client.core.ClientInfo;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.LinkedList;
 
 @Component
 @RequiredArgsConstructor
 public class HomePage extends JFrame {
-    private JButton btnSend;
-    public static JTextField tfInput;
+    private static final Logger log = LoggerFactory.getLogger(HomePage.class);
     public static JLabel userLabel = new JLabel();
+    private final MessageManager messageManager;
     public static JList<String> JListUsers;
+    private final ClientInfo clientInfo;
+    public static JTextField tfInput;
     private JButton btnCreateGroup;
     private final Group group;
-    private final ClientInfo clientInfo;
-    private final MessageManager messageManager;
+    private JButton btnSend;
 
     public void init() {
         String userName = clientInfo.getUserName();
@@ -51,7 +56,7 @@ public class HomePage extends JFrame {
                 String selectedValue = JListUsers.getSelectedValue();
 
                 if (selectedValue == null) {
-                    if (!DataSave.selectedUser.equals("")) {
+                    if (!DataSave.selectedUser.isEmpty()) {
                         int i = 0;
                         for (String online : DataSave.userOnline) {
                             if (online.equals(DataSave.selectedUser)) {
@@ -60,18 +65,14 @@ public class HomePage extends JFrame {
                             i++;
                         }
                     }
-                } else if (selectedValue != null) {
+                } else {
                     int index = JListUsers.getSelectedIndex();
                     DataSave.selectedUser =  DataSave.userOnline.get(index);
 
                     // Update userLabel on the EDT
                     SwingUtilities.invokeLater(() -> {
                         userLabel.setText(userName + " is chatting with user: " + DataSave.selectedUser.split("\\?")[0]);
-                        LinkedList<String> history = DataSave.contentChat.get(DataSave.selectedUser);
-                        if (history == null) {
-                            history = new LinkedList<>();
-                            DataSave.contentChat.put(DataSave.selectedUser, history);
-                        }
+                        LinkedList<String> history = DataSave.contentChat.computeIfAbsent(DataSave.selectedUser, k -> new LinkedList<>());
                         clientInfo.getMessageList().clear();
 
                         for (String content : history) {
@@ -81,6 +82,7 @@ public class HomePage extends JFrame {
                 }
             }
         });
+
 
         onlineUser.add(JScrollPaneUsers, BorderLayout.CENTER);
         onlineUser.add(new JLabel("Users Online"), BorderLayout.NORTH);
@@ -108,6 +110,14 @@ public class HomePage extends JFrame {
         homePanel.add(onlineUser, BorderLayout.EAST);
 
         setContentPane(homePanel);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                log.info("Shutting down application...");
+                System.exit(0);
+            }
+        });
 
         handleEvent();
         setVisible(true);
