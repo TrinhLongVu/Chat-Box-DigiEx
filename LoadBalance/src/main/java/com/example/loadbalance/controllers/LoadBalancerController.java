@@ -16,13 +16,17 @@ import com.example.loadbalance.database.Database;
 import com.example.loadbalance.payloads.ClientInfo;
 import com.example.loadbalance.payloads.ServerInfo;
 
-import javax.xml.crypto.Data;
+
 
 @RestController
 @RequestMapping("")
 public class LoadBalancerController {
+    private Database database;
     private static final Logger log = LogManager.getLogger(LoadBalancerController.class);
 
+    public LoadBalancerController(Database database) {
+        this.database = database;
+    }
     @PostMapping("/login")
     public String handleLogin(@RequestBody String requestBody) {
         log.info("Received login request: {}", requestBody);
@@ -34,12 +38,12 @@ public class LoadBalancerController {
         String host = hostAndPort[0];
         int port = Integer.parseInt(hostAndPort[1]);
 
-        for (ServerInfo server : Database.serverList) {
+        for (ServerInfo server : database.getServerList()) {
             if (server.getHost().equals(host) && server.getPort() == port && isServerRunning(server)) {
                 if (server.getActiveClients() < server.getServerSize()) {
                     log.info("Client connected to server: {}", name);
                     ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-                    Database.clients.add(client);
+                    database.getClients().add(client);
                     server.incrementClients();
                     return "New user logged in to server: " + name;
                 } else {
@@ -64,7 +68,7 @@ public class LoadBalancerController {
         String host = hostAndPortArray[0];
         int port = Integer.parseInt(hostAndPortArray[1]);
 
-        boolean clientRemoved = Database.clients.removeIf(client -> client.getName().equals(name));
+        boolean clientRemoved = database.getClients().removeIf(client -> client.getName().equals(name));
 
         if (!clientRemoved) {
             log.warn("Client not found: {}", name);
@@ -72,7 +76,7 @@ public class LoadBalancerController {
         }
 
         boolean serverUpdated = false;
-        for (ServerInfo server : Database.serverList) {
+        for (ServerInfo server : database.getServerList()) {
             if (server.getHost().equals(host) && server.getPort() == port && isServerRunning(server)) {
                 if (server.getActiveClients() > 0) {
                     server.decrementClients();
@@ -99,7 +103,7 @@ public class LoadBalancerController {
         String name = nameAndServer[0];
 
         ClientInfo client = new ClientInfo(name, nameAndServer[1]);
-        Database.clients.add(client);
+        database.getClients().add(client);
         log.info("New group was created: {}", name);
         return "New group was created: " + name;
     }
@@ -115,7 +119,7 @@ public class LoadBalancerController {
         int port = Integer.parseInt(hostAndPort[1]);
         int threadSize = Integer.parseInt(serverAndThreadSize[1]);
 
-        if (Database.serverList.stream()
+        if (database.getServerList().stream()
                 .anyMatch(server -> server.getHost().equals(host) && server.getPort() == port)) {
             log.warn("Server already exists: {}@{}", host, port);
             return "Server already exists";
@@ -124,8 +128,10 @@ public class LoadBalancerController {
             log.warn("Server is not running: {}@{}", host, port);
             return "Server is not running";
         }
-        Database.serverList.add(new ServerInfo(host, port, null, threadSize));
+        database.getServerList().add(new ServerInfo(host, port, null, threadSize));
         log.info("New server available: {}@{}", host, port);
+
+        database.getServerList().forEach(server -> log.info("Server: {}", server));
         return "New server available: " + host + "@" + port;
     }
 
@@ -137,7 +143,7 @@ public class LoadBalancerController {
         String host = hostAndPort[0];
         int port = Integer.parseInt(hostAndPort[1]);
 
-        boolean removedServer = Database.serverList.removeIf(server -> server.getHost().equals(host) && server.getPort() == port);
+        boolean removedServer = database.getServerList().removeIf(server -> server.getHost().equals(host) && server.getPort() == port);
 
         if (!removedServer) {
             log.warn("Server not found: {}@{}", host, port);
@@ -158,24 +164,24 @@ public class LoadBalancerController {
         String host = hostAndPort[0];
         int port = Integer.parseInt(hostAndPort[1]);
 
-        Database.clients.forEach(client -> log.info("Before Client: {}", client));
-        Database.clients.removeIf(client -> client.getName().equals(name) && client.getServerInfo().equals(nameAndServer[1]));
+        database.getServerList().forEach(client -> log.info("Before Client: {}", client));
+        database.getClients().removeIf(client -> client.getName().equals(name) && client.getServerInfo().equals(nameAndServer[1]));
 
-        for (ServerInfo server : Database.serverList) {
+        for (ServerInfo server : database.getServerList()) {
             if (server.getHost().equals(host) && server.getPort() == port) {
                 if(!isServerRunning(server)) {
                     log.info("Old Server is not running, remove server: {}", nameAndServer[1]);
-                    Database.serverList.remove(server);
+                    database.getServerList().remove(server);
                 }else {
                     server.decrementClients();
                 }
                 break;
             }
         }
-        Database.serverList.forEach(server -> log.info("Server: {}", server));
-        Database.clients.forEach(client -> log.info("After Client: {}", client));
+        database.getServerList().forEach(server -> log.info("Server: {}", server));
+        database.getClients().forEach(client -> log.info("After Client: {}", client));
 
-        ServerInfo serverEmpty = Database.serverList.stream()
+        ServerInfo serverEmpty = database.getServerList().stream()
                 .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize())
                 .findFirst()
                 .orElse(null);
@@ -188,7 +194,7 @@ public class LoadBalancerController {
     public String handleGetConnection() {
         log.info("Received get connection request");
 
-        ServerInfo serverEmpty = Database.serverList.stream()
+        ServerInfo serverEmpty = database.getServerList().stream()
                 .filter(server -> isServerRunning(server) && server.getActiveClients() < server.getServerSize())
                 .findFirst()
                 .orElse(null);
@@ -203,8 +209,8 @@ public class LoadBalancerController {
         log.info("Received get clients request");
 
         StringBuilder response = new StringBuilder();
-        for (ClientInfo client : Database.clients) {
-            if (client == Database.clients.get(Database.clients.size() - 1)) {
+        for (ClientInfo client : database.getClients()) {
+            if (client == database.getClients().get(database.getClients().size() - 1)) {
                 response.append(client.getName());
             } else {
                 response.append(client.getName()).append(",");
