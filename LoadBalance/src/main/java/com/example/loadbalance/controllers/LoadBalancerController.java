@@ -218,14 +218,11 @@ public class LoadBalancerController {
         try (Socket socket = new Socket(server.getHost(), server.getPort())) {
             socket.close();
             return true;
+        } catch (ConnectException e) {
+            log.error("Connection refused to server: {}@{}", server.getHost(), server.getPort());
+        } catch (IOException e) {
+            log.error("I/O error when checking server status: {}@{}", server.getHost(), server.getPort(), e);
         }
-        catch (ConnectException e){
-            log.error("Server is not running: {}@{}", server.getHost(), server.getPort(), e);
-            return false;
-        }
-        catch (IOException e) {
-            log.error("Server is not running: {}@{}", server.getHost(), server.getPort(), e);
-            return false;
-        }
+        return false;
     }
 }
