@@ -14,8 +14,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.example.support.Send;
-import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +21,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.example.servers.payloads.BrokerInfo;
 import com.example.servers.controller.ReceiveController;
-import com.example.support.*;
+import com.example.servers.payloads.BrokerInfo;
+import com.example.support.Send;
+
+import lombok.AllArgsConstructor;
 
 @Component
 @AllArgsConstructor
@@ -144,7 +144,7 @@ public class ServerManager {
 
     private void notifyDisconnection(String host, int port) {
         try {
-            URL loadBalancerUrl = new URL("http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT + "/server-disconnected");
+            URL loadBalancerUrl = new URL("http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT + "/server/server-disconnected");
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
             loadBalancerConn.setDoOutput(true);
@@ -175,7 +175,7 @@ public class ServerManager {
 
     private void sendServerInfo(String host, int port, int threadSize) {
         try {
-            URL loadBalancerUrl = new URL("http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT + "/server-available");
+            URL loadBalancerUrl = new URL("http://" + LOADBALANCER_HOST + ":" + LOADBALANCER_PORT + "/server/server-available");
 
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");

@@ -5,16 +5,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.example.servers.payloads.BrokerInfo;
 import com.example.servers.utils.CallAPI;
-import com.example.support.*;
+import com.example.support.Client;
+import com.example.support.DataSave;
+import com.example.support.TypeReceive;
 
 @Component
 public class ReceiveServices {
@@ -155,7 +157,7 @@ class GroupMessageHandler implements InterfaceMessageHandler {
 
     private void SendToBroker(String receiveMsg, TypeReceive data) {
         sendServices.SendMessage(BrokerInfo.brokerSocket, receiveMsg + "&&flag:true");
-        callAPI.PostData("/create-group",
+        callAPI.PostData("/client/create-group",
                 "%group:" + data.getNameSend() + "," + data.getNameReceive() + "%&&localhost@1234");
     }
 

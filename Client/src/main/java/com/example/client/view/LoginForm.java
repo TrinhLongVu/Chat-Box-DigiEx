@@ -1,6 +1,21 @@
 package com.example.client.view;
 
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.io.IOException;
+import java.net.Socket;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.example.client.chat.MessageManager;
 import com.example.client.chat.SocketManager;
@@ -8,14 +23,8 @@ import com.example.client.core.ClientInfo;
 import com.example.client.utils.LoadBalanceManager;
 import com.example.support.Helper;
 import com.example.support.Send;
-import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Component;
 
-import java.awt.*;
-import java.net.Socket;
-import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -70,6 +79,7 @@ public class LoginForm extends JDialog {
 
     private String handleServer() {
         String connectString = loadBalanceManager.getConnectResponse();
+        System.out.println("Connected: " + connectString);
         String data = Helper.formatData(connectString).getData();
 
         if (data.equals("null")) {

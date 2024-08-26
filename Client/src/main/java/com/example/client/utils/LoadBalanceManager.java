@@ -1,12 +1,22 @@
 package com.example.client.utils;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.Socket;
+import java.net.URL;
+
 import javax.swing.JOptionPane;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+
 import com.example.client.chat.SocketManager;
 import com.example.client.core.ClientInfo;
 import com.example.support.Helper;
@@ -33,7 +43,7 @@ public class LoadBalanceManager {
 
         try {
             // URL of the LoadBalancer
-            URL url = new URL(LOADBALANCER_URL + "/connect");
+            URL url = new URL(LOADBALANCER_URL + "/client/connect");
 
             // Open connection
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -58,7 +68,7 @@ public class LoadBalanceManager {
 
     public void notifyConnected(String host, int port, String name) {
         try {
-            URL loadBalancerUrl = new URL(LOADBALANCER_URL + "/login");
+            URL loadBalancerUrl = new URL(LOADBALANCER_URL + "/client/login");
 
             HttpURLConnection loadBalancerConn = (HttpURLConnection) loadBalancerUrl.openConnection();
             loadBalancerConn.setRequestMethod("POST");
@@ -123,7 +133,7 @@ public class LoadBalanceManager {
     private StringBuilder sendRequest(StringBuilder content) {
         try {
             Thread.sleep(2000);
-            URL url = new URL(LOADBALANCER_URL + "/reconnect");
+            URL url = new URL(LOADBALANCER_URL + "/client/reconnect");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);

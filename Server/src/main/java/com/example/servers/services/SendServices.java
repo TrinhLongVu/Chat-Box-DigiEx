@@ -5,12 +5,15 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.servers.utils.CallAPI;
-import com.example.support.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.example.servers.utils.CallAPI;
+import com.example.support.Client;
+import com.example.support.DataSave;
+import com.example.support.Send;
 
 @Component
 public class SendServices {
@@ -28,7 +31,7 @@ public class SendServices {
         }
     }
     public void SendUserOnline() {
-        callAPI.GetData("/get-clients").thenAccept(userOnline -> {
+        callAPI.GetData("/server/get-clients").thenAccept(userOnline -> {
             if (!userOnline.equals("error")) {
                 for (Client client : DataSave.clients) {
                     processClient(client, userOnline);

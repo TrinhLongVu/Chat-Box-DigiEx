@@ -8,7 +8,6 @@ import java.net.Socket;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -19,7 +18,10 @@ import com.example.servers.services.InterfaceMessageHandler;
 import com.example.servers.services.ReceiveServices;
 import com.example.servers.services.SendServices;
 import com.example.servers.utils.CallAPI;
-import com.example.support.*;
+import com.example.support.Client;
+import com.example.support.DataSave;
+import com.example.support.Helper;
+import com.example.support.TypeReceive;
 
 @Component
 @Scope("prototype")
@@ -81,7 +83,7 @@ public class ReceiveController implements Runnable {
             Client currentClient = getClientfromDataSave(socket);
             if (currentClient != null) {
                 DataSave.clients.remove(currentClient);
-                callAPI.PostData("/disconnect", currentClient.getName() + "&&localhost@" + PORT);
+                callAPI.PostData("/client/disconnect", currentClient.getName() + "&&localhost@" + PORT);
                 sendServices.SendMessage(BrokerInfo.brokerSocket, "type:disconnect");
             }
         } catch (IOException e) {
