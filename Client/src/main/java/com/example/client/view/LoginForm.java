@@ -22,7 +22,6 @@ import java.io.IOException;
 public class LoginForm extends JDialog {
     private static final Logger log = LogManager.getLogger(LoginForm.class);
     private final LoadBalanceManager loadBalanceManager;
-    private final MessageManager messageManager;
     private final SocketManager socketManager;
     private final ClientInfo clientInfo;
     private final HomePage homePage;

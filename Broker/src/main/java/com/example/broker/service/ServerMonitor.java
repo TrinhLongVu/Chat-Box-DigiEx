@@ -23,7 +23,7 @@ public class ServerMonitor {
             try {
                 serverSocket.getOutputStream().write(0);
             } catch (IOException e) {
-                log.info("Remove Client From Broadcast: {}", serverSocket);
+                log.info("Remove Server From Broadcast: {}", serverSocket);
                 removeDisconnectedServer(serverSocket);
             }
         }
