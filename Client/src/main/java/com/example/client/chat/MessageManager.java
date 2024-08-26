@@ -1,21 +1,20 @@
 package com.example.client.chat;
 
-import com.example.client.core.ClientInfo;
-import com.example.client.view.HomePage;
-import com.example.client.utils.LoadBalanceManager;
-import com.example.support.TypeReceive;
-import com.example.support.DataSave;
-import com.example.support.Helper;
-import com.example.support.Send;
-import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import javax.swing.JOptionPane;
-import java.io.IOException;
 import java.net.Socket;
+import java.io.IOException;
 import java.util.LinkedList;
+import com.example.support.Send;
+import com.example.support.Helper;
+import com.example.support.DataSave;
+import lombok.RequiredArgsConstructor;
+import com.example.support.TypeReceive;
+import org.apache.logging.log4j.Logger;
+import com.example.client.view.HomePage;
+import com.example.client.core.ClientInfo;
+import org.apache.logging.log4j.LogManager;
+import org.springframework.stereotype.Component;
+import com.example.client.utils.LoadBalanceManager;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @Component
 @RequiredArgsConstructor
@@ -45,7 +44,6 @@ public class MessageManager {
         } catch (IOException ie) {
             log.error("IOException: {}", ie.getMessage());
             loadBalanceManager.reconnectToNewServer();
-        } catch (Exception e) {
         }
     }
 
