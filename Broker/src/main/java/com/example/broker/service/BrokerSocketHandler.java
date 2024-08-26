@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 @Configuration
-public class ServerSocketHandler {
-    private ServerSocket serverSocket;
+public class BrokerSocketHandler {
+    private ServerSocket brokerSocket;
 }

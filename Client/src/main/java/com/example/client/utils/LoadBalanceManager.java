@@ -20,7 +20,6 @@ public class LoadBalanceManager {
     private static final Logger log = LogManager.getLogger(LoadBalanceManager.class);
     private final SocketManager socketManager;
     private final ClientInfo clientInfo;
-    private final ApplicationContext context;
 
     private String SCHEME = "http://";
     private String LOADBALANCER_HOST = "localhost";
